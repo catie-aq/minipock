@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "minipock_description"
+version = "0.0.1"
+description = "Description package for MiniPock robot."
+authors = ["Sébastien Delpeuch <sebastien@delpeuch.net>"]
+license = "GPL-3.0-only"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.scripts]
+model = "minipock_description.model:generate"
+
+[tool.colcon-poetry-ros.data-files]
+"share/ament_index/resource_index/packages" = ["resource/minipock_description"]
+"share/minipock_description" = ["package.xml", "models", "urdf"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

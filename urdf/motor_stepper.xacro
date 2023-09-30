@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="motor_stepper" params="namespace:=minipock name:=stepper_left x:=0.0 y:=0.0 z:=0.0
+				       R:=0.0 P:=0.0 Y:=0.0">
+    <link name="${name}_base_link">
+      <visual>
+        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/wheel_base.stl"/>
+        </geometry>
+        <material name="6TRON">
+          <color rgba="0.27 0.64 0.52 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/wheel_base.stl"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
+        <mass value="1.587"/>
+        <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013"/>
+      </inertial>
+    </link>
+    <link name="${name}_wheel_link">
+      <visual>
+        <origin xyz="0 -0.073 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/wheel_rotative.stl"/>
+        </geometry>
+        <material name="black">
+          <color rgba="0.0 0.0 0.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 -0.073 0" rpy="${pi/2} -0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/wheel_rotative.stl"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
+        <mass value="1.587"/>
+        <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013"/>
+      </inertial>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="${namespace}_base_link"/>
+      <child link="${name}_base_link"/>
+      <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}"/>
+    </joint>
+    <joint name="${name}_wheel_joint" type="continuous">
+      <parent link="${name}_base_link"/>
+      <child link="${name}_wheel_link"/>
+      <origin xyz="0.0 0.073 0.0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+</robot>

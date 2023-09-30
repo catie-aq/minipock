@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<robot name="blueboat" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:include filename="$(find minipock_description)/urdf/minipock_differential_base.xacro"/>
+  <xacro:minipock_base namespace="minipock"/>
+
+  <!-- motor -->
+  <xacro:include filename="$(find minipock_description)/urdf/motor_stepper.xacro"/>
+  <xacro:motor_stepper namespace="minipock" name="stepper_left" x="0.098" y="0.0" z="-0.034" R="0.0" P="0.0" Y="${-pi/2}"/>
+  <xacro:motor_stepper namespace="minipock" name="stepper_right" x="-0.098" y="0.0" z="-0.034" R="0.0" P="0.0" Y="${pi/2}"/>
+</robot>
