@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "minipock_gz"
+version = "0.0.1"
+description = "MiniPock Worlds for Gazebo Sim"
+authors = ["Sébastien Delpeuch <sebastien@delpeuch.net>"]
+license = "GPL-3.0-only"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[tool.poetry.scripts]
+
+[tool.colcon-poetry-ros.data-files]
+"share/ament_index/resource_index/packages" = ["resource/minipock_gz"]
+"share/minipock_gz" = ["package.xml", "worlds", "launch"]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
