@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="motor_stepper" params="namespace:=minipock name:=stepper_left x:=0.0 y:=0.0 z:=0.0
-				       R:=0.0 P:=0.0 Y:=0.0">
+				       R:=0.0 P:=0.0 Y:=0.0 side:=1">
+
     <link name="${name}_base_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
@@ -15,7 +16,7 @@
       <collision>
         <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/wheel_base.stl"/>
+          <rectangular size="0.1 0.1 0.1"/>
         </geometry>
       </collision>
       <inertial>
@@ -35,9 +36,9 @@
         </material>
       </visual>
       <collision>
-        <origin xyz="0 -0.073 0" rpy="${pi/2} -0 0"/>
+        <origin xyz="0 ${-0.006/2} 0" rpy="${pi/2} -0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/wheel_rotative.stl"/>
+          <cylinder radius="0.036" length="0.006"/>
         </geometry>
       </collision>
       <inertial>
@@ -55,7 +56,18 @@
       <parent link="${name}_base_link"/>
       <child link="${name}_wheel_link"/>
       <origin xyz="0.0 0.073 0.0" rpy="0 0 0"/>
-      <axis xyz="0 1 0"/>
+      <axis xyz="0 ${side} 0"/>
+      <limit effort="2000" velocity="5"/>
+      <dynamics friction="0.05" damping="0.05"/>
     </joint>
+
+    <gazebo>
+      <plugin filename="gz-sim-joint-position-controller-system" name="gz::sim::systems::JointPositionController">
+        <joint_name>${name}_wheel_joint</joint_name>
+        <use_velocity_commands>true</use_velocity_commands>
+        <topic>${namespace}/${name}/pos</topic>
+        <name>${name}</name>
+      </plugin>
+    </gazebo>
   </xacro:macro>
 </robot>
