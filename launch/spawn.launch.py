@@ -15,7 +15,6 @@ import os
 
 import minipock_description.model
 from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription
@@ -25,7 +24,11 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.actions import PushRosNamespace
 
+from launch import LaunchDescription
+from minipock_gz import bridges
+
 robot_name = 'minipock'
+
 
 def parse_config(context, *args, **kwargs):
     """
@@ -44,8 +47,21 @@ def parse_config(context, *args, **kwargs):
     extra_gz_args = LaunchConfiguration('extra_gz_args').perform(context)
     launch_processes = []
     launch_processes.extend(simulation(world_name=world, extra_gz_args=extra_gz_args))
+    launch_processes.append(map_server())
     launch_processes.extend(spawn(position))
+    launch_processes.extend(bridge(world_name=world))
     return launch_processes
+
+
+def map_server():
+    return LaunchDescription([
+        Node(
+            package='nav2_map_server',
+            executable='map_server',
+            output='screen',
+            parameters=[{'use_sim_time': True},
+                        {'yaml_filename': 'test_map.yaml'}])
+    ])
 
 
 def simulation(world_name, extra_gz_args):
@@ -88,10 +104,23 @@ def spawn(position):
     params = {'use_sim_time': True, 'robot_description': robot_desc,
               'namespace': robot_name}
     nodes = [Node(package='robot_state_publisher', executable='robot_state_publisher', output='both',
-                  parameters=[params], remappings=[('/joint_states', f'{robot_name}/joint_states')])]
+                  parameters=[params], remappings=[('/joint_states', f'/{robot_name}/joint_states')])]
     group_action = GroupAction([PushRosNamespace(robot_name), *nodes])
     launch_processes.append(group_action)
     return launch_processes
+
+
+def bridge(world_name):
+    bridges_list = [bridges.clock(),
+                    bridges.pose(model_name=robot_name),
+                    bridges.joint_states(model_name=robot_name, world_name=world_name),
+                    bridges.odometry(model_name=robot_name), bridges.cmd_vel(model_name=robot_name)]
+    nodes = [Node(package='ros_gz_bridge',
+                  executable='parameter_bridge',
+                  output='screen',
+                  arguments=[bridge.argument() for bridge in bridges_list],
+                  remappings=[bridge.remapping() for bridge in bridges_list])]
+    return nodes
 
 
 def generate_launch_description():
