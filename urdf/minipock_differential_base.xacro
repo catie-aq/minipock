@@ -9,9 +9,9 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
+        <origin xyz="0 0 -${0.06/2}" rpy="0 -0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_alu.dae"/>
+          <box size="0.30 0.342 0.06"/>
         </geometry>
       </collision>
       <inertial>
@@ -26,17 +26,10 @@
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_pla.stl"/>
         </geometry>
-
         <material name="6TRON">
           <color rgba="0.27 0.64 0.52 1.0"/>
         </material>
       </visual>
-      <collision>
-        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
-        <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_pla.stl"/>
-        </geometry>
-      </collision>
       <inertial>
         <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
         <mass value="1.587"/>
@@ -49,17 +42,10 @@
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_pmma.stl"/>
         </geometry>
-
         <material name="6TRON_2">
           <color rgba="0.27 0.64 0.52 0.9"/>
         </material>
       </visual>
-      <collision>
-        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
-        <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_pmma.stl"/>
-        </geometry>
-      </collision>
       <inertial>
         <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
         <mass value="1.587"/>
@@ -76,12 +62,6 @@
           <color rgba="0.3 0.3 0.3 1.0"/>
         </material>
       </visual>
-      <collision>
-        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
-        <geometry>
-          <mesh filename="package://minipock_description/models/differential_misc.stl"/>
-        </geometry>
-      </collision>
       <inertial>
         <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
         <mass value="1.587"/>
@@ -96,7 +76,7 @@
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0.0" rpy="${pi/2} -0 0"/>
+        <origin xyz="0 0 0" rpy="${pi/2} -0 0"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_top.dae"/>
         </geometry>
@@ -107,6 +87,7 @@
         <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013"/>
       </inertial>
     </link>
+
     <joint name="${namespace}_structure_pla_joint" type="fixed">
       <origin xyz="0 0 0.0" rpy="0 0 0"/>
       <parent link="${namespace}_base_link"/>
