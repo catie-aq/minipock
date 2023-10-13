@@ -15,6 +15,7 @@ import os
 
 import minipock_description.model
 from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription
@@ -24,7 +25,6 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.actions import PushRosNamespace
 
-from launch import LaunchDescription
 from minipock_gz import bridges
 
 robot_name = 'minipock'
@@ -114,7 +114,8 @@ def bridge(world_name):
     bridges_list = [bridges.clock(),
                     bridges.pose(model_name=robot_name),
                     bridges.joint_states(model_name=robot_name, world_name=world_name),
-                    bridges.odometry(model_name=robot_name), bridges.cmd_vel(model_name=robot_name)]
+                    bridges.odometry(model_name=robot_name), bridges.cmd_vel(model_name=robot_name),
+                    bridges.scan_lidar(model_name=robot_name)]
     nodes = [Node(package='ros_gz_bridge',
                   executable='parameter_bridge',
                   output='screen',
