@@ -43,3 +43,11 @@ def cmd_vel(model_name):
         gz_type='gz.msgs.Twist',
         ros_type='geometry_msgs/msg/Twist',
         direction=bridge.BridgeDirection.ROS_TO_GZ)
+
+def scan_lidar(model_name):
+    return bridge.Bridge(
+        gz_topic=f'/scan',
+        ros_topic=f'{model_name}/scan',
+        gz_type='gz.msgs.LaserScanStamped',
+        ros_type='sensor_msgs/msg/LaserScan',
+        direction=bridge.BridgeDirection.GZ_TO_ROS)
