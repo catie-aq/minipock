@@ -48,6 +48,7 @@ def parse_config(context, *args, **kwargs):
     launch_processes = []
     launch_processes.extend(simulation(world_name=world, extra_gz_args=extra_gz_args))
     launch_processes.append(map_server())
+    launch_processes.append(lidar_process())
     launch_processes.extend(spawn(position))
     launch_processes.extend(bridge(world_name=world))
     return launch_processes
@@ -61,6 +62,15 @@ def map_server():
             output='screen',
             parameters=[{'use_sim_time': True},
                         {'yaml_filename': 'test_map.yaml'}])
+    ])
+
+
+def lidar_process():
+    return LaunchDescription([
+        Node(
+            package='minipock_gz',
+            executable='lidar_process',
+        )
     ])
 
 

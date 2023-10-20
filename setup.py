@@ -17,6 +17,9 @@ setup(
     ],
     packages=[package_name],
     entry_points={
+        'console_scripts': [
+            'lidar_process = minipock_gz.lidar_process:main',
+        ],
     },
     data_files=[
         ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
