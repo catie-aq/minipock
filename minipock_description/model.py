@@ -74,10 +74,8 @@ def payload_from_sdf(model_sdf):
     for plugin in plugins:
         if plugin.name() == 'gz::sim::systems::Thruster':
             name = name_from_plugin(plugin.__str__())
-            payload['thruster_thrust_' + name] = [link.name(), name]
         elif plugin.name() == 'gz::sim::systems::JointPositionController':
             name = name_from_plugin(plugin.__str__())
-            payload['thruster_rotate_' + name] = [link.name(), name]
         else:
             payload[plugin.name()] = ['', plugin.filename()]
     return payload
