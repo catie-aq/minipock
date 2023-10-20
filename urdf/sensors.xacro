@@ -32,9 +32,9 @@
     <gazebo reference="${name}_link">
       <sensor type="gpu_lidar" name="lds_01">
         <update_rate>5</update_rate>
-        <topic>${namespace}/sensors/scan</topic>
+        <topic>scan</topic>
         <visualize>true</visualize>
-        <visibility_mask>4294967295</visibility_mask>
+        <frame_id>${name}_link</frame_id>
         <lidar>
           <scan>
             <horizontal>

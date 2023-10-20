@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="blueboat" xmlns:xacro="http://ros.org/wiki/xacro">
+<robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name="namespace" value="minipock"/>
 
   <xacro:include filename="$(find minipock_description)/urdf/minipock_differential_base.xacro"/>
