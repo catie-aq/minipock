@@ -42,7 +42,7 @@ package https://github.com/catie-aq/minipock_description/blob/19d8f223b17d1fa1e8
 Les pièces d’origines servant à la construction sont disponibles
 sur [OnShape](https://cad.onshape.com/documents/33cae3bcf76fa1a7bad5518d/w/291d81df1473dfe37dbb5dbf/e/d2e6f80356159bebf1722dda)
 
-![Résumé de la construction de l’URDF](minipock_black.svg#gh-light-mode-only)
+![Résumé de la construction de l’URDF](minipock_black.svg)
 
 Résumé de la construction de l’URDF
 
