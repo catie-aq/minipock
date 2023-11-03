@@ -2,8 +2,8 @@
 <COLLADA version="1.4.1" xmlns="http://www.collada.org/2005/11/COLLADASchema">
 
   <asset>
-    <created>2023-09-24T14:51:15</created>
-    <modified>2023-09-24T14:51:15</modified>
+    <created>2023-11-03T09:46:04</created>
+    <modified>2023-11-03T09:46:04</modified>
     <unit meter="1" name="meters"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -110,11 +110,11 @@
     <visual_scene id="ID1">
       <node id="ID2" name="differential_base_alu">
         <node>
-          <matrix>1 0 0 -1.38778e-17 0 1 0 -0.0605 0 0 1 2.77556e-17 0 0 0 1</matrix>
+          <matrix>6.12323e-17 0 -1 0.000141927 -1 0 -6.12323e-17 -7.2975e-05 0 1 0 -0.0635 0 0 0 1</matrix>
           <instance_node url="#ID3"/>
         </node>
         <node>
-          <matrix>1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+          <matrix>6.12323e-17 0 -1 0.000141927 -1 0 -6.12323e-17 -7.2975e-05 0 1 0 -0.003 0 0 0 1</matrix>
           <instance_node url="#ID11"/>
         </node>
       </node>

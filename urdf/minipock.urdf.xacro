@@ -7,12 +7,12 @@
 
   <!-- motor -->
   <xacro:include filename="$(find minipock_description)/urdf/motor_stepper.xacro"/>
-  <xacro:motor_stepper namespace="${namespace}" name="stepper_left" x="-0.098" y="0.0" z="-0.034" R="0.0" P="0.0"
-                       Y="${pi/2}" side="1"/>
-  <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.098" y="0.0" z="-0.034" R="0.0" P="0.0"
-                       Y="${-pi/2}" side="-1"/>
+  <xacro:motor_stepper namespace="${namespace}" name="stepper_left" x="0.0" y="0.098" z="-0.034" R="0.0" P="0.0"
+                       Y="0.0" side="1"/>
+  <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.0" y="-0.098" z="-0.034" R="0.0" P="0.0"
+                       Y="${-pi}" side="-1"/>
   <xacro:include filename="$(find minipock_description)/urdf/sensors.xacro"/>
-  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.079" R="0.0" P="0.0" Y="0.0"/>
+  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.079" R="0.0" P="0.0" Y="${-pi/2}"/>
 
   <gazebo>
 
@@ -26,7 +26,7 @@
       <odom_publish_frequency>50</odom_publish_frequency>
       <topic>cmd_vel</topic>
 
-      <child_frame_id>minipock_base_link</child_frame_id>
+      <child_frame_id>base_link</child_frame_id>
       <frame_id>odom</frame_id>
     </plugin>
 

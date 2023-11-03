@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="minipock_base" params="namespace:=minipock">
-    <link name="${namespace}_base_link">
+    <link name="base_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_alu.dae"/>
         </geometry>
@@ -89,23 +89,23 @@
     </link>
 
     <joint name="${namespace}_structure_pla_joint" type="fixed">
-      <origin xyz="0 0 0.0" rpy="0 0 0"/>
-      <parent link="${namespace}_base_link"/>
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="base_link"/>
       <child link="${namespace}_structure_pla_link"/>
     </joint>
     <joint name="${namespace}_structure_pmma_joint" type="fixed">
-      <origin xyz="0 0 0.0" rpy="0 0 0"/>
-      <parent link="${namespace}_base_link"/>
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="base_link"/>
       <child link="${namespace}_structure_pmma_link"/>
     </joint>
     <joint name="${namespace}_structure_misc_joint" type="fixed">
-      <origin xyz="0 0 0.0" rpy="0 0 0"/>
-      <parent link="${namespace}_base_link"/>
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="base_link"/>
       <child link="${namespace}_structure_misc_link"/>
     </joint>
     <joint name="${namespace}_structure_top_joint" type="fixed">
-      <origin xyz="0 0 0.0" rpy="0 0 0"/>
-      <parent link="${namespace}_base_link"/>
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="base_link"/>
       <child link="${namespace}_structure_top_link"/>
     </joint>
   </xacro:macro>
