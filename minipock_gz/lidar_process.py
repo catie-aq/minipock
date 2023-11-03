@@ -1,6 +1,7 @@
 """
 The Python module introduces a ROS2 ScanFilterNode class.
-The constructor initializes a node ('scan_filter_node'), sets up a subscription to the /minipock/scan_raw topic,
+The constructor initializes a node ('scan_filter_node'), sets up a subscription to the
+/minipock/scan_raw topic,
  and creates a publisher for /minipock/scan, all with a queue size of 10.
 
 The listener_callback method modifies the frame_id of incoming LaserScan messages
@@ -20,10 +21,10 @@ class ScanFilterNode(Node):
         super().__init__('scan_filter_node')
         self.subscription = self.create_subscription(
             LaserScan,
-            '/minipock/scan_raw',
+            '/scan_raw',
             self.listener_callback,
             10)
-        self.publisher = self.create_publisher(LaserScan, '/minipock/scan', 10)
+        self.publisher = self.create_publisher(LaserScan, '/scan', 10)
 
     def listener_callback(self, msg):
         """

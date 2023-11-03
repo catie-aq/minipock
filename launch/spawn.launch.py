@@ -47,22 +47,10 @@ def parse_config(context, *args, **kwargs):
     extra_gz_args = LaunchConfiguration('extra_gz_args').perform(context)
     launch_processes = []
     launch_processes.extend(simulation(world_name=world, extra_gz_args=extra_gz_args))
-    launch_processes.append(map_server())
     launch_processes.append(lidar_process())
     launch_processes.extend(spawn(position))
     launch_processes.extend(bridge(world_name=world))
     return launch_processes
-
-
-def map_server():
-    return LaunchDescription([
-        Node(
-            package='nav2_map_server',
-            executable='map_server',
-            output='screen',
-            parameters=[{'use_sim_time': True},
-                        {'yaml_filename': 'test_map.yaml'}])
-    ])
 
 
 def lidar_process():
@@ -125,7 +113,8 @@ def bridge(world_name):
                     bridges.pose(model_name=robot_name),
                     bridges.joint_states(model_name=robot_name, world_name=world_name),
                     bridges.odometry(model_name=robot_name), bridges.cmd_vel(model_name=robot_name),
-                    bridges.scan_lidar(model_name=robot_name)]
+                    bridges.scan_lidar(model_name=robot_name),
+                    bridges.tf()]
     nodes = [Node(package='ros_gz_bridge',
                   executable='parameter_bridge',
                   output='screen',
