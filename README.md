@@ -30,6 +30,12 @@ Modifiez votre `.bashrc` pour indiquer à Gazebo où trouver les modèles.
 export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH~/[your colcon workspace]/install/share
 ```
 
+## Utilisation
+
+```bash
+ros2 launch minipock_gz minipock.launch.py
+```
+
 ## Fichier URDF
 
 La génération du modèle se fait via la définition d’un `URDF` dont le point d’entrée
