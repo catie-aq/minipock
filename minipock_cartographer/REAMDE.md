@@ -1,4 +1,4 @@
-# MiniPock Navigation
+# MiniPock Cartographer
 
 - Maintainer status: developed
 - Maintainer: Sébastien Delpeuch [s.delpeuch@catie.fr](mailto:s.delpeuch@catie.fr)
@@ -16,7 +16,7 @@ Pour installer ce package, assurez-vous que votre workspace ROS est correctement
 cd <your_ros2_workspace>/src
 git clone git@github.com:catie-aq/minipock_navigation.git
 cd ..
-colcon build --packages-select minipock_navigation2
+colcon build --packages-select minipock_cartographer
 ```
 
 ## Utilisation en simulation
@@ -28,13 +28,20 @@ package [minipock_gz](https://github.com/catie-aq/minipock_gz) en utilisant le l
 ros2 launch minipock_gz minipock.launch.py
 ```
 
-puis de lancer le launch file de navigation:
+puis de lancer cartographer:
 
 ```bash
-ros2 launch minipock_navigation2 navigation2.launch.py
+ros2 launch minipock_cartographer cartographer.launch.py
 ```
 
-## Configuration
+Vous pouvez ensuite lancer le node de téléopération pour contrôler le robot:
 
-La configuration de la stack de navigation se fait via le
-fichier [minipock.yaml](minipock_navigation2/param/minipock.yaml)
+```bash
+ros2 run minipock_teleop teleop_keyboard
+```
+
+Une fois la carte construite, vous pouvez enrégistrer la carte dans un fichier `.pgm` et `.yaml` en utilisant le node
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f <file_name>
+```
