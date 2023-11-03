@@ -68,10 +68,10 @@ class TeleopController(Node):
     def __init__(self):
         super().__init__('teleop_keyboard')
 
-        self.MINIPOCK_MAX_LIN_VEL = 2.0
-        self.MINIPOCK_MAX_ANG_VEL = 1.0
-        self.LIN_VEL_STEP_SIZE = 0.1
-        self.ANG_VEL_STEP_SIZE = 0.1
+        self.MINIPOCK_MAX_LIN_VEL = 6.0
+        self.MINIPOCK_MAX_ANG_VEL = 6.0
+        self.LIN_VEL_STEP_SIZE = 0.3
+        self.ANG_VEL_STEP_SIZE = 0.3
 
         self.qos = QoSProfile(depth=10)
         self.publisher = self.create_publisher(Twist, 'cmd_vel', self.qos)
