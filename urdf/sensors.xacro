@@ -31,7 +31,7 @@
     </joint>
     <gazebo reference="${name}_link">
       <sensor type="gpu_lidar" name="lds_01">
-        <update_rate>5</update_rate>
+        <update_rate>50</update_rate>
         <topic>scan_raw</topic>
         <visualize>true</visualize>
         <lidar>
