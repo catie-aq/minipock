@@ -32,7 +32,7 @@ def generate_launch_description():
             [
                 FindPackageShare('minipock_navigation2'),
                 'map',
-                'minipock_world.yaml'
+                'map.yaml'
             ]
         )
     )
