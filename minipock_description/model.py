@@ -8,7 +8,6 @@ import pathlib
 import re
 import subprocess
 
-import sdformat13 as sdf
 from launch_ros.substitutions import FindPackageShare
 
 PACKAGE_NAME = 'minipock_description'
@@ -53,34 +52,6 @@ def name_from_plugin(plugin_sdf):
         return result.group(1)
 
 
-def payload_from_sdf(model_sdf):
-    """
-    Parse the sdf file for payloads
-
-    :param model_sdf: sdf string of the model
-    :return: dictionary of payloads
-    """
-    payload = {}
-    root = sdf.Root()
-    root.load_sdf_string(model_sdf)
-    model = root.model()
-    link = None
-    for link_index in range(model.link_count()):
-        link = model.link_by_index(link_index)
-        for sensor_index in range(link.sensor_count()):
-            sensor = link.sensor_by_index(sensor_index)
-            payload[sensor.name()] = [link.name(), sensor.type()]
-    plugins = model.plugins()
-    for plugin in plugins:
-        if plugin.name() == 'gz::sim::systems::Thruster':
-            name = name_from_plugin(plugin.__str__())
-        elif plugin.name() == 'gz::sim::systems::JointPositionController':
-            name = name_from_plugin(plugin.__str__())
-        else:
-            payload[plugin.name()] = ['', plugin.filename()]
-    return payload
-
-
 def generate():
     """
     Generate the sdf file from the urdf file
@@ -103,8 +74,6 @@ def generate():
 
     stdout = process.communicate()[0]
     model_sdf = codecs.getdecoder('unicode_escape')(stdout)[0]
-
-    payload_from_sdf(model_sdf)
 
     return model_sdf
 
