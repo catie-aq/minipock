@@ -17,6 +17,8 @@ jobs:
           - docker_image: osrf/ros:rolling-desktop-full-jammy
             ros_distribution: rolling
             ros_version: 2
+    env:
+      GITHUB_REPO: ${{ github.event.repository.name }}
 
     container: # Use the Docker image defined in the matrix
       image: ${{ matrix.docker_image }}
@@ -29,6 +31,6 @@ jobs:
         if: ${{ matrix.ros_version == 2 }}
         uses: ros-tooling/action-ros-ci@v0.2
         with:
-          package-name: ${{ github.repository }}
+          package-name: ${{ env.GITHUB_REPO }}
           target-ros2-distro: ${{ matrix.ros_distribution }}
           import-token: ${{ secrets.GITHUB_TOKEN }}
