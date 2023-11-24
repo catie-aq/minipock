@@ -11,10 +11,10 @@ jobs:
           - humble
           - rolling
         include:
-          - docker_image: ubuntu:jammy
+          - docker_image: osrf/ros:humble-desktop-full
             ros_distribution: humble
             ros_version: 2
-          - docker_image: ubuntu:jammy
+          - docker_image: osrf/ros:rolling-desktop-full-jammy
             ros_distribution: rolling
             ros_version: 2
 
