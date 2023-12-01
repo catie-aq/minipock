@@ -223,6 +223,7 @@ class TeleopController(Node):
                     if status == 0:
                         self.get_logger().info(self.help_msg)
                 elif key == '\x03':
+                    self.publisher.publish(make_twist(0.0, 0.0))
                     break
                 self.make_simple_profile_linear()
                 self.make_simple_profile_angular()
