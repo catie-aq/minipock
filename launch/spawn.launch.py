@@ -1,29 +1,22 @@
-# Copyright 2021 Open Source Robotics Foundation, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+This script manages the launching process of the Gazebo simulator for the Minipock robot.
+
+It sets the initial position parameters for the robot in the Gazebo world,
+runs the simulation, and spawns the robot-related processes.
+
+It also bridges ROS messages and Gazebo simulator information.
+"""
+
 import os
 
-import minipock_description.model
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.actions import GroupAction
 from launch.actions import IncludeLaunchDescription
 from launch.actions import OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.actions import PushRosNamespace
 
 from minipock_gz import bridges
 
@@ -32,7 +25,8 @@ robot_name = 'minipock'
 
 def parse_config(context, *args, **kwargs):
     """
-    Parse the launch arguments and launch the spawn function
+    Parse the launch arguments and spawn the robot in the Gazebo world.
+
     :param context: LaunchContext with arguments
     :return: list of launch processes
     """
@@ -54,6 +48,11 @@ def parse_config(context, *args, **kwargs):
 
 
 def lidar_process():
+    """
+    This function returns a lidar process wrapped within a LaunchDescription object.
+
+    :return: LaunchDescription object containing the lidar process.
+    """
     return LaunchDescription([
         Node(
             package='minipock_gz',
@@ -64,20 +63,16 @@ def lidar_process():
 
 def simulation(world_name, extra_gz_args):
     """
-    This method takes in the name of a world file, a boolean indicating whether the simulation should start in a
-    paused state, and any additional command line arguments to pass to the Gazebo simulator. It returns a
-    LaunchDescription object that can be used to start the simulation.
+    This method takes in the name of a world file, a boolean indicating whether the simulation
+    should start in a paused state, and any additional command line arguments to pass to the
+    Gazebo simulator.
+    It returns a LaunchDescription object that can be used to start the simulation.
 
     :param world_name: the name of the world file to load in the simulation
     :param extra_gz_args: additional command line arguments to pass to the Gazebo simulator
     :return: a list containing a LaunchDescription for starting the simulation
     """
-    gz_args = []
-    gz_args.append('-r')
-
-    gz_args.append(extra_gz_args)
-
-    gz_args.append(f'{world_name}.sdf')
+    gz_args = ['-r', extra_gz_args, f'{world_name}.sdf']
 
     gz_sim = IncludeLaunchDescription(PythonLaunchDescriptionSource(
         [os.path.join(get_package_share_directory('ros_gz_sim'), 'launch'), '/gz_sim.launch.py']),
@@ -87,28 +82,33 @@ def simulation(world_name, extra_gz_args):
 
 def spawn(position):
     """
-    Spawn the robot in the current gazebo world
+    Spawn the robot in the current Gazebo world.
 
     :param position: list of a position and rotation
     :return: list of launch processes
     """
-    launch_processes = [Node(package='ros_gz_sim', executable='create', output='screen',
-                             arguments=minipock_description.model.spawn_args(position))]
-    # robot_state_publisher
-    model_dir = os.path.join(get_package_share_directory('minipock_description'), 'models/tmp')
-    urdf_file = os.path.join(model_dir, 'model.urdf')
-    with open(urdf_file) as input_file:
-        robot_desc = input_file.read()
-    params = {'use_sim_time': True, 'robot_description': robot_desc,
-              'namespace': robot_name}
-    nodes = [Node(package='robot_state_publisher', executable='robot_state_publisher', output='both',
-                  parameters=[params], remappings=[('/joint_states', f'/{robot_name}/joint_states')])]
-    group_action = GroupAction([PushRosNamespace(robot_name), *nodes])
-    launch_processes.append(group_action)
+    spawn_launch_path = os.path.join(get_package_share_directory('minipock_description'),
+                                     'launch',
+                                     'spawn.launch.py')
+    spawn_description = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(spawn_launch_path),
+        launch_arguments={
+            'position': position,
+            'robot_name': robot_name,
+        }.items()
+    )
+    launch_processes = [spawn_description]
+
     return launch_processes
 
 
 def bridge(world_name):
+    """
+    This function manages the bridge between ROS messages and Gazebo simulator.
+
+    :param world_name: the name of the Gazebo world file
+    :return: a list of nodes
+    """
     bridges_list = [bridges.clock(),
                     bridges.pose(model_name=robot_name),
                     bridges.joint_states(model_name=robot_name, world_name=world_name),
@@ -118,26 +118,41 @@ def bridge(world_name):
     nodes = [Node(package='ros_gz_bridge',
                   executable='parameter_bridge',
                   output='screen',
-                  arguments=[bridge.argument() for bridge in bridges_list],
-                  remappings=[bridge.remapping() for bridge in bridges_list])]
+                  arguments=[bridge_name.argument() for bridge_name in bridges_list],
+                  remappings=[bridge_name.remapping() for bridge_name in bridges_list])]
     return nodes
 
 
 def generate_launch_description():
     """
-    Necessary function launched by the ROS launch system
-    Define coordinates parameters. use them with x:=12 after the launch command
+    Generate the launch description for spawning an object in a simulation.
+
+    :return: LaunchDescription object.
     """
-    return LaunchDescription([DeclareLaunchArgument('x', default_value='0', description='X position to spawn'),
-                              DeclareLaunchArgument('y', default_value='0', description='y position to spawn'),
-                              DeclareLaunchArgument('z', default_value='1.0', description='z position to spawn'),
-                              DeclareLaunchArgument('R', default_value='0', description='R rotation to spawn'),
-                              DeclareLaunchArgument('P', default_value='0', description='P rotation to spawn'),
-                              DeclareLaunchArgument('Y', default_value='0', description='Y rotation to spawn'),
+    return LaunchDescription([DeclareLaunchArgument('x',
+                                                    default_value='0',
+                                                    description='X position to spawn'),
+                              DeclareLaunchArgument('y',
+                                                    default_value='0',
+                                                    description='y position to spawn'),
+                              DeclareLaunchArgument('z',
+                                                    default_value='1.0',
+                                                    description='z position to spawn'),
+                              DeclareLaunchArgument('R',
+                                                    default_value='0',
+                                                    description='R rotation to spawn'),
+                              DeclareLaunchArgument('P',
+                                                    default_value='0',
+                                                    description='P rotation to spawn'),
+                              DeclareLaunchArgument('Y',
+                                                    default_value='0',
+                                                    description='Y rotation to spawn'),
                               DeclareLaunchArgument('world', default_value='minipock_world',
                                                     description='Name of world'),
                               DeclareLaunchArgument('paused', default_value='False',
-                                                    description='True to start the simulation paused. '),
+                                                    description='True to start the simulation '
+                                                                'paused. '),
                               DeclareLaunchArgument('extra_gz_args', default_value='',
-                                                    description='Additional arguments to be passed to gz sim. '),
+                                                    description='Additional arguments to be '
+                                                                'passed to gz sim. '),
                               OpaqueFunction(function=parse_config)])
