@@ -26,6 +26,6 @@ setup(
         (os.path.join('share', package_name), ['package.xml']),
         (os.path.join('share', package_name, 'models'), glob(os.path.join('models', '*.*'))),
         (os.path.join('share', package_name, 'urdf'), glob(os.path.join('urdf', '*.*'))),
-
+        (os.path.join('share', package_name, 'launch'), glob(os.path.join('launch', '*.*'))),
     ]
 )
