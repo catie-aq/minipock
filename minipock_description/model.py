@@ -61,22 +61,22 @@ def generate():
     urdf_path = os.path.join(FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME),
                              'urdf', ROBOT_NAME + '.urdf.xacro')
     command = xacro_cmd(urdf_path)
+    model_sdf = ''
     try:
         process = subprocess.Popen(command,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
+        # evaluate error output for the xacro process
+        stderr = process.communicate()[1]
+        err_output = codecs.getdecoder('unicode_escape')(stderr)[0]
+        for line in err_output.splitlines():
+            if line.find('undefined local') > 0:
+                raise RuntimeError(line)
+
+        stdout = process.communicate()[0]
+        model_sdf = codecs.getdecoder('unicode_escape')(stdout)[0]
     except OSError as e:
         print("Detecting you're on Minipock, continuing")
-
-    # evaluate error output for the xacro process
-    stderr = process.communicate()[1]
-    err_output = codecs.getdecoder('unicode_escape')(stderr)[0]
-    for line in err_output.splitlines():
-        if line.find('undefined local') > 0:
-            raise RuntimeError(line)
-
-    stdout = process.communicate()[0]
-    model_sdf = codecs.getdecoder('unicode_escape')(stdout)[0]
 
     return model_sdf
 
