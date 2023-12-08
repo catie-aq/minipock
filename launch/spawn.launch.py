@@ -89,7 +89,7 @@ def spawn(position):
     :return: list of launch processes
     """
     launch_processes = [Node(package='ros_gz_sim', executable='create', output='screen',
-                             arguments=minipock_description.model.spawn_args(position))]
+                             arguments=minipock_description.model.spawn_args())]
     spawn_launch_path = os.path.join(get_package_share_directory('minipock_description'),
                                      'launch',
                                      'spawn.launch.py')
