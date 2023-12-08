@@ -6,6 +6,7 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, Opaq
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from minipock_description import model
 
 
 def parse_config(context, *args, **kwargs):
@@ -33,6 +34,7 @@ def spawn(robot_name):
 
     :return: list of launch processes
     """
+    model.spawn_args()
     spawn_launch_path = os.path.join(get_package_share_directory('minipock_description'),
                                      'launch',
                                      'spawn.launch.py')
@@ -58,6 +60,19 @@ def state():
             executable='joint_state_publisher',
         ),
     ])
+
+
+def lidar():
+    """
+    :return:
+    """
+    return LaunchDescription([Node(
+        package='hls_lfcd_lds_driver',
+        executable='hlds_laser',
+        name='hlds_laser_driver',
+        output='screen',
+        parameters=[{'port': '/dev/ttyUSB1', 'frame_id': 'lds_01_link'}],
+    )])
 
 
 def generate_launch_description():
