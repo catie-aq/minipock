@@ -8,9 +8,8 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /TF1/Tree1/odom1
-        - /TF1/Tree1/odom1/minipock_base_link1
         - /Odometry1/Shape1
+        - /LaserScan1/Topic1
       Splitter Ratio: 0.5
     Tree Height: 839
   - Class: rviz_common/Selection
@@ -30,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: LaserScan
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -56,29 +55,29 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
+        base_link:
+          Value: true
         lds_01_link:
-          Value: true
-        minipock_base_link:
-          Value: true
+          Value: false
         minipock_structure_misc_link:
-          Value: true
+          Value: false
         minipock_structure_pla_link:
-          Value: true
+          Value: false
         minipock_structure_pmma_link:
-          Value: true
+          Value: false
         minipock_structure_top_link:
-          Value: true
+          Value: false
         odom:
-          Value: true
+          Value: false
         stepper_left_base_link:
-          Value: true
+          Value: false
         stepper_left_wheel_link:
-          Value: true
+          Value: false
         stepper_right_base_link:
-          Value: true
+          Value: false
         stepper_right_wheel_link:
-          Value: true
+          Value: false
       Marker Scale: 0.20000000298023224
       Name: TF
       Show Arrows: true
@@ -86,7 +85,7 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          minipock_base_link:
+          base_link:
             lds_01_link:
               {}
             minipock_structure_misc_link:
@@ -105,7 +104,7 @@ Visualization Manager:
                 {}
       Update Interval: 0
       Value: true
-    - Alpha: 1
+    - Alpha: 0.20000000298023224
       Class: rviz_default_plugins/RobotModel
       Collision Enabled: false
       Description File: ""
@@ -115,7 +114,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /minipock/robot_description
+        Value: /robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -123,12 +122,12 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        lds_01_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
-        minipock_base_link:
+        lds_01_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -249,15 +248,15 @@ Visualization Manager:
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /scan
+        Reliability Policy: Best Effort
+        Value: /scan_real
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: minipock_base_link
+    Fixed Frame: base_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -300,25 +299,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.2549495697021484
+      Distance: 1.2798664569854736
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.3928840160369873
-        Y: 0.0001653865328989923
-        Z: 0.2637285888195038
+        X: 0.04626511037349701
+        Y: 0.10721976310014725
+        Z: 0.12660697102546692
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.6303969621658325
+      Pitch: 0.7203968167304993
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.5817559957504272
+      Yaw: 2.4167513847351074
     Saved: ~
 Window Geometry:
   Displays:
