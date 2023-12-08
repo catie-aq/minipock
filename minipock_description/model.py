@@ -36,11 +36,7 @@ def xacro_cmd(urdf):
         pathlib.Path(model_tmp_dir).mkdir(parents=True, exist_ok=True)
     with open(model_output_file, 'w') as f:
         f.write(urdf_str)
-    try:
-        command = ['gz', 'sdf', '-p', model_output_file]
-    except:
-        command = ['echo "Detecting minipock version"']
-
+    command = ['gz', 'sdf', '-p', model_output_file]
     return command
 
 
@@ -65,9 +61,12 @@ def generate():
     urdf_path = os.path.join(FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME),
                              'urdf', ROBOT_NAME + '.urdf.xacro')
     command = xacro_cmd(urdf_path)
-    process = subprocess.Popen(command,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+    try:
+        process = subprocess.Popen(command,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
+    except OSError as e:
+        print("Detecting you're on Minipock, continuing")
 
     # evaluate error output for the xacro process
     stderr = process.communicate()[1]
