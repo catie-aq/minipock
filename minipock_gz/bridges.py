@@ -9,6 +9,7 @@ def clock():
         ros_type='rosgraph_msgs/msg/Clock',
         direction=bridge.BridgeDirection.GZ_TO_ROS)
 
+
 def tf():
     return bridge.Bridge(
         gz_topic='/model/minipock/tf',
@@ -30,7 +31,7 @@ def pose(model_name):
 def joint_states(world_name, model_name):
     return bridge.Bridge(
         gz_topic=f'/world/{world_name}/model/{model_name}/joint_state',
-        ros_topic=f'{model_name}/joint_states',
+        ros_topic=f'/joint_states',
         gz_type='gz.msgs.Model',
         ros_type='sensor_msgs/msg/JointState',
         direction=bridge.BridgeDirection.GZ_TO_ROS)
@@ -45,7 +46,7 @@ def odometry(model_name):
         direction=bridge.BridgeDirection.GZ_TO_ROS)
 
 
-def cmd_vel(model_name):
+def cmd_vel():
     return bridge.Bridge(
         gz_topic=f'/cmd_vel',
         ros_topic=f'/cmd_vel',
@@ -54,7 +55,7 @@ def cmd_vel(model_name):
         direction=bridge.BridgeDirection.ROS_TO_GZ)
 
 
-def scan_lidar(model_name):
+def scan_lidar():
     return bridge.Bridge(
         gz_topic=f'/scan_raw',
         ros_topic=f'/scan_raw',

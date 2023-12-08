@@ -9,6 +9,7 @@ It also bridges ROS messages and Gazebo simulator information.
 
 import os
 
+import minipock_description.model
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
@@ -87,6 +88,8 @@ def spawn(position):
     :param position: list of a position and rotation
     :return: list of launch processes
     """
+    launch_processes = [Node(package='ros_gz_sim', executable='create', output='screen',
+                             arguments=minipock_description.model.spawn_args(position))]
     spawn_launch_path = os.path.join(get_package_share_directory('minipock_description'),
                                      'launch',
                                      'spawn.launch.py')
@@ -97,7 +100,7 @@ def spawn(position):
             'robot_name': robot_name,
         }.items()
     )
-    launch_processes = [spawn_description]
+    launch_processes.append(spawn_description)
 
     return launch_processes
 
@@ -112,8 +115,8 @@ def bridge(world_name):
     bridges_list = [bridges.clock(),
                     bridges.pose(model_name=robot_name),
                     bridges.joint_states(model_name=robot_name, world_name=world_name),
-                    bridges.odometry(model_name=robot_name), bridges.cmd_vel(model_name=robot_name),
-                    bridges.scan_lidar(model_name=robot_name),
+                    bridges.odometry(model_name=robot_name), bridges.cmd_vel(),
+                    bridges.scan_lidar(),
                     bridges.tf()]
     nodes = [Node(package='ros_gz_bridge',
                   executable='parameter_bridge',
