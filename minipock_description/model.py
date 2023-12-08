@@ -36,7 +36,11 @@ def xacro_cmd(urdf):
         pathlib.Path(model_tmp_dir).mkdir(parents=True, exist_ok=True)
     with open(model_output_file, 'w') as f:
         f.write(urdf_str)
-    command = ['gz', 'sdf', '-p', model_output_file]
+    try:
+        command = ['gz', 'sdf', '-p', model_output_file]
+    except:
+        command = ['echo "Detecting minipock version"']
+
     return command
 
 
