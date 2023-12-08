@@ -78,20 +78,13 @@ def generate():
     return model_sdf
 
 
-def spawn_args(position):
+def spawn_args():
     """
     Return the spawning arguments for the create command
 
-    :param position: list of position and rotation
     :return: list of arguments
     """
     model_sdf = generate()
     return ['-string', model_sdf,
             '-name', ROBOT_NAME,
-            '-allow_renaming', 'false',
-            '-x', str(position[0]),
-            '-y', str(position[1]),
-            '-z', str(position[2]),
-            '-R', str(position[3]),
-            '-P', str(position[4]),
-            '-Y', str(position[5])]
+            '-allow_renaming', 'false']
