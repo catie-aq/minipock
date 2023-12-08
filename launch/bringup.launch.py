@@ -25,6 +25,7 @@ def parse_config(context, *args, **kwargs):
     launch_processes = []
     launch_processes.extend(spawn(robot_name))
     launch_processes.append(state())
+    launch_processes.append(lidar())
     return launch_processes
 
 
