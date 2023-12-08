@@ -67,13 +67,18 @@ def lidar():
     """
     :return:
     """
-    return LaunchDescription([Node(
-        package='hls_lfcd_lds_driver',
-        executable='hlds_laser',
-        name='hlds_laser_driver',
-        output='screen',
-        parameters=[{'port': '/dev/ttyUSB1', 'frame_id': 'lds_01_link'}],
-    )])
+    lidar_launch_path = os.path.join(get_package_share_directory('hls_lfcd_lds_driver'),
+                                     'launch',
+                                     'hlds_laser.launch.py')
+    spawn_description = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(lidar_launch_path),
+        launch_arguments={
+            "frame_id": "lds_01_link",
+            "port": "/dev/ttyUSB1",
+        }.items()
+    )
+    launch_processes = [spawn_description]
+    return launch_processes
 
 
 def generate_launch_description():
