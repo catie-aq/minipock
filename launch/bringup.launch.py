@@ -25,7 +25,7 @@ def parse_config(context, *args, **kwargs):
     launch_processes = []
     launch_processes.extend(spawn(robot_name))
     launch_processes.append(state())
-    launch_processes.append(lidar())
+    launch_processes.extend(lidar())
     return launch_processes
 
 
@@ -70,14 +70,14 @@ def lidar():
     lidar_launch_path = os.path.join(get_package_share_directory('hls_lfcd_lds_driver'),
                                      'launch',
                                      'hlds_laser.launch.py')
-    spawn_description = IncludeLaunchDescription(
+    lidar_launch_description = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(lidar_launch_path),
         launch_arguments={
             "frame_id": "lds_01_link",
             "port": "/dev/ttyUSB1",
         }.items()
     )
-    launch_processes = [spawn_description]
+    launch_processes = [lidar_launch_description]
     return launch_processes
 
 
