@@ -1,8 +1,0 @@
-name: "Test"
-
-on:
-  push:
-
-jobs:
-  ros:
-    uses: catie-aq/ros_workflows/.github/workflows/ros2_build.yml@main
