@@ -2,6 +2,9 @@ name: Build & Test ROS 2 Packages
 
 on: [ push, pull_request ] # Trig on push and pull request
 
+permissions:
+  actions: read
+
 jobs:
   build_and_test_ros2_package:
     runs-on: self-hosted # Use self-hosted runner
