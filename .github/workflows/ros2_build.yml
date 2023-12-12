@@ -17,7 +17,7 @@ jobs:
       image: ${{ matrix.docker_image }}
     steps:
       - name: ROS2 Action
-        uses: catie-aq/ros_action@humble
+        uses: catie-aq/ros_action@v1
         with:
           ros_distribution: ${{ matrix.ros_distribution }}
 
