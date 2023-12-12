@@ -7,30 +7,17 @@ jobs:
     runs-on: self-hosted # Use self-hosted runner
     strategy: # Define a matrix of ROS distributions and Docker images
       matrix:
-        ros_distribution:
-          - humble
-          - rolling
         include:
           - docker_image: osrf/ros:humble-desktop-full
             ros_distribution: humble
-            ros_version: 2
           - docker_image: osrf/ros:rolling-desktop-full-jammy
             ros_distribution: rolling
-            ros_version: 2
-    env:
-      GITHUB_REPO: ${{ github.event.repository.name }}
 
     container: # Use the Docker image defined in the matrix
       image: ${{ matrix.docker_image }}
     steps:
-      - name: setup ROS environment
-        uses: ros-tooling/setup-ros@v0.7
+      - name: ROS2 Action
+        uses: catie-aq/ros_action@humble
         with:
-          required-ros-distributions: ${{ matrix.ros_distribution }}
-      - name: build and test ROS 2
-        if: ${{ matrix.ros_version == 2 }}
-        uses: ros-tooling/action-ros-ci@v0.2
-        with:
-          package-name: ${{ env.GITHUB_REPO }}
-          target-ros2-distro: ${{ matrix.ros_distribution }}
-          import-token: ${{ secrets.GITHUB_TOKEN }}
+          ros_distribution: ${{ matrix.ros_distribution }}
+
