@@ -8,7 +8,7 @@ Panels:
         - /Status1
         - /TF1/Frames1
         - /TF1/Tree1
-        - /PoseWithCovariance1/Covariance1/Position1
+        - /LaserScan1/Topic1
       Splitter Ratio: 0.5833333134651184
     Tree Height: 590
   - Class: rviz_common/Selection
@@ -56,7 +56,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /minipock/robot_description
+        Value: /robot_description
       Enabled: true
       Links:
         All Links Enabled: true
@@ -151,9 +151,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 0
+      Max Intensity: 2384
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 104
       Name: LaserScan
       Position Transformer: XYZ
       Selectable: true
@@ -165,7 +165,7 @@ Visualization Manager:
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
-        Reliability Policy: Reliable
+        Reliability Policy: Best Effort
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
@@ -206,41 +206,6 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Best Effort
         Value: /particle_cloud
-      Value: true
-    - Alpha: 1
-      Axes Length: 1
-      Axes Radius: 0.10000000149011612
-      Class: rviz_default_plugins/PoseWithCovariance
-      Color: 255; 25; 0
-      Covariance:
-        Orientation:
-          Alpha: 0.5
-          Color: 255; 255; 127
-          Color Style: Unique
-          Frame: Local
-          Offset: 1
-          Scale: 1
-          Value: false
-        Position:
-          Alpha: 0.30000001192092896
-          Color: 204; 51; 204
-          Scale: 1
-          Value: true
-        Value: true
-      Enabled: true
-      Head Length: 0.30000001192092896
-      Head Radius: 0.10000000149011612
-      Name: PoseWithCovariance
-      Shaft Length: 1
-      Shaft Radius: 0.05000000074505806
-      Shape: Arrow
-      Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        Filter size: 10
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /amcl_pose
       Value: true
     - Class: rviz_common/Group
       Displays:
@@ -467,25 +432,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/XYOrbit
-      Distance: 5.226685523986816
+      Distance: 4.401098251342773
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -4.383028984069824
-        Y: -0.8600554466247559
-        Z: 3.63867511623539e-05
+        X: -1.073645830154419
+        Y: 2.6033287048339844
+        Z: -1.430511474609375e-06
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4853978753089905
+      Pitch: 1.120397925376892
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz_default_plugins)
-      Yaw: 1.2385798692703247
+      Yaw: 0.4253983497619629
     Saved:
       - Class: rviz_default_plugins/XYOrbit
         Distance: 8.56193733215332
@@ -523,5 +488,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1920
-  X: 1200
+  X: 0
   Y: 27
