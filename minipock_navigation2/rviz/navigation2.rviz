@@ -132,8 +132,7 @@ Visualization Manager:
       Show Arrows: true
       Show Axes: true
       Show Names: false
-      Tree:
-        {}
+      Tree: {}
       Update Interval: 0
       Value: false
     - Alpha: 1
