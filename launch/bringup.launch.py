@@ -24,10 +24,12 @@ def parse_config(context, *args, **kwargs):
     * to spawn the robot and get its state.
     """
     robot_name = LaunchConfiguration("robot_name").perform(context)
+    odom_frame = LaunchConfiguration("odom_frame").perform(context)
     launch_processes = []
     launch_processes.extend(spawn(robot_name))
     launch_processes.append(state())
-    launch_processes.append(odometry())
+    if odom_frame:
+        launch_processes.append(odometry())
     return launch_processes
 
 
@@ -92,6 +94,9 @@ def generate_launch_description():
         [
             DeclareLaunchArgument(
                 "robot_name", default_value="minipock", description="Robot name"
+            ),
+            DeclareLaunchArgument(
+                "odom_frame", default_value="true", description="Publish odom frame"
             ),
             OpaqueFunction(function=parse_config),
         ]
