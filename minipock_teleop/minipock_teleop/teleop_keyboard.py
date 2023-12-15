@@ -9,7 +9,7 @@ from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
-if os.name == 'nt':
+if os.name == "nt":
     import msvcrt
 else:
     import termios
@@ -33,14 +33,14 @@ def get_key(settings):
     :param settings: the termios settings to restore after reading the key
     :return: the pressed key as a string or an empty string if no key was pressed
     """
-    if os.name == 'nt':
-        return msvcrt.getch().decode('utf-8')
+    if os.name == "nt":
+        return msvcrt.getch().decode("utf-8")
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
     if rlist:
         key = sys.stdin.read(1)
     else:
-        key = ''
+        key = ""
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
@@ -66,7 +66,7 @@ def make_twist(linear, angular):
 
 class TeleopController(Node):
     def __init__(self):
-        super().__init__('teleop_keyboard')
+        super().__init__("teleop_keyboard")
 
         self.MINIPOCK_MAX_LIN_VEL = 2.0
         self.MINIPOCK_MAX_ANG_VEL = 12.0
@@ -74,7 +74,7 @@ class TeleopController(Node):
         self.ANG_VEL_STEP_SIZE = 0.2
 
         self.qos = QoSProfile(depth=10)
-        self.publisher = self.create_publisher(Twist, 'cmd_vel', self.qos)
+        self.publisher = self.create_publisher(Twist, "cmd_vel", self.qos)
         self.status = 0
         self.settings = None
 
@@ -105,9 +105,11 @@ class TeleopController(Node):
 
         :return: None
         """
-        self.get_logger().info('currently:\tlinear velocity {0}\t angular velocity {1} '.format(
-            self.target_linear_velocity,
-            self.target_angular_velocity))
+        self.get_logger().info(
+            "currently:\tlinear velocity {0}\t angular velocity {1} ".format(
+                self.target_linear_velocity, self.target_angular_velocity
+            )
+        )
 
     def check_linear_limit_velocity(self, velocity):
         """
@@ -135,7 +137,7 @@ class TeleopController(Node):
         :returns: None
         """
         self.settings = None
-        if os.name != 'nt':
+        if os.name != "nt":
             self.settings = termios.tcgetattr(sys.stdin)
 
     def reset_terminal_settings(self):
@@ -144,7 +146,7 @@ class TeleopController(Node):
 
         :returns: None
         """
-        if os.name != 'nt':
+        if os.name != "nt":
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
 
     def make_simple_profile_linear(self):
@@ -152,13 +154,15 @@ class TeleopController(Node):
         :return: The updated output value.
         """
         if self.target_linear_velocity > self.control_linear_velocity:
-            self.control_linear_velocity = min(self.target_linear_velocity,
-                                               self.control_linear_velocity +
-                                               self.LIN_VEL_STEP_SIZE / 2.0)
+            self.control_linear_velocity = min(
+                self.target_linear_velocity,
+                self.control_linear_velocity + self.LIN_VEL_STEP_SIZE / 2.0,
+            )
         elif self.target_linear_velocity < self.control_linear_velocity:
-            self.control_linear_velocity = max(self.target_linear_velocity,
-                                               self.control_linear_velocity -
-                                               self.LIN_VEL_STEP_SIZE / 2.0)
+            self.control_linear_velocity = max(
+                self.target_linear_velocity,
+                self.control_linear_velocity - self.LIN_VEL_STEP_SIZE / 2.0,
+            )
 
     def make_simple_profile_angular(self):
         """
@@ -167,13 +171,15 @@ class TeleopController(Node):
         :return: The calculated angular velocity profile.
         """
         if self.target_angular_velocity > self.control_angular_velocity:
-            self.control_angular_velocity = min(self.target_angular_velocity,
-                                                self.control_angular_velocity +
-                                                self.ANG_VEL_STEP_SIZE / 2.0)
+            self.control_angular_velocity = min(
+                self.target_angular_velocity,
+                self.control_angular_velocity + self.ANG_VEL_STEP_SIZE / 2.0,
+            )
         elif self.target_angular_velocity < self.control_angular_velocity:
-            self.control_angular_velocity = max(self.target_angular_velocity,
-                                                self.control_angular_velocity -
-                                                self.ANG_VEL_STEP_SIZE / 2.0)
+            self.control_angular_velocity = max(
+                self.target_angular_velocity,
+                self.control_angular_velocity - self.ANG_VEL_STEP_SIZE / 2.0,
+            )
 
     def process_key(self, key):
         """
@@ -183,24 +189,28 @@ class TeleopController(Node):
 
         :return: Tuple of two floats representing the updated target linear and angular velocity.
         """
-        if key in ['z', 'q']:
-            step_size = self.LIN_VEL_STEP_SIZE if key == 'z' else self.ANG_VEL_STEP_SIZE
-            if key == 'q':
+        if key in ["z", "q"]:
+            step_size = self.LIN_VEL_STEP_SIZE if key == "z" else self.ANG_VEL_STEP_SIZE
+            if key == "q":
                 self.target_angular_velocity = self.check_angular_limit_velocity(
-                    self.target_angular_velocity + step_size)
+                    self.target_angular_velocity + step_size
+                )
             else:
                 self.target_linear_velocity = self.check_linear_limit_velocity(
-                    self.target_linear_velocity + step_size)
+                    self.target_linear_velocity + step_size
+                )
 
-        if key in ['s', 'd']:
-            step_size = self.LIN_VEL_STEP_SIZE if key == 's' else self.ANG_VEL_STEP_SIZE
-            if key == 'd':
+        if key in ["s", "d"]:
+            step_size = self.LIN_VEL_STEP_SIZE if key == "s" else self.ANG_VEL_STEP_SIZE
+            if key == "d":
                 self.target_angular_velocity = self.check_angular_limit_velocity(
-                    self.target_angular_velocity - step_size)
+                    self.target_angular_velocity - step_size
+                )
             else:
                 self.target_linear_velocity = self.check_linear_limit_velocity(
-                    self.target_linear_velocity - step_size)
-        if key in ['x']:
+                    self.target_linear_velocity - step_size
+                )
+        if key in ["x"]:
             self.target_linear_velocity = 0.0
             self.target_angular_velocity = 0.0
 
@@ -216,21 +226,22 @@ class TeleopController(Node):
             status = 0
             while True:
                 key = get_key(self.settings)
-                if key in ['z', 'q', 's', 'd', 'x']:
+                if key in ["z", "q", "s", "d", "x"]:
                     self.process_key(key)
                     self.print_velocities()
                     status = (status + 1) % 20
                     if status == 0:
                         self.get_logger().info(self.help_msg)
-                elif key == '\x03':
+                elif key == "\x03":
                     self.publisher.publish(make_twist(0.0, 0.0))
                     break
                 self.make_simple_profile_linear()
                 self.make_simple_profile_angular()
-                self.publisher.publish(make_twist(self.control_linear_velocity,
-                                                  self.control_angular_velocity))
+                self.publisher.publish(
+                    make_twist(self.control_linear_velocity, self.control_angular_velocity)
+                )
         except Exception as e:
-            self.get_logger().error('Error: ' + str(e))
+            self.get_logger().error("Error: " + str(e))
         finally:
             self.publisher.publish(make_twist(0.0, 0.0))
             self.reset_terminal_settings()
@@ -248,5 +259,5 @@ def main():
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
