@@ -7,4 +7,3 @@ Main description
 ## Installation
 
 ## Usage
-
