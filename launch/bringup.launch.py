@@ -1,13 +1,12 @@
 import os
 
 from ament_index_python import get_package_share_directory
-from launch_ros.actions import Node
-from minipock_description import model
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+from minipock_description import model
 
 
 def parse_config(context, *args, **kwargs):
@@ -91,7 +90,9 @@ def generate_launch_description():
     """
     return LaunchDescription(
         [
-            DeclareLaunchArgument("robot_name", default_value="minipock", description="Robot name"),
+            DeclareLaunchArgument(
+                "robot_name", default_value="minipock", description="Robot name"
+            ),
             OpaqueFunction(function=parse_config),
         ]
     )
