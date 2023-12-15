@@ -11,21 +11,22 @@ from minipock_description import model
 
 def parse_config(context, *args, **kwargs):
     """
+    The `parse_config` method is used to parse a configuration in the specified context.
+
+    It retrieves the robot name using the LaunchConfiguration class and then performs the necessary
+    operations
+
     :param context: The context object containing information for parsing the config.
     :param args: Additional arguments for the method. Not used in this method.
     :param kwargs: Additional keyword arguments for the method. Not used in this method.
     :return: A list of launch processes.
 
-    The `parse_config` method is used to parse a configuration in the specified context. It
-    retrieves the robot name using the LaunchConfiguration class and then performs the necessary
-    operations
     * to spawn the robot and get its state.
     """
     robot_name = LaunchConfiguration('robot_name').perform(context)
     launch_processes = []
     launch_processes.extend(spawn(robot_name))
     launch_processes.append(state())
-    launch_processes.extend(lidar())
     return launch_processes
 
 
@@ -61,24 +62,6 @@ def state():
             executable='joint_state_publisher',
         ),
     ])
-
-
-def lidar():
-    """
-    :return:
-    """
-    lidar_launch_path = os.path.join(get_package_share_directory('hls_lfcd_lds_driver'),
-                                     'launch',
-                                     'hlds_laser.launch.py')
-    lidar_launch_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(lidar_launch_path),
-        launch_arguments={
-            "frame_id": "lds_01_link",
-            "port": "/dev/ttyUSB1",
-        }.items()
-    )
-    launch_processes = [lidar_launch_description]
-    return launch_processes
 
 
 def generate_launch_description():
