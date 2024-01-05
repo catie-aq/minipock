@@ -37,4 +37,4 @@ ros2 launch minipock_navigation2 navigation2.launch.py
 ## Configuration
 
 La configuration de la stack de navigation se fait via le
-fichier [minipock.yaml](minipock_navigation2/param/minipock.yaml)
+fichier [minipock.yaml](https://github.com/catie-aq/minipock_navigation/blob/main/minipock_navigation2/param/minipock.yaml)
