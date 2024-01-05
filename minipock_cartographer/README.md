@@ -1,28 +1,47 @@
-# {{cookiecutter.project_name}}
+# MiniPock Cartographer
 
-{{cookiecutter.project_description}}
+- Maintainer status: developed
+- Maintainer: Sébastien Delpeuch [s.delpeuch@catie.fr](mailto:s.delpeuch@catie.fr)
+- License: Apache 2.0
+- Bug / feature tracker: https://github.com/catie-aq/minipock_navigation/issues
+- Source: git https://github.com/catie-aq/minipock_navigation
 
-Description and purpose
-
-## API
-
-Definition and description of the public API
+Ce package fournit l'implémentation de la stack de navigation 2 sur le robot MiniPock.
 
 ## Installation
 
-How to build and install (should reference external tools / workflows)
+Pour installer ce package, assurez-vous que votre workspace ROS est correctement configuré.
 
-## Usage
+```bash
+cd <your_ros2_workspace>/src
+git clone git@github.com:catie-aq/minipock_navigation.git
+cd ..
+colcon build --packages-select minipock_cartographer
+```
 
-How to use the package (should reference external tools / workflows)
+## Utilisation en simulation
 
-## How to develop
+Pour utiliser ce package il est nécessaire de lancer la simulation gazebo du robot MiniPock installée via le
+package [minipock_gz](https://github.com/catie-aq/minipock_gz) en utilisant le launch file suivant:
 
-How to develop the package (should reference external tools / workflows)
+```bash
+ros2 launch minipock_gz minipock.launch.py
+```
 
-## License
+puis de lancer cartographer:
 
-This project is licensed under Apache 2.0, a permissive open source license that
-allows you to freely use, modify, distribute, and sell your own
-products that include this software. The full text of the license can be
-obtained from the [Apache website](https://www.apache.org/licenses/LICENSE-2.0).
+```bash
+ros2 launch minipock_cartographer cartographer.launch.py
+```
+
+Vous pouvez ensuite lancer le node de téléopération pour contrôler le robot:
+
+```bash
+ros2 run minipock_teleop teleop_keyboard
+```
+
+Une fois la carte construite, vous pouvez enrégistrer la carte dans un fichier `.pgm` et `.yaml` en utilisant le node
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f <file_name>
+```
