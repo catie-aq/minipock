@@ -26,5 +26,5 @@ jobs:
         with:
           static-top-text: "_This documentation is auto-generated from [${{ github.repository }}/README.md](https://github.com/${{ github.repository }})_"
           file-path: ${{ matrix.file-path }}
-          notion-token: ${{ secrets.notion-token }}
+          notion-token: ${{ secrets.NOTION_TOKEN }}
           notion-page-id: ${{ matrix.notion-page-id }}
