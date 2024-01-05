@@ -1,0 +1,13 @@
+name: Sync Readme to Notion
+
+on:
+  workflow_dispatch: # Allow manual trigger
+  push:
+
+jobs:
+  sync_readme_to_notion:
+    uses: catie-aq/eagle_workflows/.github/workflows/notion.yml@main
+    with:
+      notion-page-id: "7750e0e454d54bc79d9f4c220183cc15"
+    secrets:
+      notion-token: ${{ secrets.NOTION_TOKEN }}
