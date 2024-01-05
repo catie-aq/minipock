@@ -1,0 +1,30 @@
+name: Sync Readme to Notion
+
+on:
+  push:
+
+jobs:
+  sync_readme_to_notion:
+    runs-on: self-hosted
+    name: Checkout and upload Readme to Notion
+    container:
+      image: ubuntu:22.04
+    strategy:
+      matrix:
+        include:
+          - file-path: "./minipock_cartographer/README.md"
+            notion-page-id: "bb39e4b815284a54a217900b7f7c1721"
+          - file-path: "./minipock_navigation2/README.md"
+            notion-page-id: "2ac0f9a47bfc44898af7204e5ee84ca7"
+          - file-path: "./minipock_teleop/README.md"
+            notion-page-id: "239ab349ad184af688e7d016bcb4564c"
+    steps:
+      - name: checkout
+        uses: "actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b"
+      - name: Upload to Notion Cartographer
+        uses: agonzalezl/readme-to-notion-action@88b6cb8eea354ac61c589f540e40cacadf0c8ecb
+        with:
+          static-top-text: "_This documentation is auto-generated from [${{ github.repository }}/README.md](https://github.com/${{ github.repository }})_"
+          file-path: ${{ matrix.file-path }}
+          notion-token: ${{ secrets.notion-token }}
+          notion-page-id: ${{ matrix.notion-page-id }}
