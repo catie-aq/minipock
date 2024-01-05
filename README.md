@@ -25,8 +25,6 @@ plus particulièrement la fonction `simulation` permettant de lancer `gz-sim` et
 fonction `spawn` permettant de convertir l’entrée `URDF` de https://github.com/catie-aq/minipock_description en un `sdf`
 en s’appuyant sur les scripts fournis.
 
-![world.png](world.png)
-
 ## Communication ROS2 ↔ Gazebo Sim
 
 Le projet utilise https://github.com/gazebosim/ros_gz/tree/humble/ros_gz_bridge pour transmettre les données de
@@ -34,11 +32,7 @@ simulation à ROS2. Les différents bridges sont disponibles
 dans https://github.com/catie-aq/minipock_gz/blob/main/minipock_gz/bridges.py. Un résumé des noeuds disponible est
 extrait ci dessous
 
-![rosgraph.png](rosgraph.png)
-
 Le package fournit aussi `minipock.rviz` permettant de visualiser les données disponibles
-
-![Untitled](rviz.png)
 
 Un noeud spécifique `scan_filter_node` est créé.
 
