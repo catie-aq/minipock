@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/catie-aq/cookiecutter_ros-python-generic.git",
-  "commit": "a22da7f3349104d5635977b116c4104f5811eebd",
+  "commit": "1d2da9e4943d0acef37debf8fbdd5b265e044849",
   "checkout": null,
   "context": {
     "cookiecutter": {
