@@ -1,0 +1,16 @@
+{
+  "template": "https://github.com/catie-aq/cookiecutter_ros-python-generic.git",
+  "commit": "a22da7f3349104d5635977b116c4104f5811eebd",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "email": "s.delpeuch@catie.fr",
+      "name": "sedelpeuch",
+      "project_name": "minipock_bringup",
+      "project_description": "Bringup for MiniPock",
+      "project_slug": "minipock_description",
+      "_template": "https://github.com/catie-aq/cookiecutter_ros-python-generic.git"
+    }
+  },
+  "directory": null
+}
