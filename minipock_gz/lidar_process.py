@@ -18,13 +18,11 @@ from sensor_msgs.msg import LaserScan
 
 class ScanFilterNode(Node):
     def __init__(self):
-        super().__init__('scan_filter_node')
+        super().__init__("scan_filter_node")
         self.subscription = self.create_subscription(
-            LaserScan,
-            '/scan_raw',
-            self.listener_callback,
-            10)
-        self.publisher = self.create_publisher(LaserScan, '/scan', 10)
+            LaserScan, "/scan_raw", self.listener_callback, 10
+        )
+        self.publisher = self.create_publisher(LaserScan, "/scan", 10)
 
     def listener_callback(self, msg):
         """
@@ -34,7 +32,7 @@ class ScanFilterNode(Node):
         :param msg: The LaserScan message received from the listener.
         :return: None
         """
-        msg.header.frame_id = 'lds_01_link'
+        msg.header.frame_id = "lds_01_link"
         self.publisher.publish(msg)
 
 
@@ -53,5 +51,5 @@ def main(args=None):
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

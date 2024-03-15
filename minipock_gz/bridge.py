@@ -10,15 +10,16 @@ class BridgeDirection(Enum):
     """
     Enum for the direction of a bridge.
     """
+
     BIDIRECTIONAL = 0
     GZ_TO_ROS = 1
     ROS_TO_GZ = 2
 
 
 DIRECTION_SYMS = {
-    BridgeDirection.BIDIRECTIONAL: '@',
-    BridgeDirection.GZ_TO_ROS: '[',
-    BridgeDirection.ROS_TO_GZ: ']',
+    BridgeDirection.BIDIRECTIONAL: "@",
+    BridgeDirection.GZ_TO_ROS: "[",
+    BridgeDirection.ROS_TO_GZ: "]",
 }
 
 
@@ -33,6 +34,7 @@ class Bridge:
     :param ros_type: ROS message type
     :param direction: BridgeDirection enum
     """
+
     gz_topic: str
     ros_topic: str
     gz_type: str
@@ -45,7 +47,7 @@ class Bridge:
 
         :return: argument string
         """
-        out = f'{self.gz_topic}@{self.ros_type}{DIRECTION_SYMS[self.direction]}{self.gz_type}'
+        out = f"{self.gz_topic}@{self.ros_type}{DIRECTION_SYMS[self.direction]}{self.gz_type}"
         return out
 
     def remapping(self):
