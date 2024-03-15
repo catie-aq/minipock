@@ -1,0 +1,18 @@
+{
+  "dockerFile": "Dockerfile",
+  "containerEnv": {
+    "DISPLAY": "${localEnv:DISPLAY}"
+  },
+  "runArgs": ["--network=host"],
+  "mounts": [
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/root/.ssh,type=bind",
+    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers-contrib/features/pipx-package:1": {},
+    "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
+  },
+  "postCreateCommand": "/bin/bash -c 'source /opt/ros/humble/setup.bash'",
+  "postStartCommand": "pip install . && colcon build --symlink-install"
+}
