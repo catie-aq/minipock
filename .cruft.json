@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/catie-aq/cookiecutter_ros-python-generic.git",
-  "commit": "a22da7f3349104d5635977b116c4104f5811eebd",
+  "commit": "b7f0c1abd3e3dc93d937b9e58ac43d66b0a6212f",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -9,7 +9,9 @@
       "project_name": "minipock_gz",
       "project_description": "MiniPock Worlds for Gazebo Sim",
       "project_slug": "minipock_gz",
-      "_copy_without_render": [".github/workflows/update.yml"],
+      "_copy_without_render": [
+        ".github/workflows/update.yml"
+      ],
       "_template": "https://github.com/catie-aq/cookiecutter_ros-python-generic.git"
     }
   },
