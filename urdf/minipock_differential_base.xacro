@@ -3,13 +3,13 @@
   <xacro:macro name="minipock_base" params="namespace:=minipock">
     <link name="base_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <origin xyz="0 0 0.0" rpy="0 0 ${pi/2}"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_alu.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 -${0.06/2}" rpy="0 -0 0"/>
+        <origin xyz="0 0 -${0.089/2}" rpy="0 -0 ${pi/2}"/>
         <geometry>
           <box size="0.30 0.342 0.075"/>
         </geometry>
@@ -22,7 +22,7 @@
     </link>
     <link name="${namespace}_structure_pla_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_pla.stl"/>
         </geometry>
@@ -33,7 +33,7 @@
     </link>
     <link name="${namespace}_structure_pmma_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_pmma.stl"/>
         </geometry>
@@ -44,20 +44,9 @@
     </link>
     <link name="${namespace}_structure_misc_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_misc.stl"/>
-        </geometry>
-        <material name="dark_gray">
-          <color rgba="0.3 0.3 0.3 1.0"/>
-        </material>
-      </visual>
-    </link>
-    <link name="${namespace}_structure_top_link">
-      <visual>
-        <origin xyz="0 0 0.0" rpy="${pi/2} 0 0"/>
-        <geometry>
-          <mesh filename="package://minipock_description/models/differential_top.dae"/>
+          <mesh filename="package://minipock_description/models/differential_misc.dae"/>
         </geometry>
       </visual>
     </link>
@@ -76,11 +65,6 @@
       <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
       <parent link="base_link"/>
       <child link="${namespace}_structure_misc_link"/>
-    </joint>
-    <joint name="${namespace}_structure_top_joint" type="fixed">
-      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
-      <parent link="base_link"/>
-      <child link="${namespace}_structure_top_link"/>
     </joint>
   </xacro:macro>
 </robot>
