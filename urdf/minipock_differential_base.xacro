@@ -46,8 +46,11 @@
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_misc.dae"/>
+          <mesh filename="package://minipock_description/models/differential_misc.stl"/>
         </geometry>
+        <material name="6TRON_2">
+          <color rgba="0.27 0.64 0.52 1.0"/>
+      </material>
       </visual>
     </link>
 
