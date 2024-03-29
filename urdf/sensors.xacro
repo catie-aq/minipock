@@ -3,16 +3,13 @@
                params="namespace:=minipock name:=lds_01 x:=0.0 y:=0.0 z:=0.0 R:=0.0 P:=0.0 Y:=0.0">
     <link name="${name}_link">
       <visual name="${name}_visual">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
         <geometry>
-          <mesh filename="package://minipock_description/models/lds.dae" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://minipock_description/models/lds_visual.dae"/>
         </geometry>
-        <material name="black_lidar">
-          <color rgba="0.1 0.1 0.1 1.0"/>
-        </material>
       </visual>
       <collision name="${name}_collision">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0.016" rpy="0 0 0"/>
         <geometry>
           <mesh filename="package://minipock_description/models/lds.dae" scale="0.001 0.001 0.001"/>
         </geometry>

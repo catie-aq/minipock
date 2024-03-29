@@ -12,7 +12,7 @@
   <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.0" y="-0.133" z="-0.086" R="0.0" P="0.0"
                        Y="${-pi}" side="-1"/>
   <xacro:include filename="$(find minipock_description)/urdf/sensors.xacro"/>
-  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.079" R="0.0" P="0.0" Y="${-pi/2}"/>
+  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.050" R="0.0" P="0.0" Y="${pi}"/>
 
   <gazebo>
 
