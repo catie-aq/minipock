@@ -16,7 +16,7 @@ def generate_launch_description():
     :return: A LaunchDescription object.
     """
     start_rviz = LaunchConfiguration("start_rviz")
-    use_sim = LaunchConfiguration("use_sim")
+    use_sim_time = LaunchConfiguration("use_sim_time")
     autostart = LaunchConfiguration("autostart")
     use_composition = LaunchConfiguration("use_composition")
     use_respawn = LaunchConfiguration("use_respawn")
@@ -64,7 +64,7 @@ def generate_launch_description():
                 "start_rviz", default_value="true", description="Whether execute rviz2"
             ),
             DeclareLaunchArgument(
-                "use_sim", default_value="false", description="Start robot in Gazebo simulation"
+                "use_sim_time", default_value="true", description="Set use_sim_time"
             ),
             DeclareLaunchArgument(
                 "autostart",
@@ -82,14 +82,16 @@ def generate_launch_description():
                 description="Whether to respawn if a node crashes. \
                 Applied when composition is disabled.",
             ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource([minipock_bringup_file_dir, "/bringup.launch.py"]),
-            ),
+            # IncludeLaunchDescription(
+            #     PythonLaunchDescriptionSource(
+            #         [minipock_bringup_file_dir, "/bringup.launch.py"]
+            #     ),
+            # ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([nav2_launch_file_dir, "/bringup_launch.py"]),
                 launch_arguments={
                     "map": map_yaml_file,
-                    "use_sim_time": use_sim,
+                    "use_sim_time": use_sim_time,
                     "params_file": params_file,
                     "default_bt_xml_filename": default_bt_xml_filename,
                     "autostart": autostart,
@@ -104,6 +106,7 @@ def generate_launch_description():
                 arguments=["-d", rviz_config_file],
                 output="screen",
                 condition=IfCondition(start_rviz),
+                parameters=[{"use_sim_time": use_sim_time}],
             ),
         ]
     )

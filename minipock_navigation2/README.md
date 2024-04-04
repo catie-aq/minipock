@@ -21,8 +21,7 @@ colcon build --packages-select minipock_navigation2
 
 ## Utilisation en simulation
 
-Pour utiliser ce package il est nécessaire de lancer la simulation gazebo du robot MiniPock installée via le
-package [minipock_gz](https://github.com/catie-aq/minipock_gz) en utilisant le launch file suivant:
+Pour utiliser ce package il est nécessaire de lancer la simulation gazebo du robot MiniPock installée via le package [minipock_gz](https://github.com/catie-aq/minipock_gz) en utilisant le launch file suivant:
 
 ```bash
 ros2 launch minipock_gz minipock.launch.py
