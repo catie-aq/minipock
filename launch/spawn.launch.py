@@ -28,13 +28,14 @@ def parse_config(context, *args, **kwargs):
     :param kwargs: variable number of additional keyword arguments
     :return: a list of launch processes
     """
-    robot_name = LaunchConfiguration('robot_name').perform(context)
+    robot_name = LaunchConfiguration("robot_name").perform(context)
+    use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     launch_processes = []
-    launch_processes.extend(spawn(robot_name))
+    launch_processes.extend(spawn(robot_name, use_sim_time))
     return launch_processes
 
 
-def spawn(robot_name):
+def spawn(robot_name, use_sim_time):
     """
     This method is used to spawn a robot in a simulation environment.
     It reads the URDF file of the robot model and generates launch processes to start the
@@ -44,14 +45,21 @@ def spawn(robot_name):
     :return: A list of launch processes.
     """
     # robot_state_publisher
-    model_dir = os.path.join(get_package_share_directory(f'{robot_name}_description'), 'models/tmp')
-    urdf_file = os.path.join(model_dir, 'model.urdf')
+    model_dir = os.path.join(
+        get_package_share_directory(f"{robot_name}_description"), "models/tmp"
+    )
+    urdf_file = os.path.join(model_dir, "model.urdf")
     with open(urdf_file) as input_file:
         robot_desc = input_file.read()
-    params = {'use_sim_time': False, 'robot_description': robot_desc}
+    params = {"use_sim_time": bool(use_sim_time), "robot_description": robot_desc}
     nodes = [
-        Node(package='robot_state_publisher', executable='robot_state_publisher', output='both',
-             parameters=[params])]
+        Node(
+            package="robot_state_publisher",
+            executable="robot_state_publisher",
+            output="both",
+            parameters=[params],
+        )
+    ]
     group_action = GroupAction(nodes)
     launch_processes = [group_action]
     return launch_processes
@@ -63,7 +71,14 @@ def generate_launch_description():
 
     :return: A LaunchDescription object.
     """
-    return LaunchDescription([DeclareLaunchArgument('robot_name',
-                                                    default_value='minipock',
-                                                    description='Robot name'),
-                              OpaqueFunction(function=parse_config)])
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                "robot_name", default_value="minipock", description="Robot name"
+            ),
+            DeclareLaunchArgument(
+                "use_sim_time", default_value="False", description="Use simulation time"
+            ),
+            OpaqueFunction(function=parse_config),
+        ]
+    )
