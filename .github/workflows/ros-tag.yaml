@@ -8,4 +8,4 @@ on:
 
 jobs:
   poetry-test:
-    uses: catie-aq/ros_workflows/.github/workflows/ros2-tag.yml@main
+    uses: catie-aq/ros_workflows/.github/workflows/ros-tag.yml@main

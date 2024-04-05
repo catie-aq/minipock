@@ -6,7 +6,7 @@ on:
 
 jobs:
   sync_readme_to_notion:
-    uses: catie-aq/eagle_workflows/.github/workflows/notion.yml@main
+    uses: catie-aq/generic_workflows/.github/workflows/notion.yml@main
     with:
       notion-page-id: "bdb6e39bf56f41648cb744ef09744e01"
     secrets:
