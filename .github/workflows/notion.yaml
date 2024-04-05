@@ -3,6 +3,8 @@ name: Sync Readme to Notion
 on:
   workflow_dispatch: # Allow manual trigger
   push:
+    paths:
+      - 'README.md'
 
 jobs:
   sync_readme_to_notion:
