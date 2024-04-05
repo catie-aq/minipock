@@ -19,11 +19,11 @@ def parse_config(context, *args, **kwargs):
 
     :return: A LaunchDescription object.
     """
-    start_rviz = IfCondition(LaunchConfiguration("start_rviz")).evaluate(context)
-    use_sim_time = IfCondition(LaunchConfiguration("use_sim_time")).evaluate(context)
-    autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
-    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(context)
-    use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
+    start_rviz = LaunchConfiguration("start_rviz").perform(context)
+    use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
+    autostart = LaunchConfiguration("autostart").perform(context)
+    use_composition = LaunchConfiguration("use_composition").perform(context)
+    use_respawn = LaunchConfiguration("use_respawn").perform(context)
     bringup = IfCondition(LaunchConfiguration("bringup")).evaluate(context)
 
     map_yaml_file = LaunchConfiguration(
@@ -92,7 +92,7 @@ def parse_config(context, *args, **kwargs):
             arguments=["-d", rviz_config_file],
             output="screen",
             condition=IfCondition(start_rviz),
-            parameters=[{"use_sim_time": use_sim_time}],
+            parameters=[{"use_sim_time": IfCondition(use_sim_time).evaluate(context)}],
         ),
     ]
     if minipock_bringup is not None:
@@ -127,7 +127,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "use_composition",
-                default_value="true",
+                default_value="True",
                 description="Whether to use composed bringup",
             ),
             DeclareLaunchArgument(
