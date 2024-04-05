@@ -1,8 +1,8 @@
 - Maintainer status: developed
 - Maintainer: Sébastien Delpeuch [s.delpeuch@catie.fr](mailto:s.delpeuch@catie.fr)
 - License: Apache 2.0
-- Bug / feature tracker: https://github.com/catie-aq/minipock_description/issues
-- Source: git https://github.com/catie-aq/minipock_description
+- Bug / feature tracker: <https://github.com/catie-aq/minipock_description/issues>
+- Source: git <https://github.com/catie-aq/minipock_description>
 
 Ce package contient les fichiers de description du robot MiniPock au format URDF utilisant `xacro` pour la génération
 des modèles. Le dépôt n'est pas lié à un simulateur spécifique, mais il est conçu pour fonctionner avec Gazebo Sim
@@ -43,7 +43,7 @@ est [minipock.urdf.xacro](https://github.com/catie-aq/minipock_description/blob/
 conversion en `sdf` pour être utilisée dans Gazebo Sim Garden se fait via le
 script [model.py](https://github.com/catie-aq/minipock_description/blob/main/minipock_description/model.py) et plus
 particulièrement la fonction `generate` qui est un point d’entrée du
-package https://github.com/catie-aq/minipock_description/blob/19d8f223b17d1fa1e83059e489daa218251e7e88/minipock_description/model.py#L84-L109
+package <https://github.com/catie-aq/minipock_description/blob/19d8f223b17d1fa1e83059e489daa218251e7e88/minipock_description/model.py#L84-L109>
 
 Les pièces d’origines servant à la construction sont disponibles
 sur [OnShape](https://cad.onshape.com/documents/33cae3bcf76fa1a7bad5518d/w/291d81df1473dfe37dbb5dbf/e/d2e6f80356159bebf1722dda)

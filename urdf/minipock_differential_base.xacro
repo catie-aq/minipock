@@ -3,13 +3,13 @@
   <xacro:macro name="minipock_base" params="namespace:=minipock">
     <link name="base_link">
       <visual>
-        <origin xyz="0 0 0.0" rpy="0 0 ${pi/2}"/>
+        <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
         <geometry>
           <mesh filename="package://minipock_description/models/differential_base_alu.dae"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 -${0.089/2}" rpy="0 -0 ${pi/2}"/>
+        <origin xyz="0 0 -${0.089/2}" rpy="0 -0 ${-pi/2}"/>
         <geometry>
           <box size="0.30 0.342 0.089"/>
         </geometry>
