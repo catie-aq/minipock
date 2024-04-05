@@ -10,6 +10,7 @@ and uses the publisher to send them to /minipock/scan.
 The main function initializes rclpy, creates a ScanFilterNode instance, spins the node,
 then terminates the node and rclpy.
 """
+
 import rclpy
 from rclpy.node import Node
 

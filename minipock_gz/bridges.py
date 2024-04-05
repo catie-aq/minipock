@@ -1,4 +1,4 @@
-from bluenav_gz import bridge
+from minipock_gz import bridge
 
 
 def clock():
