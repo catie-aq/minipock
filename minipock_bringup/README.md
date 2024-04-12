@@ -13,9 +13,7 @@ Ce package fournit l'implémentation du Bringup de la plateforme Minipock.
 Pour installer ce package, assurez-vous que votre workspace ROS est correctement configuré.
 
 ```bash
-cd <your_ros2_workspace>/src
-git clone git@github.com:catie-aq/minipock_bringup.git
-cd ..
+cd <your_ros2_workspace>
 colcon build --packages-select minipock_bringup
 ```
 

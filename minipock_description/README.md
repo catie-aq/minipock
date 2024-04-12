@@ -10,18 +10,9 @@ Garden et ROS 2 Humble.
 
 ## Installation
 
-Clonez le dépôt dans votre espace de travail.
-
 ```bash
-cd ~/[your colcon workspace]/src
-git clone git@github.com:catie-aq/minipock_description.git
-```
-
-Compilez le package avec colcon.
-
-```bash
-cd ~/[your colcon workspace]
-colcon build --merge-install
+cd <your_ros2_workspace>
+colcon build --packages-select minipock_description
 ```
 
 Modifiez votre `.bashrc` pour indiquer à Gazebo où trouver les modèles.
