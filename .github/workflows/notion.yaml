@@ -1,22 +1,33 @@
 name: Sync Readme to Notion
 
 on:
+  workflow_dispatch: # Allow manual trigger
   push:
+    branches:
+      - main
+
 
 jobs:
   sync_readme_to_notion:
-    runs-on: self-hosted
+    runs-on:
+      group: default
     name: Checkout and upload Readme to Notion
     container:
       image: ubuntu:22.04
     strategy:
       matrix:
         include:
-          - file-path: "./minipock_cartographer/README.md"
+          - file-path: "./minipock_bringup/README.md"
+            notion-page-id: "7750e0e454d54bc79d9f4c220183cc15"
+          - file-path: "./minipock_description/README.md"
+            notion-page-id: "bdb6e39bf56f41648cb744ef09744e01"
+          - file-path: "./minipock_gz/README.md"
+            notion-page-id: "3d2ee4afcd3b4ad981c40a10133c90d1"
+          - file-path: "./minipock_navigation/minipock_cartographer/README.md"
             notion-page-id: "bb39e4b815284a54a217900b7f7c1721"
-          - file-path: "./minipock_navigation2/README.md"
+          - file-path: "./minipock_navigation/minipock_navigation2/README.md"
             notion-page-id: "2ac0f9a47bfc44898af7204e5ee84ca7"
-          - file-path: "./minipock_teleop/README.md"
+          - file-path: "./minipock_navigation/minipock_teleop/README.md"
             notion-page-id: "239ab349ad184af688e7d016bcb4564c"
     steps:
       - name: checkout

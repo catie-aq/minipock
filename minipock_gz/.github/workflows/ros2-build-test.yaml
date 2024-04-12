@@ -1,8 +1,0 @@
-name: "ROS2 CI/CD"
-
-on:
-  push:
-
-jobs:
-  ros2-build-test:
-    uses: catie-aq/ros_workflows/.github/workflows/ros2.yml@main

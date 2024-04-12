@@ -1,6 +1,5 @@
 name: Update pre-commit and template
 
-
 on:
   schedule:
     - cron: "0 0 * * 1"
@@ -9,7 +8,3 @@ on:
 jobs:
   pre-commit:
     uses: catie-aq/generic_workflows/.github/workflows/autoupdate-pre-commit.yml@main
-  cruft:
-    uses: catie-aq/generic_workflows/.github/workflows/cruft.yaml@main
-    secrets:
-      token: ${{ secrets.PAT }}
