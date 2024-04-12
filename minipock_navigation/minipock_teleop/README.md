@@ -8,9 +8,7 @@ commander le mouvement linéaire et angulaire du robot à l'aide des touches de 
 Pour installer ce package, assurez-vous que votre workspace ROS est correctement configuré.
 
 ```bash
-cd <your_ros2_workspace>/src
-git clone git@github.com:catie-aq/minipock_navigation.git
-cd ..
+cd <your_ros2_workspace>
 colcon build --packages-select minipock_teleop
 ```
 
