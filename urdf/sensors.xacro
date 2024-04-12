@@ -1,0 +1,52 @@
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="lds_01"
+               params="namespace:=minipock name:=lds_01 x:=0.0 y:=0.0 z:=0.0 R:=0.0 P:=0.0 Y:=0.0">
+    <link name="${name}_link">
+      <visual name="${name}_visual">
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/lds_visual.dae"/>
+        </geometry>
+      </visual>
+      <collision name="${name}_collision">
+        <origin xyz="0 0 0.016" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/lds.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.1"/>
+        <inertia ixx="0.00000542" ixy="0.0" ixz="0.0" iyy="0.00002104" iyz="0.0" izz="0.00002604"/>
+      </inertial>
+    </link>
+    <joint name="${name}_joint" type="revolute">
+      <axis xyz="0 0 1"/>
+      <limit effort="1000.0" lower="0.0" upper="0" velocity="0"/>
+      <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}"/>
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+    </joint>
+    <gazebo reference="${name}_link">
+      <sensor type="gpu_lidar" name="lds_01">
+        <update_rate>50</update_rate>
+        <topic>scan_raw</topic>
+        <visualize>true</visualize>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>360</samples>
+              <resolution>1</resolution>
+              <min_angle>0.0</min_angle>
+              <max_angle>6.280</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.12</min>
+            <max>3.5</max>
+            <resolution>0.0150</resolution>
+          </range>
+        </lidar>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+</robot>

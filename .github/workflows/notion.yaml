@@ -1,0 +1,15 @@
+name: Sync Readme to Notion
+
+on:
+  workflow_dispatch: # Allow manual trigger
+  push:
+    paths:
+      - 'README.md'
+
+jobs:
+  sync_readme_to_notion:
+    uses: catie-aq/generic_workflows/.github/workflows/notion.yml@main
+    with:
+      notion-page-id: "bdb6e39bf56f41648cb744ef09744e01"
+    secrets:
+      notion-token: ${{ secrets.NOTION_TOKEN }}
