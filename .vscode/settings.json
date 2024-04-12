@@ -1,0 +1,20 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_teleop",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_gz",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_description",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_bringup",
+        "/home/sedelpeuch/CATIE/colcon_ws/install/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_teleop",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_gz",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_description",
+        "/home/sedelpeuch/CATIE/colcon_ws/build/minipock_bringup",
+        "/home/sedelpeuch/CATIE/colcon_ws/install/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}
