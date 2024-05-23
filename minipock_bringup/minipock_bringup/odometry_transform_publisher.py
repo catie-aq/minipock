@@ -3,16 +3,13 @@ from geometry_msgs.msg import TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from tf2_msgs.msg import TFMessage
 from tf2_ros import TransformBroadcaster
 
 
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.__odometry_subscriber = self.create_subscription(
-            Odometry, "/odom", self.callback, qos_profile_sensor_data
-        )
+        self.create_subscription(Odometry, "/odom", self.callback, qos_profile_sensor_data)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
@@ -26,7 +23,7 @@ class OdometryTransformPublisher(Node):
         :param msg: The message received.
         :return: None.
         """
-        self.__odom_transform.header.stamp = msg.header.stamp
+        self.__odom_transform.header.stamp = self.get_clock().now().to_msg()
         self.__odom_transform.transform.translation.x = msg.pose.pose.position.x
         self.__odom_transform.transform.translation.y = msg.pose.pose.position.y
         self.__odom_transform.transform.translation.z = msg.pose.pose.position.z
