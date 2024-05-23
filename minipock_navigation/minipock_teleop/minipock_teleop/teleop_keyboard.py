@@ -8,6 +8,7 @@ import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
+import time
 
 if os.name == "nt":
     import msvcrt
@@ -75,6 +76,7 @@ class TeleopController(Node):
 
         self.qos = QoSProfile(depth=10)
         self.publisher = self.create_publisher(Twist, "cmd_vel", self.qos)
+        self.rate = self.create_rate(10)
         self.status = 0
         self.settings = None
 
@@ -240,6 +242,7 @@ class TeleopController(Node):
                 self.publisher.publish(
                     make_twist(self.control_linear_velocity, self.control_angular_velocity)
                 )
+                time.sleep(0.1)
         except Exception as e:
             self.get_logger().error("Error: " + str(e))
         finally:
