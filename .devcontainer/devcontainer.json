@@ -1,9 +1,14 @@
 {
   "dockerFile": "Dockerfile",
+  "build": {
+    "target": "base"
+  },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}"
   },
-  "runArgs": ["--network=host"],
+  "runArgs": [
+    "--network=host"
+  ],
   "mounts": [
     "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
     "source=/dev/dri,target=/dev/dri,type=bind",
@@ -19,7 +24,8 @@
     "vscode": {
       "extensions": [
         "ms-iot.vscode-ros"
-      ]}
+      ]
+    }
   },
   "postStartCommand": "/bin/bash -c 'source /opt/ros/humble/setup.bash && colcon build --symlink-install --merge-install'",
   "postCreateCommand": "echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc && echo 'source /workspaces/minipock/install/setup.bash' >> ~/.bashrc && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> ~/.bashrc && if [ -f ~/.zshrc ]; then echo 'source /opt/ros/humble/setup.zsh' >> ~/.zshrc && echo 'source /workspaces/minipock/install/setup.zsh' >> ~/.zshrc && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> ~/.zshrc; fi"
