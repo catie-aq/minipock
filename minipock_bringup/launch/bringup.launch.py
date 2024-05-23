@@ -49,6 +49,7 @@ def micro_ros_agent():
         ]
     )
 
+
 def spawn(robot_name):
     """
     Spawn the robot in the current Gazebo world.
