@@ -26,12 +26,28 @@ def parse_config(context, *args, **kwargs):
     robot_name = LaunchConfiguration("robot_name").perform(context)
     odom_frame = LaunchConfiguration("odom_frame").perform(context)
     launch_processes = []
+    launch_processes.append(micro_ros_agent())
     launch_processes.extend(spawn(robot_name))
     launch_processes.append(state())
     if odom_frame:
         launch_processes.append(odometry())
     return launch_processes
 
+
+def micro_ros_agent():
+    """
+    :return: LaunchDescription instance containing a Node with package 'micro_ros_agent'
+    and executable 'micro_ros_agent'
+    """
+    return LaunchDescription(
+        [
+            Node(
+                package="micro_ros_agent",
+                executable="micro_ros_agent",
+                arguments=["udp4", "--port", "8888"],
+            ),
+        ]
+    )
 
 def spawn(robot_name):
     """
