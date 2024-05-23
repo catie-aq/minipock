@@ -13,13 +13,11 @@ class OdometryTransformPublisher(Node):
         self.__odometry_subscriber = self.create_subscription(
             Odometry, "/odom", self.callback, qos_profile_sensor_data
         )
-        self.__tf_subscriber = self.create_subscription(TFMessage, "/tf", self.callback_tf, 10)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
         self.__odom_transform.header.frame_id = "odom"
         self.__odom_transform.child_frame_id = "base_link"
-        self.__last_odom = None
 
     def callback(self, msg):
         """
@@ -28,23 +26,11 @@ class OdometryTransformPublisher(Node):
         :param msg: The message received.
         :return: None.
         """
-        self.__last_odom = msg
-
-    def callback_tf(self, msg):
-        """
-        Transforms the received message into a TransformStamped message and broadcasts
-
-        :param msg: The received message.
-        :return: None
-        """
-        if self.__last_odom is None:
-            return
-        last_odom = self.__last_odom
-        self.__odom_transform.header.stamp = self.get_clock().now().to_msg()
-        self.__odom_transform.transform.translation.x = last_odom.pose.pose.position.x
-        self.__odom_transform.transform.translation.y = last_odom.pose.pose.position.y
-        self.__odom_transform.transform.translation.z = last_odom.pose.pose.position.z
-        self.__odom_transform.transform.rotation = last_odom.pose.pose.orientation
+        self.__odom_transform.header.stamp = msg.header.stamp
+        self.__odom_transform.transform.translation.x = msg.pose.pose.position.x
+        self.__odom_transform.transform.translation.y = msg.pose.pose.position.y
+        self.__odom_transform.transform.translation.z = msg.pose.pose.position.z
+        self.__odom_transform.transform.rotation = msg.pose.pose.orientation
         self.__tf_broadcaster.sendTransform(self.__odom_transform)
 
 
