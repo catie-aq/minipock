@@ -5,6 +5,8 @@ RUN apt update && apt install -y \
     python3-colcon-common-extensions \
     ros-humble-tf-transformations \
     lsb-release wget gnupg \
+    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher \
+    ros-humble-desktop-full \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install transforms3d
