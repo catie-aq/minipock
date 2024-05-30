@@ -21,9 +21,9 @@ class ScanFilterNode(Node):
     def __init__(self):
         super().__init__("scan_filter_node")
         self.subscription = self.create_subscription(
-            LaserScan, "/scan_raw", self.listener_callback, 10
+            LaserScan, "/scan_raw", self.listener_callback, 50
         )
-        self.publisher = self.create_publisher(LaserScan, "/scan", 10)
+        self.publisher = self.create_publisher(LaserScan, "/scan", 50)
 
     def listener_callback(self, msg):
         """

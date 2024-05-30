@@ -10,10 +10,8 @@ from tf2_ros import TransformBroadcaster
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.__odometry_subscriber = self.create_subscription(
-            Odometry, "/odom", self.callback, qos_profile_sensor_data
-        )
-        self.__tf_subscriber = self.create_subscription(TFMessage, "/tf", self.callback_tf, 10)
+        self.create_subscription(Odometry, "/odom", self.callback, qos_profile_sensor_data)
+        self.create_subscription(TFMessage, "/tf", self.callback_tf, 50)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
