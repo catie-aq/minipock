@@ -7,7 +7,7 @@ RUN apt update && apt install -y \
     python3-colcon-common-extensions \
     ros-humble-tf-transformations \
     lsb-release wget gnupg \
-    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher \
+    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher  ros-humble-xacro \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install transforms3d
@@ -19,10 +19,8 @@ RUN if [ "$DEBUG" = "1" ]; then \
 
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
     && echo 'source /workspaces/minipock/install/setup.bash' >> /root/.bashrc \
-    && if [ -f /root/.zshrc ]; then \
-        echo 'source /opt/ros/humble/setup.zsh' >> /root/.zshrc \
-        && echo 'source /workspaces/minipock/install/setup.zsh' >> /root/.zshrc \
-    ; fi
+    && echo 'source /opt/ros/humble/setup.zsh' >> /root/.zshrc \
+    && echo 'source /workspaces/minipock/install/setup.zsh' >> /root/.zshrc
 
 
 FROM base as simulation
@@ -35,6 +33,4 @@ RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pk
     && rm -rf /var/lib/apt/lists/*
 
 RUN echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> /root/.bashrc \
-    && if [ -f /root/.zshrc ]; then \
-        echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> /root/.zshrc \
-    ; fi
+    && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> /root/.zshrc
