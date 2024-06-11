@@ -5,8 +5,8 @@
   },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
-    "DEBUG": "1",
-    "ROS_DOMAIN_ID": "10"
+    "DEBUG": "0",
+    "ROS_DOMAIN_ID": "1"
   },
   "runArgs": [
     "--network=host",
