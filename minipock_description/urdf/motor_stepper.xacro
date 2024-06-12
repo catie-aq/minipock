@@ -37,7 +37,7 @@
       </inertial>
     </link>
     <joint name="${name}_joint" type="fixed">
-      <parent link="base_link" />
+      <parent link="${namespace}base_link" />
       <child link="${name}_base_link" />
       <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}" />
     </joint>
@@ -55,7 +55,7 @@
         name="gz::sim::systems::JointPositionController">
         <joint_name>${name}_wheel_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
-        <topic>${namespace}/${name}/pos</topic>
+        <topic>${namespace}${name}/pos</topic>
         <name>${name}</name>
       </plugin>
     </gazebo>
