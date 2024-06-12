@@ -1,7 +1,7 @@
 {
   "dockerFile": "Dockerfile",
   "build": {
-    "target": "base"
+    "target": "simulation"
   },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
