@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:macro name="minipock_base" params="namespace:=minipock name:=minipock">
+    <link name="${namespace}/base_footprint">
+    </link>
+    <link name="${namespace}/base_link">
+      <visual>
+        <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/differential_base_alu.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -${0.089/2}" rpy="0 -0 ${-pi/2}"/>
+        <geometry>
+          <box size="0.30 0.342 0.089"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0"/>
+        <mass value="1.587"/>
+        <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013"/>
+      </inertial>
+    </link>
+    <link name="${namespace}/minipock_structure_pla_link">
+      <visual>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/differential_base_pla.stl"/>
+        </geometry>
+        <material name="6TRON">
+          <color rgba="0.27 0.64 0.52 1.0"/>
+        </material>
+      </visual>
+    </link>
+    <link name="${namespace}/minipock_structure_pmma_link">
+      <visual>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/differential_base_pmma.stl"/>
+        </geometry>
+        <material name="6TRON_2">
+          <color rgba="0.27 0.64 0.52 0.9"/>
+        </material>
+      </visual>
+    </link>
+    <link name="${namespace}/minipock_structure_misc_link">
+      <visual>
+        <origin xyz="0 0 0.0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://minipock_description/models/differential_misc.stl"/>
+        </geometry>
+        <material name="6TRON_2">
+          <color rgba="0.27 0.64 0.52 1.0"/>
+      </material>
+      </visual>
+    </link>
+
+    <joint name="base_joint" type="fixed">
+      <origin xyz="1 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="${namespace}/base_footprint"/>
+      <child link="${namespace}/base_link"/>
+    </joint>
+    <joint name="minipock_structure_pla_joint" type="fixed">
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/minipock_structure_pla_link"/>
+    </joint>
+    <joint name="minipock_structure_pmma_joint" type="fixed">
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/minipock_structure_pmma_link"/>
+    </joint>
+    <joint name="minipock_structure_misc_joint" type="fixed">
+      <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
+      <parent link="${namespace}/base_link"/>
+      <child link="${namespace}/minipock_structure_misc_link"/>
+    </joint>
+  </xacro:macro>
+</robot>
