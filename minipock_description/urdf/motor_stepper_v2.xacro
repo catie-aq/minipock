@@ -37,7 +37,7 @@
       </inertial>
     </link>
     <joint name="${name}_joint" type="fixed">
-      <parent link="${namespace}/${name}_base_link" />
+      <parent link="${namespace}/base_link" />
       <child link="${namespace}/${name}_base_link" />
       <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}" />
     </joint>

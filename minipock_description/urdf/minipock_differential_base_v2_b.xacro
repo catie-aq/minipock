@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="minipock_base" params="namespace:=minipock name:=minipock x:=0 y:=0 z:=0.0">
+  <xacro:macro name="minipock_base" params="namespace:=minipock name:=minipock">
     <link name="${namespace}/base_footprint">
     </link>
     <link name="${namespace}/base_link">
@@ -57,7 +57,7 @@
     </link>
 
     <joint name="base_joint" type="fixed">
-      <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
+      <origin xyz="1 0 0.0" rpy="0 0 ${-pi/2}"/>
       <parent link="${namespace}/base_footprint"/>
       <child link="${namespace}/base_link"/>
     </joint>

@@ -21,7 +21,9 @@ from launch.substitutions import LaunchConfiguration
 from minipock_gz import bridges_multiple as bridges
 
 robot_name_0 = "minipock_0"
+robot_position_0_str = "(0, 1, 0.0)"
 robot_name_1 = "minipock_1"
+robot_position_1_str = "(1, 0, 0.0)"
 
 
 def parse_config(context, *args, **kwargs):
@@ -137,6 +139,7 @@ def spawn(use_sim_time):
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
             "robot_name": robot_name_0,
+            "robot_position": robot_position_0_str,
             "use_sim_time": use_sim_time,
         }.items(),
     )
@@ -154,6 +157,7 @@ def spawn(use_sim_time):
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
             "robot_name": robot_name_1,
+            "robot_position": robot_position_1_str,
             "use_sim_time": use_sim_time,
         }.items(),
     )

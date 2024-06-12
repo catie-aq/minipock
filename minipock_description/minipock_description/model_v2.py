@@ -14,14 +14,17 @@ PACKAGE_NAME = "minipock_description"
 ROBOT_NAME = "minipock"
 
 
-def xacro_cmd(urdf):
+def xacro_cmd(urdf, robot_position):
     """
     Generate the command to run xacro and gz sdf print
 
     :param urdf: path to urdf file
     :return: command to run
     """
-    xacro_command = ["xacro", urdf, f"namespace:={ROBOT_NAME}"]
+    x, y, z = 1.0, 1.0, 0.0
+    # x, y, z = robot_position
+    # xacro_command = ["xacro", urdf, f"namespace:={ROBOT_NAME}", f"x:=-1", f"y:=1", f"z:=0.0"]
+    xacro_command = ["xacro", urdf, f"namespace:={ROBOT_NAME}", f"x:={x}", f"y:={y}", f"z:={z}"]
     xacro_process = subprocess.Popen(xacro_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = xacro_process.communicate()[0]
     urdf_str = codecs.getdecoder("unicode_escape")(stdout)[0]
@@ -50,16 +53,17 @@ def name_from_plugin(plugin_sdf):
         return result.group(1)
 
 #piste2robots
-def generate():
+def generate(robot_position=(0, 0, 0.0)):
     """
     Generate the sdf file from the urdf file
 
     :return: return the sdf
     """
     urdf_path = os.path.join(
-        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", ROBOT_NAME + ".urdf.xacro"
+        # FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", ROBOT_NAME + ".urdf.xacro"
+        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", "minipock_v2.urdf.xacro"
     )
-    command = xacro_cmd(urdf_path)
+    command = xacro_cmd(urdf_path, robot_position)
     model_sdf = ""
     try:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -78,7 +82,7 @@ def generate():
     return model_sdf
 
 
-def spawn_args(robot_name=ROBOT_NAME):
+def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0 0 0.0"):
     """
     Return the spawning arguments for the create command
 
@@ -86,5 +90,7 @@ def spawn_args(robot_name=ROBOT_NAME):
     """
     global ROBOT_NAME
     ROBOT_NAME = robot_name
+    # retrieve x, y, z from the string
+    # robot_position = tuple(map(int, robot_position_str.split(" ")))
     model_sdf = generate()
     return ["-string", model_sdf, "-name", ROBOT_NAME, "-allow_renaming", "false"]
