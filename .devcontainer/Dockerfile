@@ -7,14 +7,18 @@ RUN apt update && apt install -y \
     python3-colcon-common-extensions \
     ros-humble-tf-transformations \
     lsb-release wget gnupg \
-    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher  ros-humble-xacro \
+    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher ros-humble-xacro \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install transforms3d
 
 RUN if [ "$DEBUG" = "1" ]; then \
     apt update && apt install -y \
-    ros-humble-rqt-* \
+    sudo apt install -y ros-humble-rqt* \
+    ; fi
+
+RUN if [ "$DEBUG" = "1" ]; then \
+    sudo apt install -y ros-humble-rqt-tf-tree \
     ; fi
 
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \

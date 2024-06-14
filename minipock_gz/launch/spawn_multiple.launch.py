@@ -21,9 +21,9 @@ from launch.substitutions import LaunchConfiguration
 from minipock_gz import bridges_multiple as bridges
 
 robot_name_0 = "minipock_0"
-robot_position_0_str = "(0, 1, 0.0)"
+robot_position_0_str = "0 1 0"
 robot_name_1 = "minipock_1"
-robot_position_1_str = "(1, 0, 0.0)"
+robot_position_1_str = "1 0 0"
 
 
 def parse_config(context, *args, **kwargs):
@@ -60,8 +60,6 @@ def lidar_process(use_sim_time):
 
     :return: LaunchDescription object containing the lidar process.
     """
-    #piste2robots
-    #add namespace?
     return LaunchDescription(
         [
             Node(
@@ -97,9 +95,6 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     :return: a list containing a LaunchDescription for starting the simulation
     """
     gz_args = ["-r", extra_gz_args, f"{world_name}.sdf"]
-    #piste2robots
-    #ça prend tous les mondes existants en parcourant??
-
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -115,7 +110,6 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     )
     return [gz_sim]
 
-#piste2robots
 def spawn(use_sim_time):
     """
     Spawn the robot in the current Gazebo world.
@@ -128,18 +122,17 @@ def spawn(use_sim_time):
             package="ros_gz_sim",
             executable="create",
             output="screen",
-            arguments=minipock_description.model_v2.spawn_args(robot_name = robot_name_0),
+            arguments=minipock_description.model_v2.spawn_args(robot_name = robot_name_0, robot_position_str=robot_position_0_str),
         )
     ]
     spawn_launch_path = os.path.join(
         get_package_share_directory("minipock_description"), "launch", "spawn_multiple.launch.py"
-        #piste2robots
     )
     spawn_description_0 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
             "robot_name": robot_name_0,
-            "robot_position": robot_position_0_str,
+            "robot_position_str": robot_position_0_str,
             "use_sim_time": use_sim_time,
         }.items(),
     )
@@ -150,14 +143,14 @@ def spawn(use_sim_time):
             package="ros_gz_sim",
             executable="create",
             output="screen",
-            arguments=minipock_description.model_v2.spawn_args(robot_name=robot_name_1),
+            arguments=minipock_description.model_v2.spawn_args(robot_name=robot_name_1, robot_position_str=robot_position_1_str),
         )
     )
     spawn_description_1 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
             "robot_name": robot_name_1,
-            "robot_position": robot_position_1_str,
+            "robot_position_str": robot_position_1_str,
             "use_sim_time": use_sim_time,
         }.items(),
     )
@@ -165,7 +158,6 @@ def spawn(use_sim_time):
 
     return launch_processes
 
-#piste2robots
 def bridge(world_name, robot_name, use_sim_time):
     """
     This function manages the bridge between ROS messages and Gazebo simulator.
@@ -173,8 +165,6 @@ def bridge(world_name, robot_name, use_sim_time):
     :param world_name: the name of the Gazebo world file
     :return: a list of nodes
     """
-    #piste2robots
-    #change namespaces
     bridges_list = [
         bridges.clock(),
         bridges.pose(model_name=robot_name),
@@ -188,15 +178,15 @@ def bridge(world_name, robot_name, use_sim_time):
         Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
+            #namespace=f"{robot_name}",
             output="screen",
             arguments=[bridge_name.argument() for bridge_name in bridges_list],
             remappings=[bridge_name.remapping() for bridge_name in bridges_list],
-            parameters=[{"use_sim_time": use_sim_time}],
+            parameters=[{"use_sim_time": use_sim_time, }],
         )
     ]
     return nodes
 
-#piste2robots
 def generate_launch_description():
     """
     Generate the launch description for spawning an object in a simulation.
