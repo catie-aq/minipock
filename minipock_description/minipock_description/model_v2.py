@@ -78,7 +78,7 @@ def generate():
     return model_sdf
 
 
-def spawn_args(robot_name=ROBOT_NAME, robot_position_str):
+def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0.0 0.0 0.0"):
     """
     Return the spawning arguments for the create command
 
