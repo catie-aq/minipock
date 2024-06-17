@@ -11,10 +11,10 @@ def clock():
     )
 
 
-def tf():
+def tf(model_name):
     return bridge.Bridge(
-        gz_topic="/model/minipock/tf",
-        ros_topic="/tf",
+        gz_topic=f"/model/{model_name}/tf",
+        ros_topic=f"/tf",
         gz_type="gz.msgs.Pose_V",
         ros_type="tf2_msgs/msg/TFMessage",
         direction=bridge.BridgeDirection.GZ_TO_ROS,
@@ -43,7 +43,7 @@ def joint_states(world_name, model_name):
 
 def odometry(model_name):
     return bridge.Bridge(
-        gz_topic=f"/model/{model_name}/odometry",
+        gz_topic=f"/{model_name}/odom",
         ros_topic=f"/{model_name}/odom",
         gz_type="gz.msgs.Odometry",
         ros_type="nav_msgs/msg/Odometry",

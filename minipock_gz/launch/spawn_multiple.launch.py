@@ -25,6 +25,9 @@ robot_position_0_str = "0 1 0"
 robot_name_1 = "minipock_1"
 robot_position_1_str = "1 0 0"
 
+robots = [{"name": robot_name_0, "position": robot_position_0_str},
+            {"name": robot_name_1, "position": robot_position_1_str}]
+
 
 def parse_config(context, *args, **kwargs):
     """
@@ -49,8 +52,7 @@ def parse_config(context, *args, **kwargs):
     )
     launch_processes.append(lidar_process(use_sim_time=use_sim_time_bool))
     launch_processes.extend(spawn(use_sim_time=use_sim_time))
-    launch_processes.extend(bridge(world_name=world, robot_name=robot_name_0, use_sim_time=use_sim_time_bool))
-    launch_processes.extend(bridge(world_name=world, robot_name=robot_name_1, use_sim_time=use_sim_time_bool))
+    launch_processes.extend(bridge(world_name=world, robots=robots, use_sim_time=use_sim_time_bool))
     return launch_processes
 
 
@@ -64,7 +66,7 @@ def lidar_process(use_sim_time):
         [
             Node(
                 package="minipock_gz",
-                namespace=f"{robot_name_0}",
+                namespace=f"{robots[0]['name']}",
                 executable="lidar_process",
                 parameters=[
                     {"use_sim_time": use_sim_time},
@@ -73,7 +75,7 @@ def lidar_process(use_sim_time):
 
             Node(
                 package="minipock_gz",
-                namespace=f"{robot_name_1}",
+                namespace=f"{robots[1]['name']}",
                 executable="lidar_process",
                 parameters=[
                     {"use_sim_time": use_sim_time},
@@ -122,7 +124,7 @@ def spawn(use_sim_time):
             package="ros_gz_sim",
             executable="create",
             output="screen",
-            arguments=minipock_description.model_v2.spawn_args(robot_name = robot_name_0, robot_position_str=robot_position_0_str),
+            arguments=minipock_description.model_v2.spawn_args(robot_name = robots[0]['name'], robot_position_str = robots[0]['position']),
         )
     ]
     spawn_launch_path = os.path.join(
@@ -131,8 +133,8 @@ def spawn(use_sim_time):
     spawn_description_0 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
-            "robot_name": robot_name_0,
-            "robot_position_str": robot_position_0_str,
+            "robot_name": robots[0]['name'],
+            "robot_position_str": robots[0]['position'],
             "use_sim_time": use_sim_time,
         }.items(),
     )
@@ -143,14 +145,14 @@ def spawn(use_sim_time):
             package="ros_gz_sim",
             executable="create",
             output="screen",
-            arguments=minipock_description.model_v2.spawn_args(robot_name=robot_name_1, robot_position_str=robot_position_1_str),
+            arguments=minipock_description.model_v2.spawn_args(robot_name=robots[1]['name'], robot_position_str=robots[1]['position']),
         )
     )
     spawn_description_1 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(spawn_launch_path),
         launch_arguments={
-            "robot_name": robot_name_1,
-            "robot_position_str": robot_position_1_str,
+            "robot_name": robots[1]['name'],
+            "robot_position_str": robots[1]['position'],
             "use_sim_time": use_sim_time,
         }.items(),
     )
@@ -158,7 +160,7 @@ def spawn(use_sim_time):
 
     return launch_processes
 
-def bridge(world_name, robot_name, use_sim_time):
+def bridge(world_name, robots, use_sim_time):
     """
     This function manages the bridge between ROS messages and Gazebo simulator.
 
@@ -167,18 +169,20 @@ def bridge(world_name, robot_name, use_sim_time):
     """
     bridges_list = [
         bridges.clock(),
-        bridges.pose(model_name=robot_name),
-        bridges.joint_states(model_name=robot_name, world_name=world_name),
-        bridges.odometry(model_name=robot_name),
-        bridges.cmd_vel(model_name=robot_name),
-        bridges.scan_lidar(model_name=robot_name),
-        bridges.tf(),
     ]
+    for robot in robots:
+        bridges_list.extend([
+            bridges.pose(model_name=robot['name']),
+            bridges.joint_states(model_name=robot['name'], world_name=world_name),
+            bridges.odometry(model_name=robot['name']),
+            bridges.cmd_vel(model_name=robot['name']),
+            bridges.scan_lidar(model_name=robot['name']),
+            bridges.tf(model_name=robot['name']),
+        ])
     nodes = [
         Node(
             package="ros_gz_bridge",
             executable="parameter_bridge",
-            #namespace=f"{robot_name}",
             output="screen",
             arguments=[bridge_name.argument() for bridge_name in bridges_list],
             remappings=[bridge_name.remapping() for bridge_name in bridges_list],
