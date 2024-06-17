@@ -31,8 +31,9 @@
       <wheel_separation>0.335</wheel_separation>
       <wheel_radius>0.036</wheel_radius>
       <odom_publish_frequency>50</odom_publish_frequency>
-      <topic>${namespace}/cmd_vel</topic>
 
+      <topic>${namespace}/cmd_vel</topic>
+      <odom_topic>${namespace}/odom</odom_topic>
       <child_frame_id>${namespace}/base_footprint</child_frame_id>
       <frame_id>${namespace}/odom</frame_id>
     </plugin>
