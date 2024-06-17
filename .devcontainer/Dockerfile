@@ -18,7 +18,8 @@ RUN if [ "$DEBUG" = "1" ]; then \
     ; fi
 
 RUN if [ "$DEBUG" = "1" ]; then \
-    sudo apt install -y ros-humble-rqt-tf-tree \
+    sudo apt-get install -y ros-humble-rqt-tf-tree \
+    sudo apt-get install -y tf2-tools \
     ; fi
 
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
