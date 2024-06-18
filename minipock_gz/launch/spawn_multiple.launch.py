@@ -48,8 +48,11 @@ def parse_config(context, *args, **kwargs):
     robots = make_robots(nb_robots, robot_name)
     launch_processes.append(lidar_process(use_sim_time=use_sim_time_bool, robots=robots))
     launch_processes.extend(spawn(use_sim_time=use_sim_time, robots=robots))
-    launch_processes.extend(bridge(world_name=world, robots=robots, use_sim_time=use_sim_time_bool))
+    launch_processes.extend(
+        bridge(world_name=world, robots=robots, use_sim_time=use_sim_time_bool)
+    )
     return launch_processes
+
 
 def generate_spiral_positions(num_entities, spacing=1):
     """
@@ -64,13 +67,14 @@ def generate_spiral_positions(num_entities, spacing=1):
     if num_entities >= 1:
         positions.append(first_position)
     if num_entities > 1:
-        for i in range(num_entities-1):
+        for i in range(num_entities - 1):
             radius = spacing * (i // 8 + 1)
             angle = (i % 8) * (2 * math.pi / 8)
             x = radius * math.cos(angle)
             y = radius * math.sin(angle)
             positions.append((x, y))
     return positions
+
 
 def make_robots(nb_robots, robot_name):
     """
@@ -87,6 +91,7 @@ def make_robots(nb_robots, robot_name):
         robot_position_str = f"{positions[i][0]} {positions[i][1]} 0"
         robots.append({"name": name, "position": robot_position_str})
     return robots
+
 
 def lidar_process(use_sim_time, robots):
     """
@@ -107,9 +112,7 @@ def lidar_process(use_sim_time, robots):
             )
         )
 
-    return LaunchDescription(
-        nodes
-    )
+    return LaunchDescription(nodes)
 
 
 def simulation(world_name, paused, extra_gz_args, use_sim_time):
@@ -139,6 +142,7 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     )
     return [gz_sim]
 
+
 def spawn(use_sim_time, robots):
     """
     Spawn the robot in the current Gazebo world.
@@ -156,20 +160,23 @@ def spawn(use_sim_time, robots):
                 package="ros_gz_sim",
                 executable="create",
                 output="screen",
-                arguments=minipock_description.model_v2.spawn_args(robot_name=robot['name'], robot_position_str=robot['position']),
+                arguments=minipock_description.model_v2.spawn_args(
+                    robot_name=robot["name"], robot_position_str=robot["position"]
+                ),
             )
         )
         spawn_description = IncludeLaunchDescription(
             PythonLaunchDescriptionSource(spawn_launch_path),
             launch_arguments={
-                "robot_name": robot['name'],
-                "robot_position_str": robot['position'],
+                "robot_name": robot["name"],
+                "robot_position_str": robot["position"],
                 "use_sim_time": use_sim_time,
             }.items(),
         )
         launch_processes.append(spawn_description)
 
     return launch_processes
+
 
 def bridge(world_name, robots, use_sim_time):
     """
@@ -182,14 +189,16 @@ def bridge(world_name, robots, use_sim_time):
         bridges.clock(),
     ]
     for robot in robots:
-        bridges_list.extend([
-            bridges.pose(model_name=robot['name']),
-            bridges.joint_states(model_name=robot['name'], world_name=world_name),
-            bridges.odometry(model_name=robot['name']),
-            bridges.cmd_vel(model_name=robot['name']),
-            bridges.scan_lidar(model_name=robot['name']),
-            bridges.tf(model_name=robot['name']),
-        ])
+        bridges_list.extend(
+            [
+                bridges.pose(model_name=robot["name"]),
+                bridges.joint_states(model_name=robot["name"], world_name=world_name),
+                bridges.odometry(model_name=robot["name"]),
+                bridges.cmd_vel(model_name=robot["name"]),
+                bridges.scan_lidar(model_name=robot["name"]),
+                bridges.tf(model_name=robot["name"]),
+            ]
+        )
     nodes = [
         Node(
             package="ros_gz_bridge",
@@ -197,10 +206,15 @@ def bridge(world_name, robots, use_sim_time):
             output="screen",
             arguments=[bridge_name.argument() for bridge_name in bridges_list],
             remappings=[bridge_name.remapping() for bridge_name in bridges_list],
-            parameters=[{"use_sim_time": use_sim_time, }],
+            parameters=[
+                {
+                    "use_sim_time": use_sim_time,
+                }
+            ],
         )
     ]
     return nodes
+
 
 def generate_launch_description():
     """
@@ -209,10 +223,8 @@ def generate_launch_description():
     :return: LaunchDescription object.
     """
     return LaunchDescription(
-        [   
-            DeclareLaunchArgument(
-                "nb_robots", default_value="1", description="Number of robots"
-            ),
+        [
+            DeclareLaunchArgument("nb_robots", default_value="1", description="Number of robots"),
             DeclareLaunchArgument(
                 "robot_name", default_value="minipock", description="Name of robot"
             ),
