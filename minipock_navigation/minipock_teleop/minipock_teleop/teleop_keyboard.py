@@ -68,6 +68,15 @@ def make_twist(linear, angular):
 class TeleopController(Node):
     def __init__(self):
         super().__init__("teleop_keyboard")
+        self.declare_parameter("namespace", "")
+        namespace = self.get_parameter("namespace").value
+        self.get_logger().info(f"Namespace: {namespace}")
+
+        self.check_ns_exists(namespace)
+        if namespace[-1] != "/" and namespace != "":
+            namespace += "/"
+            self.get_logger().info("Non empty namespace set with no '/' at the end. Adding it.")
+            self.get_logger().info(f"New namespace: {namespace}")
 
         self.MINIPOCK_MAX_LIN_VEL = 2.0
         self.MINIPOCK_MAX_ANG_VEL = 12.0
@@ -75,7 +84,7 @@ class TeleopController(Node):
         self.ANG_VEL_STEP_SIZE = 0.2
 
         self.qos = QoSProfile(depth=10)
-        self.publisher = self.create_publisher(Twist, "cmd_vel", self.qos)
+        self.publisher = self.create_publisher(Twist, f"{namespace}cmd_vel", self.qos)
         self.rate = self.create_rate(10)
         self.status = 0
         self.settings = None
@@ -103,6 +112,49 @@ class TeleopController(Node):
 
         CTRL-C to quit
         """
+
+    def clean_namespace(self, namespace):
+        """
+        Clean the namespace by removing the leading and trailing slashes.
+
+        :param namespace: The namespace to clean.
+        :return: The cleaned namespace.
+        """
+        if namespace[0] == "/":
+            namespace = namespace[1:]
+        if len(namespace) > 1 and namespace[-1] == "/":
+            namespace = namespace[:-1]
+        return namespace
+
+    def retrieve_all_namespaces(self):
+        """
+        Retrieve all namespaces in the ROS2 environment.
+
+        :return: A list of all namespaces in the ROS2 environment.
+        """
+        node_names_and_namespaces = self.get_node_names_and_namespaces()
+        namespaces = []
+        for _, ns in node_names_and_namespaces:
+            raw_ns = self.clean_namespace(ns)
+            if raw_ns not in namespaces and raw_ns != "":
+                namespaces.append(raw_ns)
+        return namespaces
+
+    def check_ns_exists(self, namespace):
+        """
+        Check if a given namespace exists in the ROS2 environment.
+
+        :param namespace: The namespace to check.
+        :return: True if the namespace exists, False otherwise.
+        """
+        global_namespaces = self.retrieve_all_namespaces()
+        namespace = self.clean_namespace(namespace)
+        if namespace not in global_namespaces:
+            self.get_logger().error(
+                f"Namespace '{namespace}' not in global namespaces\n \t Existing namespaces are: {global_namespaces}"
+            )
+            exit(1)
+        self.get_logger().info(f"Namespace '{namespace}' found in global namespaces\n")
 
     def print_velocities(self):
         """
