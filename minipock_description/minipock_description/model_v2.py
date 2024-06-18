@@ -49,6 +49,7 @@ def name_from_plugin(plugin_sdf):
     if result:
         return result.group(1)
 
+
 def generate():
     """
     Generate the sdf file from the urdf file
@@ -57,7 +58,9 @@ def generate():
     """
     urdf_path = os.path.join(
         # FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", ROBOT_NAME + ".urdf.xacro"
-        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", "minipock_v2.urdf.xacro"
+        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME),
+        "urdf",
+        "minipock_v2.urdf.xacro",
     )
     command = xacro_cmd(urdf_path)
     model_sdf = ""
@@ -88,4 +91,17 @@ def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0.0 0.0 0.0"):
     ROBOT_NAME = robot_name
     x, y, z = robot_position_str.split(" ")
     model_sdf = generate()
-    return ["-string", model_sdf, "-name", ROBOT_NAME, "-allow_renaming", "false", "-x", x, "-y", y, "-z", z]
+    return [
+        "-string",
+        model_sdf,
+        "-name",
+        ROBOT_NAME,
+        "-allow_renaming",
+        "false",
+        "-x",
+        x,
+        "-y",
+        y,
+        "-z",
+        z,
+    ]
