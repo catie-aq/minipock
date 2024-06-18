@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:arg name="namespace" default="minipock"/>
+  <xacro:arg name="namespace" default="minipock/"/>
   <xacro:arg name="x" default="0"/>
   <xacro:arg name="y" default="0"/>
   <xacro:arg name="z" default="0.0"/>
@@ -32,10 +32,10 @@
       <wheel_radius>0.036</wheel_radius>
       <odom_publish_frequency>50</odom_publish_frequency>
 
-      <topic>${namespace}/cmd_vel</topic>
-      <odom_topic>${namespace}/odom</odom_topic>
-      <child_frame_id>${namespace}/base_footprint</child_frame_id>
-      <frame_id>${namespace}/odom</frame_id>
+      <topic>${namespace}cmd_vel</topic>
+      <odom_topic>${namespace}odom</odom_topic>
+      <child_frame_id>${namespace}base_footprint</child_frame_id>
+      <frame_id>${namespace}odom</frame_id>
     </plugin>
 
     <plugin filename="libgz-sim-pose-publisher-system.so"
