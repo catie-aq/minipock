@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="minipock_base" params="namespace:=minipock name:=minipock x:=0 y:=0 z:=0.0">
-    <link name="${namespace}/base_footprint">
+  <xacro:macro name="minipock_base" params="namespace:=minipock/ name:=minipock x:=0 y:=0 z:=0.0">
+    <link name="${namespace}base_footprint">
     </link>
-    <link name="${namespace}/base_link">
+    <link name="${namespace}base_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
         <geometry>
@@ -22,7 +22,7 @@
         <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013"/>
       </inertial>
     </link>
-    <link name="${namespace}/minipock_structure_pla_link">
+    <link name="${namespace}minipock_structure_pla_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
@@ -33,7 +33,7 @@
         </material>
       </visual>
     </link>
-    <link name="${namespace}/minipock_structure_pmma_link">
+    <link name="${namespace}minipock_structure_pmma_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
@@ -44,7 +44,7 @@
         </material>
       </visual>
     </link>
-    <link name="${namespace}/minipock_structure_misc_link">
+    <link name="${namespace}minipock_structure_misc_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0"/>
         <geometry>
@@ -58,23 +58,23 @@
 
     <joint name="base_joint" type="fixed">
       <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
-      <parent link="${namespace}/base_footprint"/>
-      <child link="${namespace}/base_link"/>
+      <parent link="${namespace}base_footprint"/>
+      <child link="${namespace}base_link"/>
     </joint>
     <joint name="minipock_structure_pla_joint" type="fixed">
       <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
-      <parent link="${namespace}/base_link"/>
-      <child link="${namespace}/minipock_structure_pla_link"/>
+      <parent link="${namespace}base_link"/>
+      <child link="${namespace}minipock_structure_pla_link"/>
     </joint>
     <joint name="minipock_structure_pmma_joint" type="fixed">
       <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
-      <parent link="${namespace}/base_link"/>
-      <child link="${namespace}/minipock_structure_pmma_link"/>
+      <parent link="${namespace}base_link"/>
+      <child link="${namespace}minipock_structure_pmma_link"/>
     </joint>
     <joint name="minipock_structure_misc_joint" type="fixed">
       <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}"/>
-      <parent link="${namespace}/base_link"/>
-      <child link="${namespace}/minipock_structure_misc_link"/>
+      <parent link="${namespace}base_link"/>
+      <child link="${namespace}minipock_structure_misc_link"/>
     </joint>
   </xacro:macro>
 </robot>
