@@ -171,10 +171,12 @@ class TeleopController(Node):
             if topic_name == topic:
                 self.get_logger().info(f"Topic '{topic}' found")
                 found = True
-            if 'cmd_vel' in topic_name:
+            if "cmd_vel" in topic_name:
                 topic_list.append(topic_name)
         if not found:
-            self.get_logger().error(f"Topic '{topic}' not found. \n \t Existing topics are: {topic_list}")
+            self.get_logger().error(
+                f"Topic '{topic}' not found. \n \t Existing topics are: {topic_list}"
+            )
             exit(1)
 
     def print_velocities(self):
