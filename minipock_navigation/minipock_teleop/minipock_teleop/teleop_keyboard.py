@@ -78,6 +78,8 @@ class TeleopController(Node):
             self.get_logger().info("Non empty namespace set with no '/' at the end. Adding it.")
             self.get_logger().info(f"New namespace: {namespace}")
 
+        self.check_topic_exists(f"/{namespace}cmd_vel")
+
         self.MINIPOCK_MAX_LIN_VEL = 2.0
         self.MINIPOCK_MAX_ANG_VEL = 12.0
         self.LIN_VEL_STEP_SIZE = 0.1
@@ -143,9 +145,10 @@ class TeleopController(Node):
     def check_ns_exists(self, namespace):
         """
         Check if a given namespace exists in the ROS2 environment.
+        Exit the program if the namespace does not exist, and print the existing namespaces.
 
         :param namespace: The namespace to check.
-        :return: True if the namespace exists, False otherwise.
+        :return: None
         """
         global_namespaces = self.retrieve_all_namespaces()
         namespace = self.clean_namespace(namespace)
@@ -155,6 +158,27 @@ class TeleopController(Node):
             )
             exit(1)
         self.get_logger().info(f"Namespace '{namespace}' found in global namespaces\n")
+
+    def check_topic_exists(self, topic):
+        """
+        Check if a given topic exists in the ROS2 environment.
+        Exit the program if the topic does not exist, and print the existing topics.
+
+        :param topic: The topic to check.
+        :return: None
+        """
+        found = False
+        topic_list = []
+        topic_exists = self.get_topic_names_and_types()
+        for topic_name, _ in topic_exists:
+            if topic_name == topic:
+                self.get_logger().info(f"Topic '{topic}' found")
+                found = True
+            if 'cmd_vel' in topic_name:
+                topic_list.append(topic_name)
+        if not found:
+            self.get_logger().error(f"Topic '{topic}' not found. \n \t Existing topics are: {topic_list}")
+            exit(1)
 
     def print_velocities(self):
         """
