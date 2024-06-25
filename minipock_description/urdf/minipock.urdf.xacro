@@ -1,18 +1,21 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name="namespace" value="" />
+  <xacro:property name="mode" value="differential" />
 
   <xacro:include filename="$(find minipock_description)/urdf/minipock_base.xacro" />
   <xacro:minipock_base namespace="${namespace}" name="minipock" />
 
   <!-- motor -->
   <xacro:include filename="$(find minipock_description)/urdf/motor_stepper.xacro" />
-  <xacro:motor_stepper namespace="${namespace}" name="stepper_left" x="0.0" y="0.133" z="-0.086"
-    R="0.0" P="0.0"
-    Y="0.0" side="1" />
-  <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.0" y="-0.133" z="-0.086"
-    R="0.0" P="0.0"
-    Y="${-pi}" side="-1" />
+  <xacro:if value="${mode == 'differential'}">
+    <xacro:motor_stepper namespace="${namespace}" name="stepper_left" x="0.0" y="0.133" z="-0.086"
+      R="0.0" P="0.0"
+      Y="0.0" side="1" />
+    <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.0" y="-0.133" z="-0.086"
+      R="0.0" P="0.0"
+      Y="${-pi}" side="-1" />
+  </xacro:if>
 
   <!-- sensors -->
   <xacro:include filename="$(find minipock_description)/urdf/sensors.xacro" />
@@ -20,20 +23,21 @@
     Y="${pi}" />
 
   <gazebo>
+    <xacro:if value="${mode == 'differential'}">
+      <plugin
+        filename="gz-sim-diff-drive-system"
+        name="gz::sim::systems::DiffDrive">
+        <left_joint>stepper_left_wheel_joint</left_joint>
+        <right_joint>stepper_right_wheel_joint</right_joint>
+        <wheel_separation>0.335</wheel_separation>
+        <wheel_radius>0.036</wheel_radius>
+        <odom_publish_frequency>50</odom_publish_frequency>
+        <topic>cmd_vel</topic>
 
-    <plugin
-      filename="gz-sim-diff-drive-system"
-      name="gz::sim::systems::DiffDrive">
-      <left_joint>stepper_left_wheel_joint</left_joint>
-      <right_joint>stepper_right_wheel_joint</right_joint>
-      <wheel_separation>0.335</wheel_separation>
-      <wheel_radius>0.036</wheel_radius>
-      <odom_publish_frequency>50</odom_publish_frequency>
-      <topic>cmd_vel</topic>
-
-      <child_frame_id>${namespace}base_link</child_frame_id>
-      <frame_id>odom</frame_id>
-    </plugin>
+        <child_frame_id>${namespace}base_link</child_frame_id>
+        <frame_id>odom</frame_id>
+      </plugin>
+    </xacro:if>
 
     <plugin filename="libgz-sim-pose-publisher-system.so"
       name="gz::sim::systems::PosePublisher">
