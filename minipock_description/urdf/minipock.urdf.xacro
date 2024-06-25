@@ -2,7 +2,7 @@
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name="namespace" value="" />
 
-  <xacro:include filename="$(find minipock_description)/urdf/minipock_differential_base.xacro" />
+  <xacro:include filename="$(find minipock_description)/urdf/minipock_base.xacro" />
   <xacro:minipock_base namespace="${namespace}" name="minipock" />
 
   <!-- motor -->

@@ -5,7 +5,7 @@
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 ${-pi/2}" />
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_alu.dae" />
+          <mesh filename="package://minipock_description/models/base_alu.dae" />
         </geometry>
       </visual>
       <collision>
@@ -24,7 +24,7 @@
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_pla.stl" />
+          <mesh filename="package://minipock_description/models/base_pla.stl" />
         </geometry>
         <material name="6TRON">
           <color rgba="0.27 0.64 0.52 1.0" />
@@ -35,7 +35,7 @@
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_base_pmma.stl" />
+          <mesh filename="package://minipock_description/models/base_pmma.stl" />
         </geometry>
         <material name="6TRON_2">
           <color rgba="0.27 0.64 0.52 0.9" />
@@ -46,7 +46,7 @@
       <visual>
         <origin xyz="0 0 0.0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://minipock_description/models/differential_misc.stl" />
+          <mesh filename="package://minipock_description/models/misc.stl" />
         </geometry>
         <material name="6TRON_2">
           <color rgba="0.27 0.64 0.52 1.0" />
