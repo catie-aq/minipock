@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
-  <xacro:macro name="motor_stepper"
-    params="namespace:=minipock name:=stepper_left x:=0.0 y:=0.0 z:=0.0
+  <xacro:macro name="motor"
+    params="namespace:=minipock name:=motor_left x:=0.0 y:=0.0 z:=0.0
 				       R:=0.0 P:=0.0 Y:=0.0 side:=1">
 
     <link name="${name}_base_link">

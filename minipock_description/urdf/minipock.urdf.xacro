@@ -7,14 +7,26 @@
   <xacro:minipock_base namespace="${namespace}" name="minipock" />
 
   <!-- motor -->
-  <xacro:include filename="$(find minipock_description)/urdf/motor_stepper.xacro" />
+  <xacro:include filename="$(find minipock_description)/urdf/motor.xacro" />
   <xacro:if value="${mode == 'differential'}">
-    <xacro:motor_stepper namespace="${namespace}" name="stepper_left" x="0.0" y="0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.133" z="-0.086"
       R="0.0" P="0.0"
       Y="0.0" side="1" />
-    <xacro:motor_stepper namespace="${namespace}" name="stepper_right" x="0.0" y="-0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.133" z="-0.086"
       R="0.0" P="0.0"
       Y="${-pi}" side="-1" />
+  </xacro:if>
+
+  <xacro:if value="${mode == 'holonomic'}">
+    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.133" z="-0.086"
+      R="0.0" P="0.0"
+      Y="0.0" side="1" />
+    <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.133" z="-0.086"
+      R="0.0" P="0.0"
+      Y="${-pi}" side="-1" />
+    <xacro:motor namespace="${namespace}" name="motor_middle" x="0.150" y="0.0" z="-0.086"
+      R="0.0" P="0.0"
+      Y="${-pi/2}" side="-1" />
   </xacro:if>
 
   <!-- sensors -->
@@ -27,8 +39,8 @@
       <plugin
         filename="gz-sim-diff-drive-system"
         name="gz::sim::systems::DiffDrive">
-        <left_joint>stepper_left_wheel_joint</left_joint>
-        <right_joint>stepper_right_wheel_joint</right_joint>
+        <left_joint>motor_left_wheel_joint</left_joint>
+        <right_joint>motor_right_wheel_joint</right_joint>
         <wheel_separation>0.335</wheel_separation>
         <wheel_radius>0.036</wheel_radius>
         <odom_publish_frequency>50</odom_publish_frequency>
