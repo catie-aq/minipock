@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:property name="namespace" value="" />
-  <xacro:property name="mode" value="differential" />
+  <xacro:property name="mode" value="holonomic" />
 
   <xacro:include filename="$(find minipock_description)/urdf/minipock_base.xacro" />
   <xacro:minipock_base namespace="${namespace}" name="minipock" />
@@ -18,15 +18,15 @@
   </xacro:if>
 
   <xacro:if value="${mode == 'holonomic'}">
-    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.145" z="-0.086"
       R="0.0" P="0.0"
       Y="0.0" side="1" />
-    <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_right" x="-0.126" y="-0.073" z="-0.086"
       R="0.0" P="0.0"
-      Y="${-pi}" side="-1" />
-    <xacro:motor namespace="${namespace}" name="motor_middle" x="0.150" y="0.0" z="-0.086"
+      Y="${120*pi/180}" side="1" />
+    <xacro:motor namespace="${namespace}" name="motor_middle" x="0.126" y="-0.073" z="-0.086"
       R="0.0" P="0.0"
-      Y="${-pi/2}" side="-1" />
+      Y="${240*pi/180}" side="1" />
   </xacro:if>
 
   <!-- sensors -->
