@@ -47,11 +47,10 @@
       <origin xyz="0.0 0.0 0.024" rpy="0 0 0" />
       <axis xyz="0 ${side} 0" />
       <limit effort="2000" velocity="5" />
-      <dynamics friction="0.05" damping="0.05" />
     </joint>
     <gazebo>
-      <plugin filename="gz-sim-joint-position-controller-system"
-        name="gz::sim::systems::JointPositionController">
+      <plugin filename="gz-sim-joint-controller-system"
+        name="gz::sim::systems::JointController">
         <joint_name>${name}_wheel_joint</joint_name>
         <use_velocity_commands>true</use_velocity_commands>
         <topic>${namespace}${name}/pos</topic>
