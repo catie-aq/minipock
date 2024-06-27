@@ -27,10 +27,10 @@
         <parent link="${namespace}base_link"/>
         <child link="${namespace}${name}_link"/>
       </joint>
-      <gazebo reference="${name}_link">
+      <gazebo reference="${namespace}${name}_link">
         <sensor type="gpu_lidar" name="lds_01">
           <update_rate>50</update_rate>
-          <topic>scan_raw</topic>
+          <topic>${namespace}scan_raw</topic>
           <visualize>true</visualize>
           <lidar>
             <scan>
