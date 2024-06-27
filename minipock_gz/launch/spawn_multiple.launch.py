@@ -114,6 +114,7 @@ def lidar_process(use_sim_time, robots):
 
     return LaunchDescription(nodes)
 
+
 def relay(use_sim_time, robots):
     """
     This function returns a relay process wrapped within a LaunchDescription object.
@@ -128,11 +129,12 @@ def relay(use_sim_time, robots):
                 executable="relay",
                 name="relay_tf",
                 output="screen",
-                parameters=[{
-                    "input_topic": "/tf",
-                    "output_topic": "/" + robot["name"] + "/tf",
-                    "monitor_rate": 100.0
-                }
+                parameters=[
+                    {
+                        "input_topic": "/tf",
+                        "output_topic": "/" + robot["name"] + "/tf",
+                        "monitor_rate": 100.0,
+                    }
                 ],
             )
         )
@@ -142,11 +144,12 @@ def relay(use_sim_time, robots):
                 executable="relay",
                 name="relay_tf_static",
                 output="screen",
-                parameters=[{
-                    "input_topic": "/tf_static",
-                    "output_topic": "/" + robot["name"] + "/tf_static",
-                    "monitor_rate": 100.0
-                }
+                parameters=[
+                    {
+                        "input_topic": "/tf_static",
+                        "output_topic": "/" + robot["name"] + "/tf_static",
+                        "monitor_rate": 100.0,
+                    }
                 ],
             )
         )
