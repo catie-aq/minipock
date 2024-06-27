@@ -8,6 +8,7 @@ RUN apt update && apt install -y \
     ros-humble-tf-transformations \
     lsb-release wget gnupg \
     ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher ros-humble-xacro \
+    ros-humble-topic-tools \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install transforms3d
