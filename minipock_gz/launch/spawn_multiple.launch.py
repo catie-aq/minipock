@@ -51,6 +51,7 @@ def parse_config(context, *args, **kwargs):
     launch_processes.extend(
         bridge(world_name=world, robots=robots, use_sim_time=use_sim_time_bool)
     )
+    launch_processes.append(relay(use_sim_time=use_sim_time_bool, robots=robots))
     return launch_processes
 
 
@@ -104,10 +105,9 @@ def lidar_process(use_sim_time, robots):
         nodes.append(
             Node(
                 package="minipock_gz",
-                namespace=f"{robot['name']}",
-                executable="lidar_process",
+                executable="lidar_process_multiple",
                 parameters=[
-                    {"use_sim_time": use_sim_time},
+                    {"use_sim_time": use_sim_time, "robot_name": robot["name"]},
                 ],
             )
         )
