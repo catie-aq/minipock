@@ -53,9 +53,9 @@ def parse_config(context, *args, **kwargs):
 
     namespace = "minipock0"
     namespaced_rviz_config_file = ReplaceString(
-            source_file=rviz_config_file,
-            replacements={'<robot_namespace>': ('/', namespace)})
-    
+        source_file=rviz_config_file, replacements={"<robot_namespace>": ("/", namespace)}
+    )
+
     default_bt_xml_filename = PathJoinSubstitution(
         [
             FindPackageShare("nav2_bt_navigator"),
