@@ -35,7 +35,7 @@ def parse_config(context, *args, **kwargs):
     params_file = LaunchConfiguration(
         "params_file",
         default=PathJoinSubstitution(
-            [FindPackageShare("minipock_navigation2"), "param", "minipock.yaml"]
+            [FindPackageShare("minipock_navigation2"), "param", "minipock0.yaml"]
         ),
     )
     nav2_launch_file_dir = PathJoinSubstitution(
