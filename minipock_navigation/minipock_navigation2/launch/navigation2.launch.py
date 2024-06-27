@@ -11,6 +11,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from nav2_common.launch import ReplaceString
 
 
 def parse_config(context, *args, **kwargs):
@@ -38,6 +39,7 @@ def parse_config(context, *args, **kwargs):
             [FindPackageShare("minipock_navigation2"), "param", "minipock0.yaml"]
         ),
     )
+
     nav2_launch_file_dir = PathJoinSubstitution(
         [
             FindPackageShare("nav2_bringup"),
@@ -46,9 +48,14 @@ def parse_config(context, *args, **kwargs):
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("minipock_navigation2"), "rviz", "navigation2.rviz"]
+        [FindPackageShare("minipock_navigation2"), "rviz", "navigation2_namespaced.rviz"]
     )
 
+    namespace = "minipock0"
+    namespaced_rviz_config_file = ReplaceString(
+            source_file=rviz_config_file,
+            replacements={'<robot_namespace>': ('/', namespace)})
+    
     default_bt_xml_filename = PathJoinSubstitution(
         [
             FindPackageShare("nav2_bt_navigator"),
@@ -91,7 +98,7 @@ def parse_config(context, *args, **kwargs):
             package="rviz2",
             executable="rviz2",
             name="rviz2",
-            arguments=["-d", rviz_config_file],
+            arguments=["-d", namespaced_rviz_config_file],
             output="screen",
             condition=IfCondition(start_rviz),
             parameters=[{"use_sim_time": IfCondition(use_sim_time).evaluate(context)}],
