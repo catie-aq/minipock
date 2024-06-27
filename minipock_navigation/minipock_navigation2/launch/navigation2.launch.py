@@ -83,6 +83,8 @@ def parse_config(context, *args, **kwargs):
                 "autostart": autostart,
                 "use_composition": use_composition,
                 "use_respawn": use_respawn,
+                "use_namespace": "true",
+                "namespace": "minipock0",
             }.items(),
         ),
         Node(
