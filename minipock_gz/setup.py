@@ -19,6 +19,7 @@ setup(
     entry_points={
         "console_scripts": [
             "lidar_process = minipock_gz.lidar_process:main",
+            "lidar_process_multiple = minipock_gz.lidar_process_multiple:main",
         ],
     },
     data_files=[
