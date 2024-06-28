@@ -58,7 +58,7 @@
           </geometry>
           <material name="${name}_wheel_link_material">
             <color
-              rgba="0.76862745098039220171 0.88627450980392152857 0.95294117647058818044 1.0" />
+              rgba="0.06862745098039220171 0.08627450980392152857 0.05294117647058818044 1.0" />
           </material>
         </visual>
         <inertial>
@@ -74,7 +74,7 @@
       <joint name="${name}_wheel_joint" type="continuous">
         <parent link="${name}_base_link" />
         <child link="${name}_wheel_link" />
-        <origin xyz="0.0 0.05 0.024" rpy="${pi/2} 0 0" />
+        <origin xyz="0.0 0.02 0.024" rpy="${pi/2} 0 0" />
         <axis xyz="0 0 ${side}" />
         <limit effort="2000" velocity="45.5" />
       </joint>
@@ -88,7 +88,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -128,7 +128,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -168,7 +168,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -208,7 +208,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -248,7 +248,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -288,7 +288,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -329,7 +329,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -370,7 +370,7 @@
           </geometry>
           <material name="roller_material">
             <color
-              rgba="0.64705882352941179736 0.64705882352941179736 0.64705882352941179736 1.0" />
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
           </material>
         </visual>
         <collision>
@@ -399,6 +399,45 @@
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
 
+      </joint>
+      <link name="${name}_roller_9">
+        <visual>
+          <origin xyz="0 0 -0.0080000000000000001665"
+            rpy="6.7221822527689735584e-18 -8.7180519648836596984e-33 -1.2569312029751666415e-31" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/roller.stl" />
+          </geometry>
+          <material name="roller_material">
+            <color
+              rgba="0.14705882352941179736 0.14705882352941179736 0.14705882352941179736 1.0" />
+          </material>
+        </visual>
+        <collision>
+          <origin xyz="0 0 -0.0080000000000000001665"
+            rpy="6.7221822527689735584e-18 -8.7180519648836596984e-33 -1.2569312029751666415e-31" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/roller.stl" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin
+            xyz="4.0653990009220675453e-20 2.3540384680750280962e-32 -0.0079999999999998284289"
+            rpy="0 0 0" />
+          <mass value="0.0015147722925255755443" />
+          <inertia ixx="4.0501606036357593342e-08" ixy="-4.6621608404600178297e-39"
+            ixz="-6.5460416771372355481e-39" iyy="4.0501606036357593342e-08"
+            iyz="4.055471787642257058e-24" izz="2.7582542641814991776e-08" />
+        </inertial>
+      </link>
+
+      <joint name="${name}_joint_roller_7_continuous" type="continuous">
+        <origin xyz="-0.013258688745465072728 0.028036857843754141306 -0.0049999999999999992367"
+          rpy="-0.69813170079771968979 1.5707963267948958919 0" />
+        <parent link="${name}_wheel_link" />
+        <child link="${name}_roller_9" />
+        <axis xyz="0 0 1" />
+        <limit effort="1" velocity="20" />
+        <joint_properties friction="0.0" />
       </joint>
     </xacro:if>
 
