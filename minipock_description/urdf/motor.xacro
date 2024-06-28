@@ -2,7 +2,7 @@
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="motor"
     params="namespace:=minipock name:=motor_left x:=0.0 y:=0.0 z:=0.0
-				       R:=0.0 P:=0.0 Y:=0.0 side:=1">
+				       R:=0.0 P:=0.0 Y:=0.0 side:=1 mode:='differential'">
 
     <link name="${name}_base_link">
       <visual>
@@ -17,37 +17,110 @@
         <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
       </inertial>
     </link>
-    <link name="${name}_wheel_link">
-      <visual>
-        <origin xyz="0 0 -0.024" rpy="${pi/2} 0 0" />
-        <geometry>
-          <mesh filename="package://minipock_description/models/wheel_rotative.dae" />
-        </geometry>
-      </visual>
-      <collision>
-        <origin xyz="0 0.032 0.0" rpy="${pi/2} -0 0" />
-        <geometry>
-          <cylinder radius="0.036" length="0.006" />
-        </geometry>
-      </collision>
-      <inertial>
-        <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0" />
-        <mass value="1.587" />
-        <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
-      </inertial>
-    </link>
+
+
+    <xacro:if value="${mode == 'differential'}">
+      <link name="${name}_wheel_link">
+        <visual>
+          <origin xyz="0 0 -0.024" rpy="${pi/2} 0 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/wheel_rotative.dae" />
+          </geometry>
+        </visual>
+        <collision>
+          <origin xyz="0 0.032 0.0" rpy="${pi/2} -0 0" />
+          <geometry>
+            <cylinder radius="0.036" length="0.006" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0" />
+          <mass value="1.587" />
+          <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
+        </inertial>
+      </link>
+      <joint name="${name}_wheel_joint" type="continuous">
+        <parent link="${name}_base_link" />
+        <child link="${name}_wheel_link" />
+        <origin xyz="0.0 0.0 0.024" rpy="0 0 0" />
+        <axis xyz="0 ${side} 0" />
+        <limit effort="2000" velocity="45.5" />
+      </joint>
+    </xacro:if>
+
+    <xacro:if value="${mode == 'holonomic'}">
+      <link name="${name}_wheel_link">
+        <visual>
+          <origin xyz="0 0 0" rpy="0 -0 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/core.stl" />
+          </geometry>
+          <material name="core_material">
+            <color
+              rgba="0.91764705882352937127 0.91764705882352937127 0.91764705882352937127 1.0" />
+          </material>
+        </visual>
+        <collision>
+          <origin xyz="0 0 0" rpy="0 -0 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/side.stl" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0" />
+          <mass value="1.587" />
+          <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
+        </inertial>
+      </link>
+      <link name="${name}_rollers">
+        <visual>
+          <origin
+            xyz="0.00449999999999999966 -0.019500000000000017319 0.0071250000000000722478"
+            rpy="-3.141592653589793116 -0.52359877559829481886 1.570796326794896558" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </visual>
+        <collision>
+          <origin
+            xyz="0.00449999999999999966 -0.019500000000000017319 0.0071250000000000722478"
+            rpy="-3.141592653589793116 -0.52359877559829481886 1.570796326794896558" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
+        <inertial>
+          <origin xyz="0.0 -0.029 0.0" rpy="0 -0 0" />
+          <mass value="1.587" />
+          <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
+        </inertial>
+      </link>
+      <joint name="${name}_wheel_joint" type="continuous">
+        <parent link="${name}_base_link" />
+        <child link="${name}_wheel_link" />
+        <origin xyz="0.0 0.05 0.024" rpy="0 0 0" />
+        <axis xyz="0 ${side} 0" />
+        <limit effort="2000" velocity="45.5" />
+      </joint>
+
+      <joint name="${name}_continuous_roller_11" type="continuous">
+        <origin xyz="-0.0071249999999999967873 -0.00449999999999999966 0.019500000000000045075"
+          rpy="1.5707963267949005548 -0 1.570796326794896558" />
+        <parent link="${name}_wheel_link" />
+        <child link="${name}_rollers" />
+        <axis xyz="0 0 1" />
+        <limit effort="1" velocity="20" />
+      </joint>
+    </xacro:if>
+
+
     <joint name="${name}_joint" type="fixed">
       <parent link="${namespace}base_link" />
       <child link="${name}_base_link" />
       <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}" />
     </joint>
-    <joint name="${name}_wheel_joint" type="continuous">
-      <parent link="${name}_base_link" />
-      <child link="${name}_wheel_link" />
-      <origin xyz="0.0 0.0 0.024" rpy="0 0 0" />
-      <axis xyz="0 ${side} 0" />
-      <limit effort="2000" velocity="45.5"/>
-    </joint>
+
+
     <gazebo>
       <plugin filename="gz-sim-joint-controller-system"
         name="gz::sim::systems::JointController">
