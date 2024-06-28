@@ -115,7 +115,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -155,7 +155,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_2" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -195,7 +195,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_3" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -235,7 +235,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_4" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -275,7 +275,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_5" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -315,7 +315,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_6" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -357,7 +357,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_7" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
 
@@ -397,7 +397,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_8" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
 
       </joint>
       <link name="${name}_roller_9">
@@ -436,7 +436,7 @@
         <parent link="${name}_wheel_link" />
         <child link="${name}_roller_9" />
         <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
+         <limit effort="1" velocity="200" />
         <joint_properties friction="0.0" />
       </joint>
     </xacro:if>
@@ -453,7 +453,7 @@
       <plugin filename="gz-sim-joint-controller-system"
         name="gz::sim::systems::JointController">
         <joint_name>${name}_wheel_joint</joint_name>
-        <use_velocity_commands>true</use_velocity_commands>
+        <use_velocity_commands>false</use_velocity_commands>
         <topic>${namespace}${name}/pos</topic>
         <name>${name}</name>
       </plugin>
