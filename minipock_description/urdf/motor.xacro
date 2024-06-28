@@ -52,33 +52,12 @@
       <link name="${name}_wheel_link">
         <inertial>
           <origin
-              xyz="3.3176058353666561185e-10 1.9488714546560112356e-09 -1.4410385216725714439e-09"
-              rpy="0 0 0" />
+            xyz="3.3176058353666561185e-10 1.9488714546560112356e-09 -1.4410385216725714439e-09"
+            rpy="0 0 0" />
           <mass value="0.042007231859596941281" />
           <inertia ixx="6.621896807313688522e-06" ixy="-3.30985697672957495e-13"
-              ixz="1.2990500681058296834e-10" iyy="1.1099610559885981505e-05"
-              iyz="-7.3482336870196013188e-14" izz="6.6214468781051818449e-06" />
-      </inertial>
-        <visual>
-          <origin xyz="0 0 0" rpy="0 -0 0" />
-          <geometry>
-            <mesh filename="package://minipock_description/models/core.stl" />
-          </geometry>
-        </visual>
-      </link>
-      <joint name="${name}_wheel_joint" type="continuous">
-        <parent link="${name}_base_link" />
-        <child link="${name}_wheel_link" />
-        <origin xyz="0.0 0.05 0.024" rpy="0 0 0" />
-        <axis xyz="0 ${side} 0" />
-        <limit effort="2000" velocity="45.5" />
-      </joint>
-
-      <link name="${name}_rollers_1">
-        <inertial>
-          <origin xyz="0 0 0" rpy="0 0 0" />
-          <mass value="0.001" />
-          <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
+            ixz="1.2990500681058296834e-10" iyy="1.1099610559885981505e-05"
+            iyz="-7.3482336870196013188e-14" izz="6.6214468781051818449e-06" />
         </inertial>
         <visual>
           <origin xyz="0 0 0" rpy="0 -0 0" />
@@ -91,67 +70,21 @@
           </material>
         </visual>
       </link>
-      <joint name="${name}_rollers_1_fixing" type="continuous">
-        <origin xyz="0 0 0" rpy="0 -0 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_rollers_1" />
-        <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
-      </joint>
-
-      <link name="${name}_rollers_2">
-        <inertial>
-          <origin xyz="0 0 0" rpy="0 0 0" />
-          <mass value="0.001" />
-          <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
-        </inertial>
-        <visual>
-          <origin xyz="0 0 0"
-            rpy="-3.1696191514317587783e-17 0.52359877559829870464 3.141592653589793116" />
-          <geometry>
-            <mesh filename="package://minipock_description/models/side.stl" />
-          </geometry>
-          <material name="${name}_rollers_2_visual_material">
-            <color rgba="0.2313725490196078538 0.38039215686274507888 0.7058823529411765163 1.0" />
-          </material>
-        </visual>
-      </link>
-      <joint name="${name}_rollers_2_fixing" type="continuous">
-        <origin xyz="0 0 0" rpy="0 -0 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_rollers_2" />
-        <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
-      </joint>
-
-      <link name="${name}_rollers_3">
-        <inertial>
-          <origin xyz="0 0 0" rpy="0 0 0" />
-          <mass value="0.001" />
-          <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001" />
-        </inertial>
-        <visual>
-          <origin xyz="0 0 0" rpy="0 -0 0" />
-          <geometry>
-            <mesh filename="package://minipock_description/models/side.stl" />
-          </geometry>
-          <material name="${name}_rollers_3_visual_material">
-            <color rgba="0.2313725490196078538 0.38039215686274507888 0.7058823529411765163 1.0" />
-          </material>
-        </visual>
-      </link>
-      <joint name="${name}_rollers_3_fixing" type="continuous">
-        <origin xyz="0 0 0" rpy="0 -0 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_rollers_3" />
-        <axis xyz="0 0 1" />
-        <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+      <joint name="${name}_wheel_joint" type="continuous">
+        <parent link="${name}_base_link" />
+        <child link="${name}_wheel_link" />
+        <origin xyz="0.0 0.05 0.0" rpy="0 0 0" />
+        <axis xyz="0 ${side} 0" />
+        <limit effort="2000" velocity="45.5" />
       </joint>
 
       <link name="${name}_rollers_4">
+        <collision>
+
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -175,10 +108,16 @@
         <child link="${name}_rollers_4" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_5">
+        <collision>
+          <origin xyz="0 0.00899999999999999932 0" rpy="-0 -1.570796326794896558 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -201,10 +140,16 @@
         <child link="${name}_rollers_5" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_6">
+        <collision>
+          <origin xyz="0 0.00899999999999999932 0" rpy="-0 1.570796326794896558 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -227,10 +172,16 @@
         <child link="${name}_rollers_6" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_7">
+        <collision>
+          <origin xyz="0 0.00899999999999999932 0" rpy="0 0.52359877559829870464 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -253,10 +204,16 @@
         <child link="${name}_rollers_7" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_8">
+        <collision>
+          <origin xyz="0 0.00899999999999999932 0" rpy="0 -0.52359877559829914873 0" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -279,10 +236,17 @@
         <child link="${name}_rollers_8" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_9">
+        <collision>
+          <origin xyz="0 0.00899999999999999932 0"
+            rpy="3.141592653589793116 0.52359877559829914873 3.141592653589793116" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -306,10 +270,18 @@
         <child link="${name}_rollers_9" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_10">
+        <collision>
+          <origin
+            xyz="2.500000000003367584e-06 -2.7755575615628913511e-17 4.3301270189720353354e-06"
+            rpy="-8.3452360045596450484e-16 -1.0471975511965962991 9.6362485073669450166e-16" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -334,10 +306,18 @@
         <child link="${name}_rollers_10" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_11">
+        <collision>
+          <origin
+            xyz="-2.5000000000650840986e-06 -1.1265347830754021332e-17 -4.3301270189615499146e-06"
+            rpy="-3.141592653589793116 1.0471975511965965211 3.1415926535897922278" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -362,10 +342,18 @@
         <child link="${name}_rollers_11" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_12">
+        <collision>
+          <origin
+            xyz="4.9999999999113253768e-06 -2.7755575615628913511e-17 6.9388939039072283776e-18"
+            rpy="1.8722173686805076642e-30 4.3675930115564019462e-15 4.8181242536834853273e-16" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -390,10 +378,18 @@
         <child link="${name}_rollers_12" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_13">
+        <collision>
+          <origin
+            xyz="-2.5000000000402304579e-06 -2.6888213877640509963e-17 4.3301270189815763145e-06"
+            rpy="-3.1415926535897922278 -1.0471975511965989636 3.1415926535897922278" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -418,10 +414,18 @@
         <child link="${name}_rollers_13" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_14">
+        <collision>
+          <origin
+            xyz="-4.9999999999078559298e-06 -2.7755575615628913511e-17 3.8163916471489756077e-17"
+            rpy="-3.141592653589793116 -4.3675930115564019462e-15 3.1415926535897926719" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -446,10 +450,18 @@
         <child link="${name}_rollers_14" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
 
       <link name="${name}_rollers_15">
+        <collision>
+          <origin
+            xyz="2.5000000000471693518e-06 -2.6888213877640506882e-17 -4.330127018950351292e-06"
+            rpy="8.3452360045596864635e-16 1.0471975511965989636 9.6362485073669943204e-16" />
+          <geometry>
+            <mesh filename="package://minipock_description/models/tire.stl" />
+          </geometry>
+        </collision>
         <inertial>
           <origin xyz="0 0 0" rpy="0 0 0" />
           <mass value="0.001" />
@@ -474,7 +486,7 @@
         <child link="${name}_rollers_15" />
         <axis xyz="0 0 1" />
         <limit effort="1" velocity="20" />
-        <joint_properties friction="0.0" />
+
       </joint>
     </xacro:if>
 
