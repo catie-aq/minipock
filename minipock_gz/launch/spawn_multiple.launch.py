@@ -51,7 +51,6 @@ def parse_config(context, *args, **kwargs):
     launch_processes.extend(
         bridge(world_name=world, robots=robots, use_sim_time=use_sim_time_bool)
     )
-    launch_processes.append(relay(use_sim_time=use_sim_time_bool, robots=robots))
     return launch_processes
 
 
@@ -108,48 +107,6 @@ def lidar_process(use_sim_time, robots):
                 executable="lidar_process_multiple",
                 parameters=[
                     {"use_sim_time": use_sim_time, "robot_name": robot["name"]},
-                ],
-            )
-        )
-
-    return LaunchDescription(nodes)
-
-
-def relay(use_sim_time, robots):
-    """
-    This function returns a relay process wrapped within a LaunchDescription object.
-
-    :return: LaunchDescription object containing the relay process.
-    """
-    nodes = []
-    for robot in robots:
-        nodes.append(
-            Node(
-                package="topic_tools",
-                executable="relay",
-                name="relay_tf",
-                output="screen",
-                parameters=[
-                    {
-                        "input_topic": "/tf",
-                        "output_topic": "/" + robot["name"] + "/tf",
-                        "monitor_rate": 100.0,
-                    }
-                ],
-            )
-        )
-        nodes.append(
-            Node(
-                package="topic_tools",
-                executable="relay",
-                name="relay_tf_static",
-                output="screen",
-                parameters=[
-                    {
-                        "input_topic": "/tf_static",
-                        "output_topic": "/" + robot["name"] + "/tf_static",
-                        "monitor_rate": 100.0,
-                    }
                 ],
             )
         )
