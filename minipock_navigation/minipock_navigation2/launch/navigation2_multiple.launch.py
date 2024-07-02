@@ -22,7 +22,7 @@ def parse_config(context, *args, **kwargs):
     """
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
-    autostart = LaunchConfiguration("autostart").perform(context)
+    autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
     use_composition = LaunchConfiguration("use_composition").perform(context)
     use_respawn = LaunchConfiguration("use_respawn").perform(context)
     bringup = IfCondition(LaunchConfiguration("bringup")).evaluate(context)
@@ -31,6 +31,12 @@ def parse_config(context, *args, **kwargs):
         "map_yaml_file",
         default=PathJoinSubstitution(
             [FindPackageShare("minipock_navigation2"), "map", "map.yaml"]
+        ),
+    )
+    amcl_params_file = LaunchConfiguration(
+        "amcl_params_file",
+        default=PathJoinSubstitution(
+            [FindPackageShare("minipock_navigation2"), "param", "amcl_minipock0.yaml"]
         ),
     )
     params_file = LaunchConfiguration(
@@ -79,30 +85,67 @@ def parse_config(context, *args, **kwargs):
             }.items(),
         )
 
+    launch_map_server = LaunchDescription(
+        [
+            Node(
+                package="nav2_map_server",
+                executable="map_server",
+                name="map_server",
+                output="screen",
+                parameters=[
+                    {"use_sim_time": True},
+                    {"topic_name": "/map"},
+                    {"frame-id": "map"},
+                    {"yaml_filename": map_yaml_file},
+                ],
+            ),
+        ]
+    )
+    launch_amcl = LaunchDescription(
+        [
+            Node(
+                namespace=namespace,
+                package="nav2_amcl",
+                executable="amcl",
+                name="amcl",
+                output="screen",
+                parameters=[amcl_params_file],
+            ),
+        ]
+    )
+
+    launch_lifecycle_manager_localization = LaunchDescription(
+        [
+            Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_localization",
+                output="screen",
+                parameters=[
+                    {"autostart": autostart},
+                    {"node_names": ["map_server", "minipock0/amcl"]},
+                    {"use_sim_time": True},
+                    {"bond_timeout": 0.0},
+                ],
+            ),
+        ]
+    )
+
+    launch_rviz = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", namespaced_rviz_config_file],
+        output="screen",
+        condition=IfCondition(start_rviz),
+        parameters=[{"use_sim_time": IfCondition(use_sim_time).evaluate(context)}],
+    )
+
     launch_actions = [
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([nav2_launch_file_dir, "/bringup_launch.py"]),
-            launch_arguments={
-                "map": map_yaml_file,
-                "use_sim_time": use_sim_time,
-                "params_file": params_file,
-                "default_bt_xml_filename": default_bt_xml_filename,
-                "autostart": autostart,
-                "use_composition": use_composition,
-                "use_respawn": use_respawn,
-                "use_namespace": "true",
-                "namespace": "minipock0",
-            }.items(),
-        ),
-        Node(
-            package="rviz2",
-            executable="rviz2",
-            name="rviz2",
-            arguments=["-d", namespaced_rviz_config_file],
-            output="screen",
-            condition=IfCondition(start_rviz),
-            parameters=[{"use_sim_time": IfCondition(use_sim_time).evaluate(context)}],
-        ),
+        launch_map_server,
+        launch_amcl,
+        launch_lifecycle_manager_localization,
+        launch_rviz,
     ]
     if minipock_bringup is not None:
         launch_actions.append(minipock_bringup)
@@ -135,7 +178,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "use_composition",
-                default_value="True",
+                default_value="False",
                 description="Whether to use composed bringup",
             ),
             DeclareLaunchArgument(
