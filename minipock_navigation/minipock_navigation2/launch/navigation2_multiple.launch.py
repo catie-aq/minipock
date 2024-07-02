@@ -152,6 +152,7 @@ def parse_config(context, *args, **kwargs):
 
     return launch_actions
 
+
 def generate_launch_description():
     """
     Generate the launch description for spawning an object in a simulation.
