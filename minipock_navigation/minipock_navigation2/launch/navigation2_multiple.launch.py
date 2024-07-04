@@ -21,7 +21,7 @@ def parse_config(context, *args, **kwargs):
     :return: A LaunchDescription object.
     """
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
-    use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
+    use_sim_time = IfCondition(LaunchConfiguration("use_sim_time")).evaluate(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
     use_composition = LaunchConfiguration("use_composition").perform(context)
     use_respawn = LaunchConfiguration("use_respawn").perform(context)
@@ -93,7 +93,7 @@ def parse_config(context, *args, **kwargs):
                 name="map_server",
                 output="screen",
                 parameters=[
-                    {"use_sim_time": True},
+                    {"use_sim_time": use_sim_time},
                     {"topic_name": "/map"},
                     {"frame-id": "map"},
                     {"yaml_filename": map_yaml_file},
@@ -258,7 +258,7 @@ def parse_config(context, *args, **kwargs):
         arguments=["-d", namespaced_rviz_config_file],
         output="screen",
         condition=IfCondition(start_rviz),
-        parameters=[{"use_sim_time": IfCondition(use_sim_time).evaluate(context)}],
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
     launch_actions = [
