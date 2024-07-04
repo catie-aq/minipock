@@ -1,6 +1,6 @@
  minipock0/bt_navigator:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     global_frame: map
     robot_base_frame: minipock0/base_footprint
     odom_topic: /minipock0/odom
@@ -61,11 +61,11 @@
     use_sim_time: True
  minipock0/bt_navigator_navigate_to_pose_rclcpp_node:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
 
  minipock0/controller_server:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
@@ -150,7 +150,7 @@
       publish_frequency: 2.0
       global_frame: minipock0/odom
       robot_base_frame: minipock0/base_footprint
-      use_sim_time: False
+      use_sim_time: True
       rolling_window: true
       width: 3
       height: 3
@@ -194,7 +194,7 @@
       global_frame: map
       robot_base_frame: minipock0/base_footprint
       map_topic: /map
-      use_sim_time: False
+      use_sim_time: True
       robot_radius: 0.17
       resolution: 0.05
       track_unknown_space: true
@@ -225,7 +225,7 @@
 
  minipock0/map_saver:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     save_map_timeout: 5.0
     free_thresh_default: 0.25
     occupied_thresh_default: 0.65
@@ -234,7 +234,7 @@
  minipock0/planner_server:
   ros__parameters:
     expected_planner_frequency: 5.0
-    use_sim_time: False
+    use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
@@ -244,7 +244,7 @@
 
  minipock0/smoother_server:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -269,7 +269,7 @@
     global_frame: minipock0/odom
     robot_base_frame: minipock0/base_footprint
     transform_tolerance: 0.5
-    use_sim_time: False
+    use_sim_time: True
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
     min_rotational_vel: 0.4
@@ -277,11 +277,11 @@
 
  minipock0/robot_state_publisher:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
 
  minipock0/waypoint_follower:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     loop_rate: 5
     global_frame_id: "map"
     stop_on_failure: false
@@ -293,7 +293,7 @@
 
  minipock0/velocity_smoother:
   ros__parameters:
-    use_sim_time: False
+    use_sim_time: True
     smoothing_frequency: 5.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
