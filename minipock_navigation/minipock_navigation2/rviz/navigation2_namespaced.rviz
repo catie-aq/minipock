@@ -424,6 +424,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: <robot_namespace>/clicked_point
     - Class: nav2_rviz_plugins/GoalTool
+
   Transformation:
     Current:
       Class: rviz_default_plugins/TF

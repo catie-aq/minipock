@@ -160,7 +160,8 @@ def spawn(use_sim_time, robots):
                 executable="create",
                 output="screen",
                 arguments=minipock_description.model_v2.spawn_args(
-                    robot_name=robot["name"], robot_position_str=robot["position"]
+                    robot_name=robot["name"],
+                    robot_position_str=robot["position"],
                 ),
             )
         )
