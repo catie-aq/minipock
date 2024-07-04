@@ -24,7 +24,7 @@ def parse_config(context, *args, **kwargs):
     use_sim_time = IfCondition(LaunchConfiguration("use_sim_time")).evaluate(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
     use_composition = LaunchConfiguration("use_composition").perform(context)
-    use_respawn = LaunchConfiguration("use_respawn").perform(context)
+    use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
     bringup = IfCondition(LaunchConfiguration("bringup")).evaluate(context)
 
     map_yaml_file = LaunchConfiguration(
