@@ -109,7 +109,9 @@ def parse_config(context, *args, **kwargs):
                 executable="amcl",
                 name="amcl",
                 output="screen",
-                parameters=[amcl_params_file],
+                parameters=[
+                    amcl_params_file,
+                ],
             ),
         ]
     )
