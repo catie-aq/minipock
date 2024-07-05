@@ -33,19 +33,6 @@ def parse_config(context, *args, **kwargs):
             [FindPackageShare("minipock_navigation2"), "map", "map.yaml"]
         ),
     )
-    amcl_params_file = LaunchConfiguration(
-        "amcl_params_file",
-        default=PathJoinSubstitution(
-            [FindPackageShare("minipock_navigation2"), "param", "amcl_minipock0.yaml"]
-        ),
-    )
-    params_file = LaunchConfiguration(
-        "params_file",
-        default=PathJoinSubstitution(
-            [FindPackageShare("minipock_navigation2"), "param", "minipock0.yaml"]
-        ),
-    )
-
     nav2_launch_file_dir = PathJoinSubstitution(
         [
             FindPackageShare("nav2_bringup"),
@@ -57,9 +44,13 @@ def parse_config(context, *args, **kwargs):
         [FindPackageShare("minipock_navigation2"), "rviz", "navigation2_namespaced.rviz"]
     )
 
-    namespace = "minipock0"
+    robots = [
+        {"name": "minipock0"},
+        {"name": "minipock1"},
+    ]
+
     namespaced_rviz_config_file = ReplaceString(
-        source_file=rviz_config_file, replacements={"<robot_namespace>": ("/", namespace)}
+        source_file=rviz_config_file, replacements={"<robot_namespace>": ("/", robots[0]["name"])}
     )
 
     default_bt_xml_filename = PathJoinSubstitution(
@@ -85,6 +76,36 @@ def parse_config(context, *args, **kwargs):
             }.items(),
         )
 
+    map_server_node, amcl_nodes, lifecycle_manager_localization_node = launch_localization(
+        robots, use_sim_time, autostart, use_respawn, map_yaml_file
+    )
+
+    navigation_nodes = launch_navigation(robots, use_sim_time, autostart, use_respawn)
+
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        arguments=["-d", namespaced_rviz_config_file],
+        output="screen",
+        condition=IfCondition(start_rviz),
+        parameters=[{"use_sim_time": use_sim_time}],
+    )
+
+    launch_actions = [
+        map_server_node,
+        amcl_nodes,
+        lifecycle_manager_localization_node,
+        navigation_nodes,
+        rviz_node,
+    ]
+    if minipock_bringup is not None:
+        launch_actions.append(minipock_bringup)
+
+    return launch_actions
+
+
+def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_file):
     launch_map_server = LaunchDescription(
         [
             Node(
@@ -101,8 +122,26 @@ def parse_config(context, *args, **kwargs):
             ),
         ]
     )
-    launch_amcl = LaunchDescription(
-        [
+
+    localization_lifecycle_nodes = ["map_server"]
+
+    launch_amcl = LaunchDescription()
+    for robot in robots:
+        namespace = robot["name"]
+        params_file = LaunchConfiguration(
+            "params_file",
+            default=PathJoinSubstitution(
+                [FindPackageShare("minipock_navigation2"), "param", "minipock_multi.yaml"]
+            ),
+        )
+        params_file = ReplaceString(
+            source_file=params_file,
+            replacements={
+                "<robot_namespace>": namespace,
+                "<use_sim_time>": str(use_sim_time),
+            },
+        )
+        launch_amcl.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_amcl",
@@ -110,11 +149,11 @@ def parse_config(context, *args, **kwargs):
                 name="amcl",
                 output="screen",
                 parameters=[
-                    amcl_params_file,
+                    params_file,
                 ],
-            ),
-        ]
-    )
+            )
+        )
+        localization_lifecycle_nodes.append(f"{namespace}/amcl")
 
     launch_lifecycle_manager_localization = LaunchDescription(
         [
@@ -125,28 +164,41 @@ def parse_config(context, *args, **kwargs):
                 output="screen",
                 parameters=[
                     {"autostart": autostart},
-                    {"node_names": ["map_server", "minipock0/amcl"]},
+                    {"node_names": localization_lifecycle_nodes},
                     {"use_sim_time": use_sim_time},
                     {"bond_timeout": 0.0},
                 ],
             ),
         ]
     )
+    return [launch_map_server, launch_amcl, launch_lifecycle_manager_localization]
 
-    navigation_lifecycle_nodes = [
-        f"{namespace}/controller_server",
-        f"{namespace}/smoother_server",
-        f"{namespace}/planner_server",
-        f"{namespace}/behavior_server",
-        f"{namespace}/velocity_smoother",
-        # f'{namespace}/collision_monitor',
-        f"{namespace}/bt_navigator",
-        f"{namespace}/waypoint_follower",
-        # f'{namespace}/docking_server',
-    ]
 
-    launch_navigation = LaunchDescription(
-        [
+def launch_navigation(robots, use_sim_time, autostart, use_respawn):
+    launch_navigation = LaunchDescription()
+    for robot in robots:
+        namespace = robot["name"]
+        params_file = LaunchConfiguration(
+            "params_file",
+            default=PathJoinSubstitution(
+                [FindPackageShare("minipock_navigation2"), "param", "minipock_multi.yaml"]
+            ),
+        )
+        params_file = ReplaceString(
+            source_file=params_file,
+            replacements={
+                "<robot_namespace>": namespace,
+                "<use_sim_time>": str(use_sim_time),
+            },
+        )
+        navigation_lifecycle_nodes = [
+            f"{namespace}/controller_server",
+            f"{namespace}/smoother_server",
+            f"{namespace}/planner_server",
+            f"{namespace}/behavior_server",
+            f"{namespace}/velocity_smoother",
+        ]
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_controller",
@@ -156,7 +208,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_smoother",
@@ -166,7 +220,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_planner",
@@ -176,7 +232,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_behaviors",
@@ -186,7 +244,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_bt_navigator",
@@ -196,7 +256,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_waypoint_follower",
@@ -206,7 +268,9 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
                 namespace=namespace,
                 package="nav2_velocity_smoother",
@@ -216,32 +280,13 @@ def parse_config(context, *args, **kwargs):
                 respawn=use_respawn,
                 respawn_delay=2.0,
                 parameters=[params_file, {"use_sim_time": use_sim_time}],
-            ),
-            # Node(
-            #     namespace=namespace,
-            #     package='nav2_collision_monitor',
-            #     executable='collision_monitor',
-            #     name='collision_monitor',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[params_file, {"use_sim_time": use_sim_time}],
-            # ),
-            # Node(
-            #     namespace=namespace,
-            #     package='opennav_docking',
-            #     executable='opennav_docking',
-            #     name='docking_server',
-            #     output='screen',
-            #     respawn=use_respawn,
-            #     respawn_delay=2.0,
-            #     parameters=[params_file, {"use_sim_time": use_sim_time}],
-            # ),
+            )
+        )
+        launch_navigation.add_action(
             Node(
-                # namespace=namespace,
                 package="nav2_lifecycle_manager",
                 executable="lifecycle_manager",
-                name="lifecycle_manager_navigation",
+                name=f"lifecycle_manager_navigation_{namespace}",
                 output="screen",
                 parameters=[
                     {"autostart": autostart},
@@ -250,30 +295,8 @@ def parse_config(context, *args, **kwargs):
                     {"bond_timeout": 0.0},
                 ],
             ),
-        ]
-    )
-
-    launch_rviz = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        arguments=["-d", namespaced_rviz_config_file],
-        output="screen",
-        condition=IfCondition(start_rviz),
-        parameters=[{"use_sim_time": use_sim_time}],
-    )
-
-    launch_actions = [
-        launch_map_server,
-        launch_amcl,
-        launch_lifecycle_manager_localization,
-        launch_navigation,
-        launch_rviz,
-    ]
-    if minipock_bringup is not None:
-        launch_actions.append(minipock_bringup)
-
-    return launch_actions
+        )
+    return launch_navigation
 
 
 def generate_launch_description():
