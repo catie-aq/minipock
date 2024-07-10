@@ -109,6 +109,8 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 executable="map_server",
                 name="map_server",
                 output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
                 parameters=[
                     {"use_sim_time": use_sim_time},
                     {"topic_name": "/map"},
@@ -144,6 +146,8 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 executable="amcl",
                 name="amcl",
                 output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
                 parameters=[
                     params_file,
                 ],
@@ -158,6 +162,8 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 executable="lifecycle_manager",
                 name="lifecycle_manager_localization",
                 output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
                 parameters=[
                     {"autostart": autostart},
                     {"node_names": localization_lifecycle_nodes},
@@ -293,6 +299,8 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 executable="lifecycle_manager",
                 name=f"lifecycle_manager_navigation_{namespace}",
                 output="screen",
+                respawn=use_respawn,
+                respawn_delay=2.0,
                 parameters=[
                     {"autostart": autostart},
                     {"node_names": navigation_lifecycle_nodes},
