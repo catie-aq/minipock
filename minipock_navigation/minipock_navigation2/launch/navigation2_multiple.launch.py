@@ -218,7 +218,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -230,7 +230,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -242,7 +242,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -254,7 +254,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -266,7 +266,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -278,7 +278,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
@@ -290,7 +290,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
                 output="screen",
                 respawn=use_respawn,
                 respawn_delay=2.0,
-                parameters=[params_file, {"use_sim_time": use_sim_time}],
+                parameters=[params_file],
             )
         )
         launch_navigation.add_action(
