@@ -42,6 +42,7 @@ def spawn(robot_name, use_sim_time):
     robot_state_publisher node.
 
     :param robot_name: The name of the robot.
+    :param use_sim_time: A boolean flag to enable simulation time.
     :return: A list of launch processes.
     """
     # robot_state_publisher
