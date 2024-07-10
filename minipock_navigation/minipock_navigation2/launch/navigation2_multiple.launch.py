@@ -114,7 +114,7 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 parameters=[
                     {"use_sim_time": use_sim_time},
                     {"topic_name": "/map"},
-                    {"frame-id": "map"},
+                    {"frame_id": "map"},
                     {"yaml_filename": map_yaml_file},
                 ],
             ),
