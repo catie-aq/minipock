@@ -97,6 +97,8 @@ def lidar_process(use_sim_time, robots):
     """
     This function returns a lidar process wrapped within a LaunchDescription object.
 
+    :param use_sim_time: boolean flag to enable simulation time
+    :param robots: list of robots containing their names and positions
     :return: LaunchDescription object containing the lidar process.
     """
     nodes = []
@@ -122,7 +124,9 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     It returns a LaunchDescription object that can be used to start the simulation.
 
     :param world_name: the name of the world file to load in the simulation
+    :param paused: a boolean indicating whether the simulation should start in a paused state
     :param extra_gz_args: additional command line arguments to pass to the Gazebo simulator
+    :param use_sim_time: a boolean indicating whether to use simulation time
     :return: a list containing a LaunchDescription for starting the simulation
     """
     gz_args = ["-r", extra_gz_args, f"{world_name}.sdf"]
@@ -146,7 +150,8 @@ def spawn(use_sim_time, robots):
     """
     Spawn the robot in the current Gazebo world.
 
-    :param position: list of a position and rotation
+    :param use_sim_time: boolean flag to enable simulation time
+    :param robots: list of robots containing their names and positions
     :return: list of launch processes
     """
     launch_processes = []
@@ -183,6 +188,8 @@ def bridge(world_name, robots, use_sim_time):
     This function manages the bridge between ROS messages and Gazebo simulator.
 
     :param world_name: the name of the Gazebo world file
+    :param robots: list of robots containing their names and positions
+    :param use_sim_time: boolean flag to enable simulation time
     :return: a list of nodes
     """
     bridges_list = [

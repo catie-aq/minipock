@@ -85,6 +85,8 @@ def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0.0 0.0 0.0"):
     """
     Return the spawning arguments for the create command
 
+    :param robot_name: name of the robot
+    :param robot_position_str: position of the robot in the world
     :return: list of arguments
     """
     global ROBOT_NAME

@@ -18,6 +18,7 @@ def parse_config(context, *args, **kwargs):
     """
     Generate the launch description for the application.
 
+    :param context: The context of the launch.
     :return: A LaunchDescription object.
     """
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
@@ -106,6 +107,16 @@ def parse_config(context, *args, **kwargs):
 
 
 def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_file):
+    """
+    Generate the launch description for localization.
+
+    :param robots: list of robots containing their names
+    :param use_sim_time: use simulation time
+    :param autostart: autostart the nodes
+    :param use_respawn: respawn the nodes
+    :param map_yaml_file: path to the map yaml file
+    :return: list of launch actions
+    """
     launch_map_server = LaunchDescription(
         [
             Node(
@@ -175,6 +186,15 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
 
 
 def launch_navigation(robots, use_sim_time, autostart, use_respawn):
+    """
+    Generate the launch description for navigation.
+
+    :param robots: list of robots containing their names
+    :param use_sim_time: use simulation time
+    :param autostart: autostart the nodes
+    :param use_respawn: respawn the nodes
+    :return: list of launch actions
+    """
     launch_navigation = LaunchDescription()
     for robot in robots:
         namespace = robot["name"]
