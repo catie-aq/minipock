@@ -34,7 +34,6 @@ def parse_config(context, *args, **kwargs):
     world = LaunchConfiguration("world").perform(context)
     paused = LaunchConfiguration("paused").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
-    use_sim_time_bool = IfCondition(use_sim_time).evaluate(context)
     extra_gz_args = LaunchConfiguration("extra_gz_args").perform(context)
     launch_processes = []
     launch_processes.extend(

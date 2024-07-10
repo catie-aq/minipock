@@ -57,7 +57,6 @@ def generate():
     :return: return the sdf
     """
     urdf_path = os.path.join(
-        # FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "urdf", ROBOT_NAME + ".urdf.xacro"
         FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME),
         "urdf",
         "minipock_v2.urdf.xacro",
