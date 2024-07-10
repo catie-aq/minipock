@@ -208,6 +208,8 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn):
             f"{namespace}/planner_server",
             f"{namespace}/behavior_server",
             f"{namespace}/velocity_smoother",
+            f"{namespace}/bt_navigator",
+            f"{namespace}/waypoint_follower",
         ]
         launch_navigation.add_action(
             Node(
