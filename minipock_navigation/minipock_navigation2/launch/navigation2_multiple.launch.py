@@ -24,7 +24,6 @@ def parse_config(context, *args, **kwargs):
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
     use_sim_time = IfCondition(LaunchConfiguration("use_sim_time")).evaluate(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
-    use_composition = LaunchConfiguration("use_composition").perform(context)
     use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
     bringup = IfCondition(LaunchConfiguration("bringup")).evaluate(context)
 
@@ -33,12 +32,6 @@ def parse_config(context, *args, **kwargs):
         default=PathJoinSubstitution(
             [FindPackageShare("minipock_navigation2"), "map", "map.yaml"]
         ),
-    )
-    nav2_launch_file_dir = PathJoinSubstitution(
-        [
-            FindPackageShare("nav2_bringup"),
-            "launch",
-        ]
     )
 
     rviz_config_file = PathJoinSubstitution(
@@ -52,14 +45,6 @@ def parse_config(context, *args, **kwargs):
 
     namespaced_rviz_config_file = ReplaceString(
         source_file=rviz_config_file, replacements={"<robot_namespace>": ("/", robots[0]["name"])}
-    )
-
-    default_bt_xml_filename = PathJoinSubstitution(
-        [
-            FindPackageShare("nav2_bt_navigator"),
-            "behavior_trees",
-            "navigate_w_replanning_and_recovery.xml",
-        ]
     )
 
     minipock_bringup = None
@@ -342,11 +327,6 @@ def generate_launch_description():
                 "autostart",
                 default_value="false",
                 description="Automatically startup the nav2 stack",
-            ),
-            DeclareLaunchArgument(
-                "use_composition",
-                default_value="False",
-                description="Whether to use composed bringup",
             ),
             DeclareLaunchArgument(
                 "use_respawn",
