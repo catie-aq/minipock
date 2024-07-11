@@ -2,6 +2,8 @@ name: "ROS2 CI/CD"
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   pre-commit:
