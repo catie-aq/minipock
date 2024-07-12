@@ -242,7 +242,10 @@ class TeleopController(Node):
                     break
                 self.make_simple_profile_linear()
                 self.make_simple_profile_angular()
-                if self.control_linear_velocity != self.previous_x_linear or self.control_angular_velocity != self.previous_z_angular:
+                if (
+                    self.control_linear_velocity != self.previous_x_linear
+                    or self.control_angular_velocity != self.previous_z_angular
+                ):
                     self.publisher.publish(
                         make_twist(self.control_linear_velocity, self.control_angular_velocity)
                     )
