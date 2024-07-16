@@ -7,6 +7,7 @@ runs the simulation, and spawns the robot-related processes.
 It also bridges ROS messages and Gazebo simulator information.
 """
 
+import math
 import os
 
 import minipock_description.model
@@ -20,8 +21,6 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from minipock_gz import bridges
 
-robot_name = "minipock"
-
 
 def parse_config(context, *args, **kwargs):
     """
@@ -30,10 +29,11 @@ def parse_config(context, *args, **kwargs):
     :param context: LaunchContext with arguments
     :return: list of launch processes
     """
+    nb_robots = int(LaunchConfiguration("nb_robots").perform(context))
+    robot_name = LaunchConfiguration("robot_name").perform(context)
     world = LaunchConfiguration("world").perform(context)
     paused = LaunchConfiguration("paused").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
-    use_sim_time_bool = IfCondition(use_sim_time).evaluate(context)
     extra_gz_args = LaunchConfiguration("extra_gz_args").perform(context)
     launch_processes = []
     launch_processes.extend(
@@ -44,29 +44,77 @@ def parse_config(context, *args, **kwargs):
             use_sim_time=use_sim_time,
         )
     )
-    launch_processes.append(lidar_process(use_sim_time=use_sim_time_bool))
-    launch_processes.extend(spawn(use_sim_time=use_sim_time))
-    launch_processes.extend(bridge(world_name=world, use_sim_time=use_sim_time_bool))
+    robots = make_robots(nb_robots, robot_name)
+    launch_processes.append(lidar_process(use_sim_time=bool(use_sim_time), robots=robots))
+    launch_processes.extend(spawn(use_sim_time=use_sim_time, robots=robots))
+    launch_processes.extend(
+        bridge(world_name=world, robots=robots, use_sim_time=bool(use_sim_time))
+    )
     return launch_processes
 
 
-def lidar_process(use_sim_time):
+def generate_spiral_positions(num_entities, spacing=1):
+    """
+    Generate a list of positions in a spiral pattern.
+
+    :param num_entities: number of entities
+    :param spacing: spacing between entities
+    :return: list of positions
+    """
+    positions = []
+    first_position = (0, 0)
+    if num_entities >= 1:
+        positions.append(first_position)
+    if num_entities > 1:
+        for i in range(num_entities - 1):
+            radius = spacing * (i // 8 + 1)
+            angle = (i % 8) * (2 * math.pi / 8)
+            x = radius * math.cos(angle)
+            y = radius * math.sin(angle)
+            positions.append((x, y))
+    return positions
+
+
+def make_robots(nb_robots, robot_name):
+    """
+    Create a list of robots with their names and positions.
+
+    :param nb_robots: number of robots
+    :param robot_name: name of the robot
+    :return: list of robots
+    """
+    robots = []
+    positions = generate_spiral_positions(nb_robots)
+    for i in range(nb_robots):
+        name = f"{robot_name}{i}"
+        if nb_robots == 1:
+            name = robot_name
+        robot_position_str = f"{positions[i][0]} {positions[i][1]} 0"
+        robots.append({"name": name, "position": robot_position_str})
+    return robots
+
+
+def lidar_process(use_sim_time, robots):
     """
     This function returns a lidar process wrapped within a LaunchDescription object.
 
+    :param use_sim_time: boolean flag to enable simulation time
+    :param robots: list of robots containing their names and positions
     :return: LaunchDescription object containing the lidar process.
     """
-    return LaunchDescription(
-        [
+    nodes = []
+    for robot in robots:
+        nodes.append(
             Node(
                 package="minipock_gz",
                 executable="lidar_process",
                 parameters=[
-                    {"use_sim_time": use_sim_time},
+                    {"use_sim_time": use_sim_time, "robot_name": robot["name"]},
                 ],
             )
-        ]
-    )
+        )
+
+    return LaunchDescription(nodes)
 
 
 def simulation(world_name, paused, extra_gz_args, use_sim_time):
@@ -77,11 +125,12 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     It returns a LaunchDescription object that can be used to start the simulation.
 
     :param world_name: the name of the world file to load in the simulation
+    :param paused: a boolean indicating whether the simulation should start in a paused state
     :param extra_gz_args: additional command line arguments to pass to the Gazebo simulator
+    :param use_sim_time: a boolean indicating whether to use simulation time
     :return: a list containing a LaunchDescription for starting the simulation
     """
     gz_args = ["-r", extra_gz_args, f"{world_name}.sdf"]
-
     gz_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -98,52 +147,71 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
     return [gz_sim]
 
 
-def spawn(use_sim_time):
+def spawn(use_sim_time, robots):
     """
     Spawn the robot in the current Gazebo world.
 
-    :param position: list of a position and rotation
+    :param use_sim_time: boolean flag to enable simulation time
+    :param robots: list of robots containing their names and positions
     :return: list of launch processes
     """
-    launch_processes = [
-        Node(
-            package="ros_gz_sim",
-            executable="create",
-            output="screen",
-            arguments=minipock_description.model.spawn_args(),
-        )
-    ]
+    launch_processes = []
     spawn_launch_path = os.path.join(
         get_package_share_directory("minipock_description"), "launch", "spawn.launch.py"
     )
-    spawn_description = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(spawn_launch_path),
-        launch_arguments={
-            "robot_name": robot_name,
-            "use_sim_time": use_sim_time,
-        }.items(),
-    )
-    launch_processes.append(spawn_description)
+    for robot in robots:
+        launch_processes.append(
+            Node(
+                package="ros_gz_sim",
+                executable="create",
+                output="screen",
+                arguments=minipock_description.model.spawn_args(
+                    robot_name=robot["name"],
+                    robot_position_str=robot["position"],
+                ),
+            )
+        )
+        spawn_description = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(spawn_launch_path),
+            launch_arguments={
+                "robot_name": robot["name"],
+                "robot_position_str": robot["position"],
+                "use_sim_time": use_sim_time,
+            }.items(),
+        )
+        launch_processes.append(spawn_description)
 
     return launch_processes
 
 
-def bridge(world_name, use_sim_time):
+def bridge(world_name, robots, use_sim_time):
     """
     This function manages the bridge between ROS messages and Gazebo simulator.
 
     :param world_name: the name of the Gazebo world file
+    :param robots: list of robots containing their names and positions
+    :param use_sim_time: boolean flag to enable simulation time
     :return: a list of nodes
     """
     bridges_list = [
         bridges.clock(),
-        bridges.pose(model_name=robot_name),
-        bridges.joint_states(model_name=robot_name, world_name=world_name),
-        bridges.odometry(model_name=robot_name),
-        bridges.cmd_vel(),
-        bridges.scan_lidar(),
-        bridges.tf(),
     ]
+    if world_name[0] != "/":
+        world_name = f"/{world_name}"
+    for robot in robots:
+        robot_name = ""
+        if robot["name"] != "" and robot["name"][0] != "/":
+            robot_name = "/" + robot["name"]
+        bridges_list.extend(
+            [
+                bridges.pose(model_name=robot_name),
+                bridges.joint_states(model_name=robot_name, world_name=world_name),
+                bridges.odometry(model_name=robot_name),
+                bridges.cmd_vel(model_name=robot_name),
+                bridges.scan_lidar(model_name=robot_name),
+                bridges.tf(model_name=robot_name),
+            ]
+        )
     nodes = [
         Node(
             package="ros_gz_bridge",
@@ -151,7 +219,11 @@ def bridge(world_name, use_sim_time):
             output="screen",
             arguments=[bridge_name.argument() for bridge_name in bridges_list],
             remappings=[bridge_name.remapping() for bridge_name in bridges_list],
-            parameters=[{"use_sim_time": use_sim_time}],
+            parameters=[
+                {
+                    "use_sim_time": use_sim_time,
+                }
+            ],
         )
     ]
     return nodes
@@ -165,6 +237,10 @@ def generate_launch_description():
     """
     return LaunchDescription(
         [
+            DeclareLaunchArgument("nb_robots", default_value="1", description="Number of robots"),
+            DeclareLaunchArgument(
+                "robot_name", default_value="minipock", description="Name of robot"
+            ),
             DeclareLaunchArgument(
                 "world", default_value="minipock_world", description="Name of world"
             ),
@@ -180,7 +256,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "use_sim_time",
-                default_value="True",
+                default_value="False",
                 description="Use simulation time",
             ),
             OpaqueFunction(function=parse_config),
