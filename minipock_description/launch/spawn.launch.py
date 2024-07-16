@@ -42,19 +42,19 @@ def spawn(robot_name, use_sim_time):
     robot_state_publisher node.
 
     :param robot_name: The name of the robot.
+    :param use_sim_time: A boolean flag to enable simulation time.
     :return: A list of launch processes.
     """
     # robot_state_publisher
-    model_dir = os.path.join(
-        get_package_share_directory(f"{robot_name}_description"), "models/tmp"
-    )
-    urdf_file = os.path.join(model_dir, "model.urdf")
+    model_dir = os.path.join(get_package_share_directory(f"minipock_description"), "models/tmp")
+    urdf_file = os.path.join(model_dir, f"{robot_name}_model.urdf")
     with open(urdf_file) as input_file:
         robot_desc = input_file.read()
     params = {"use_sim_time": bool(use_sim_time), "robot_description": robot_desc}
     nodes = [
         Node(
             package="robot_state_publisher",
+            namespace=robot_name,
             executable="robot_state_publisher",
             output="both",
             parameters=[params],
