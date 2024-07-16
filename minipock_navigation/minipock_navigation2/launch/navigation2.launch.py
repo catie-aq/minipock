@@ -351,7 +351,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
                 [FindPackageShare("minipock_navigation2"), "param", "minipock.yaml"]
             ),
         )
-        params_file = ReplaceString(
+        configured_params_file = ReplaceString(
             source_file=params_file,
             replacements={
                 "<absolute_namespace>": absolute_namespace,
@@ -417,7 +417,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
 
         config = {
             "namespace": namespace,
-            "params_file": params_file,
+            "params_file": configured_params_file,
             "use_sim_time": use_sim_time,
             "autostart": autostart,
             "use_respawn": use_respawn,
