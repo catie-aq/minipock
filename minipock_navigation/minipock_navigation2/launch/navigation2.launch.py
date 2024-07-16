@@ -221,6 +221,7 @@ def standalone_navigation_nodes(config):
     autostart = config["autostart"]
     params_file = config["params_file"]
     nodes_info = config["nodes_info"]
+    collision_monitor = config["collision_monitor"]
     lifecycle_manager = config["lifecycle_manager"]
     navigation_lifecycle_nodes = config["navigation_lifecycle_nodes"]
 
@@ -238,6 +239,18 @@ def standalone_navigation_nodes(config):
                 parameters=[params_file],
             )
         )
+    standalone_navigation.add_action(
+        Node(
+            namespace=namespace,
+            package=collision_monitor["package"],
+            executable=collision_monitor["executable"],
+            name=collision_monitor["name"],
+            output="screen",
+            respawn=use_respawn,
+            respawn_delay=2.0,
+            parameters=collision_monitor["params"],
+        )
+    )
     standalone_navigation.add_action(
         Node(
             package=lifecycle_manager["package"],
@@ -269,6 +282,7 @@ def composed_navigation_nodes(config):
     autostart = config["autostart"]
     params_file = config["params_file"]
     nodes_info = config["nodes_info"]
+    collision_monitor = config["collision_monitor"]
     lifecycle_manager = config["lifecycle_manager"]
     navigation_lifecycle_nodes = config["navigation_lifecycle_nodes"]
 
@@ -302,6 +316,15 @@ def composed_navigation_nodes(config):
                 parameters=[params_file],
             )
         )
+    composable_nodes.append(
+        ComposableNode(
+            package=collision_monitor["package"],
+            plugin=collision_monitor["plugin"],
+            name=collision_monitor["name"],
+            namespace=namespace,
+            parameters=collision_monitor["params"],
+        )
+    )
     composable_nodes.extend(
         [
             ComposableNode(
@@ -345,6 +368,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
         absolute_namespace = namespace
         if namespace != "":
             absolute_namespace = "/" + namespace
+
         params_file = LaunchConfiguration(
             "params_file",
             default=PathJoinSubstitution(
@@ -403,7 +427,47 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
                 "name": "velocity_smoother",
             },
         ]
-
+        collision_monitor = {
+            "package": "nav2_collision_monitor",
+            "executable": "collision_monitor",
+            "plugin": "nav2_collision_monitor::CollisionMonitor",
+            "name": "collision_monitor",
+            "params": [
+                {"base_frame_id": f"{namespace}/base_footprint"},
+                {"odom_frame_id": f"{namespace}/odom"},
+                {"use_sim_time": use_sim_time},
+                {"cmd_vel_in_topic": "cmd_vel_smoothed"},
+                {"cmd_vel_out_topic": "cmd_vel"},
+                {"state_topic": "collision_monitor_state"},
+                {"transform_tolerance": 0.2},
+                {"source_timeout": 1.0},
+                {"base_shift_correction": True},
+                {"stop_pub_timeout": 2.0},
+                {"polygons": ["FootprintApproach"]},
+                {
+                    "FootprintApproach": {
+                        "type": "polygon",
+                        "action_type": "approach",
+                        "footprint_topic": f"{namespace}/local_costmap/published_footprint",
+                        "time_before_collision": 1.2,
+                        "simulation_time_step": 0.1,
+                        "min_points": 6,
+                        "visualize": False,
+                        "enabled": True,
+                    }
+                },
+                {"observation_sources": ["laser_scan"]},
+                {
+                    "laser_scan": {
+                        "type": "scan",
+                        "topic": f"{namespace}/scan",
+                        "min_height": 0.15,
+                        "max_height": 2.0,
+                        "enabled": True,
+                    }
+                },
+            ],
+        }
         lifecycle_manager = {
             "package": "nav2_lifecycle_manager",
             "executable": "lifecycle_manager",
@@ -414,6 +478,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
         navigation_lifecycle_nodes = []
         for node_info in navigation_nodes_info:
             navigation_lifecycle_nodes.append(f"{namespace}/{node_info['name']}")
+        navigation_lifecycle_nodes.append(f"{namespace}/{collision_monitor['name']}")
 
         config = {
             "namespace": namespace,
@@ -422,6 +487,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
             "autostart": autostart,
             "use_respawn": use_respawn,
             "nodes_info": navigation_nodes_info,
+            "collision_monitor": collision_monitor,
             "lifecycle_manager": lifecycle_manager,
             "navigation_lifecycle_nodes": navigation_lifecycle_nodes,
         }
