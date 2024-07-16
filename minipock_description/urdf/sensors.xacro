@@ -1,7 +1,8 @@
-<robot xmlns:xacro="http://ros.org/wiki/xacro">
+<?xml version="1.0"?>
+<robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="lds_01"
-               params="namespace:=minipock name:=lds_01 x:=0.0 y:=0.0 z:=0.0 R:=0.0 P:=0.0 Y:=0.0">
-    <link name="${name}_link">
+              params="namespace:=minipock/ name:=lds_01 x:=0.0 y:=0.0 z:=0.0 R:=0.0 P:=0.0 Y:=0.0">
+    <link name="${namespace}${name}_link">
       <visual name="${name}_visual">
         <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
         <geometry>
@@ -24,12 +25,12 @@
       <limit effort="1000.0" lower="0.0" upper="0" velocity="0"/>
       <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}"/>
       <parent link="${namespace}base_link"/>
-      <child link="${name}_link"/>
+      <child link="${namespace}${name}_link"/>
     </joint>
-    <gazebo reference="${name}_link">
+    <gazebo reference="${namespace}${name}_link">
       <sensor type="gpu_lidar" name="lds_01">
         <update_rate>50</update_rate>
-        <topic>scan_raw</topic>
+        <topic>${namespace}scan_raw</topic>
         <visualize>true</visualize>
         <lidar>
           <scan>
