@@ -47,7 +47,11 @@ def parse_config(context, *args, **kwargs):
     robots = make_robots(nb_robots, robot_name)
 
     namespaced_rviz_config_file = ReplaceString(
-        source_file=rviz_config_file, replacements={"<relative_namespace>" : robots[0]["name"], "<absolute_namespace>": "/"+robots[0]["name"]}
+        source_file=rviz_config_file,
+        replacements={
+            "<relative_namespace>": robots[0]["name"],
+            "<absolute_namespace>": "/" + robots[0]["name"],
+        },
     )
 
     minipock_bringup = None
@@ -69,7 +73,9 @@ def parse_config(context, *args, **kwargs):
         robots, use_sim_time, autostart, use_respawn, map_yaml_file
     )
 
-    navigation_nodes = launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composition)
+    navigation_nodes = launch_navigation(
+        robots, use_sim_time, autostart, use_respawn, use_composition
+    )
 
     rviz_node = Node(
         package="rviz2",
@@ -91,6 +97,7 @@ def parse_config(context, *args, **kwargs):
 
     return launch_actions
 
+
 def make_robots(nb_robots, robot_name):
     """
     Create a list of robots with their names and positions.
@@ -106,6 +113,7 @@ def make_robots(nb_robots, robot_name):
             name = robot_name
         robots.append({"name": name})
     return robots
+
 
 def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_file):
     """
@@ -199,6 +207,7 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
     )
     return launch_localization
 
+
 def standalone_navigation_nodes(config):
     """
     Generate the launch description for standalone navigation.
@@ -214,7 +223,7 @@ def standalone_navigation_nodes(config):
     nodes_info = config["nodes_info"]
     lifecycle_manager = config["lifecycle_manager"]
     navigation_lifecycle_nodes = config["navigation_lifecycle_nodes"]
-    
+
     standalone_navigation = LaunchDescription()
     for node_info in nodes_info:
         standalone_navigation.add_action(
@@ -247,6 +256,7 @@ def standalone_navigation_nodes(config):
     )
     return standalone_navigation
 
+
 def composed_navigation_nodes(config):
     """
     Generate the launch description for composed navigation in a container.
@@ -264,16 +274,22 @@ def composed_navigation_nodes(config):
 
     composed_navigation = LaunchDescription()
     composed_navigation.add_action(
-        GroupAction([
-            PushRosNamespace(namespace),
-            Node(
-                package="rclcpp_components",
-                executable="component_container_isolated",
-                name="nav2_container",
-                output="screen",
-                parameters=[params_file, {"autostart": autostart}, {"use_sim_time": use_sim_time}],
-            )
-        ])
+        GroupAction(
+            [
+                PushRosNamespace(namespace),
+                Node(
+                    package="rclcpp_components",
+                    executable="component_container_isolated",
+                    name="nav2_container",
+                    output="screen",
+                    parameters=[
+                        params_file,
+                        {"autostart": autostart},
+                        {"use_sim_time": use_sim_time},
+                    ],
+                ),
+            ]
+        )
     )
     composable_nodes = []
     for node_info in nodes_info:
@@ -285,7 +301,7 @@ def composed_navigation_nodes(config):
                 namespace=namespace,
                 parameters=[params_file],
             )
-    )
+        )
     composable_nodes.extend(
         [
             ComposableNode(
@@ -311,6 +327,7 @@ def composed_navigation_nodes(config):
     )
     composed_navigation.add_action(load_composable_nodes)
     return composed_navigation
+
 
 def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composition):
     """
@@ -388,12 +405,12 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
         ]
 
         lifecycle_manager = {
-                "package": "nav2_lifecycle_manager",
-                "executable": "lifecycle_manager",
-                "plugin": "nav2_lifecycle_manager::LifecycleManager",
-                "name": f"lifecycle_manager_navigation",
-            }
-        
+            "package": "nav2_lifecycle_manager",
+            "executable": "lifecycle_manager",
+            "plugin": "nav2_lifecycle_manager::LifecycleManager",
+            "name": f"lifecycle_manager_navigation",
+        }
+
         navigation_lifecycle_nodes = []
         for node_info in navigation_nodes_info:
             navigation_lifecycle_nodes.append(f"{namespace}/{node_info['name']}")
@@ -414,7 +431,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
         else:
             standalone_navigation = standalone_navigation_nodes(config)
             launch_navigation.add_action(standalone_navigation)
-        
+
     return launch_navigation
 
 
@@ -430,7 +447,6 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "robot_name", default_value="minipock", description="Name of robot"
             ),
-
             DeclareLaunchArgument(
                 "start_rviz", default_value="true", description="Whether execute rviz2"
             ),
