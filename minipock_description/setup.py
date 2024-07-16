@@ -19,7 +19,6 @@ setup(
     entry_points={
         "console_scripts": [
             "minipock_generate = minipock_description.model:generate",
-            "multiple_minipock_generate = minipock_description.model_v2:generate",
         ],
     },
     data_files=[
