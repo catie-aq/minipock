@@ -350,16 +350,3 @@
     odom_duration: 0.5
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-
-# <relative_namespace>/collision_monitor:
-#   ros_parameters:
-#     base_frame_id: "<relative_namespace>/base_footprint"
-#     odom_frame_id: "<relative_namespace>/odom"
-#     use_sim_time: <use_sim_time>
-#     cmd_vel_in_topic: "cmd_vel"
-#     cmd_vel_out_topic: "cmd_vel_out"
-#     state_topic: ""
-#     observation_sources: ["laser_scan"]
-#     laser_scan:
-#       type: "scan"
-#       topic: "<absolute_namespace>/scan"
