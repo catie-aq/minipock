@@ -20,10 +20,15 @@ from sensor_msgs.msg import LaserScan
 class ScanFilterNode(Node):
     def __init__(self):
         super().__init__("scan_filter_node")
+
+        self.declare_parameter("robot_name", "")
+        self.robot_name = self.get_parameter("robot_name").get_parameter_value().string_value
+        if self.robot_name != "":
+            self.robot_name += "/"
         self.subscription = self.create_subscription(
-            LaserScan, "scan_raw", self.listener_callback, 50
+            LaserScan, self.robot_name + "scan_raw", self.listener_callback, 50
         )
-        self.publisher = self.create_publisher(LaserScan, "scan", 50)
+        self.publisher = self.create_publisher(LaserScan, self.robot_name + "scan", 50)
 
     def listener_callback(self, msg):
         """
@@ -33,7 +38,7 @@ class ScanFilterNode(Node):
         :param msg: The LaserScan message received from the listener.
         :return: None
         """
-        msg.header.frame_id = "lds_01_link"
+        msg.header.frame_id = self.robot_name + "lds_01_link"
         self.publisher.publish(msg)
 
 
