@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:macro name="motor"
-    params="namespace:=minipock name:=motor_left x:=0.0 y:=0.0 z:=0.0
+    params="namespace:=minipock/ name:=motor_left x:=0.0 y:=0.0 z:=0.0
 				       R:=0.0 P:=0.0 Y:=0.0 side:=1 mode:='differential'">
 
-    <link name="${name}_base_link">
+    <link name="${namespace}${name}_base_link">
       <visual>
         <origin xyz="0 0 0.0" rpy="${pi/2} 0 0" />
         <geometry>
@@ -20,7 +20,7 @@
 
 
     <xacro:if value="${mode == 'differential'}">
-      <link name="${name}_wheel_link">
+      <link name="${namespace}${name}_wheel_link">
         <visual>
           <origin xyz="0 0 -0.024" rpy="${pi/2} 0 0" />
           <geometry>
@@ -39,9 +39,9 @@
           <inertia ixx="0.014" ixy="0.0" ixz="0.0" iyy="0.025" iyz="0.0" izz="0.013" />
         </inertial>
       </link>
-      <joint name="${name}_wheel_joint" type="continuous">
-        <parent link="${name}_base_link" />
-        <child link="${name}_wheel_link" />
+      <joint name="${namespace}${name}_wheel_joint" type="continuous">
+        <parent link="${namespace}${name}_base_link" />
+        <child link="${namespace}${name}_wheel_link" />
         <origin xyz="0.0 0.0 0.024" rpy="0 0 0" />
         <axis xyz="0 ${side} 0" />
         <limit effort="2000" velocity="45.5" />
@@ -49,14 +49,14 @@
     </xacro:if>
 
     <xacro:if value="${mode == 'holonomic'}">
-      <link name="${name}_wheel_link">
+      <link name="${namespace}${name}_wheel_link">
         <visual>
           <origin xyz="-4.8572257327350598644e-17 0 -0.0099999999999999793915"
             rpy="1.570796326794896558 -0 -3.8098343924097847915e-13" />
           <geometry>
             <mesh filename="package://minipock_description/models/wheel_core.stl" />
           </geometry>
-          <material name="${name}_wheel_link_material">
+          <material name="${namespace}${name}_wheel_link_material">
             <color
               rgba="0.06862745098039220171 0.08627450980392152857 0.05294117647058818044 1.0" />
           </material>
@@ -71,15 +71,15 @@
             iyz="-1.5219483721075413049e-10" izz="3.2828932950195218582e-06" />
         </inertial>
       </link>
-      <joint name="${name}_wheel_joint" type="continuous">
-        <parent link="${name}_base_link" />
-        <child link="${name}_wheel_link" />
+      <joint name="${namespace}${name}_wheel_joint" type="continuous">
+        <parent link="${namespace}${name}_base_link" />
+        <child link="${namespace}${name}_wheel_link" />
         <origin xyz="0.0 0.02 0.024" rpy="${pi/2} 0 0" />
         <axis xyz="0 0 ${side}" />
         <limit effort="2000" velocity="45.5" />
       </joint>
 
-      <link name="${name}_roller">
+      <link name="${namespace}${name}_roller">
         <visual>
           <origin xyz="0 3.4694469519536141888e-18 -0.0080000000000000019013"
             rpy="6.8813454446235181599e-18 8.8647375544077344568e-32 -4.6879817938295213445e-32" />
@@ -109,17 +109,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_6_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_6_continuous" type="continuous">
         <origin xyz="-0.028131604665040808172 0.013220856400772910966 -0.0049999999999999905631"
           rpy="-1.3962634015950849964 1.5707963267948952257 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_2">
+      <link name="${namespace}${name}_roller_2">
         <visual>
           <origin xyz="0 0 -0.0080000000000000001665"
             rpy="3.344220525918795236e-17 7.1776823159320073863e-32 -4.3756900247071136203e-32" />
@@ -149,17 +149,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_5_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_5_continuous" type="continuous">
         <origin xyz="-0.030048262113536068629 -0.0079548833402023552686 -0.0049999999999999801548"
           rpy="-2.0943951023928160105 1.5707963267948950037 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_2" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_2" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_3">
+      <link name="${namespace}${name}_roller_3">
         <visual>
           <origin xyz="0 -6.9388939039072283776e-18 -0.008000000000000003636"
             rpy="4.1764705181552599466e-17 -3.5419409732648655226e-32 -4.9611279807583270422e-32" />
@@ -189,17 +189,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_4_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_4_continuous" type="continuous">
         <origin xyz="-0.017905003769872984004 -0.025408444757616242826 -0.0049999999999999775527"
           rpy="-2.7925268031905519095 1.5707963267948958919 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_3" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_3" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_4">
+      <link name="${namespace}${name}_roller_4">
         <visual>
           <origin xyz="0 3.4694469519536141888e-18 -0.0079999999999999984318"
             rpy="1.8300819703905588982e-17 -5.734781960728272461e-32 -4.8576291355316246858e-32" />
@@ -229,17 +229,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_3_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_3_continuous" type="continuous">
         <origin xyz="0.0026162048296650758025 -0.030973112489532557412 -0.0049999999999999723485"
           rpy="2.7925268031913015321 1.5707963267948958919 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_4" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_4" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_5">
+      <link name="${namespace}${name}_roller_5">
         <visual>
           <origin xyz="0 0 -0.0080000000000000001665"
             rpy="2.2839705893320894994e-17 -2.864306808693828181e-32 -3.5002571411063758511e-32" />
@@ -269,17 +269,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_2_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_2_continuous" type="continuous">
         <origin xyz="0.021913262113524886732 -0.022045116659794552344 -0.0049999999999999723485"
           rpy="2.0943951023935678535 1.5707963267948958919 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_5" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_5" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_6">
+      <link name="${namespace}${name}_roller_6">
         <visual>
           <origin xyz="0 0 -0.0080000000000000019013"
             rpy="2.0225207513426638564e-17 1.2168204653565115077e-32 -4.7592279802773546759e-32" />
@@ -309,17 +309,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_1_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_1_continuous" type="continuous">
         <origin xyz="0.030956860515685625385 -0.002801965740757847434 -0.0049999999999999801548"
           rpy="1.3962634015958343969 1.5707963267948956698 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_6" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_6" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_7">
+      <link name="${namespace}${name}_roller_7">
         <visual>
           <origin
             xyz="-8.6736173798840354721e-19 -3.4694469519536141888e-18 -0.0080000000000000019013"
@@ -351,17 +351,17 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_9_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_9_continuous" type="continuous">
         <origin xyz="0.025515399835375589255 0.017752256088759903185 -0.004999999999999987961"
           rpy="0.69813170079810316082 1.5707963267948954478 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_7" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_7" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
 
-      <link name="${name}_roller_8">
+      <link name="${namespace}${name}_roller_8">
         <visual>
           <origin xyz="0 0 -0.0080000000000000001665"
             rpy="-1.621467491797687631e-29 1.8610995229314101184e-46 4.0931594027710871881e-58" />
@@ -391,16 +391,16 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_8_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_8_continuous" type="continuous">
         <origin xyz="0.0081350000000113779214 0.029999999999996886796 -0.0049999999999999792874"
           rpy="3.8172294696792983199e-13 1.570796326794896558 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_8" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_8" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
 
       </joint>
-      <link name="${name}_roller_9">
+      <link name="${namespace}${name}_roller_9">
         <visual>
           <origin xyz="0 0 -0.0080000000000000001665"
             rpy="6.7221822527689735584e-18 -8.7180519648836596984e-33 -1.2569312029751666415e-31" />
@@ -430,11 +430,11 @@
         </inertial>
       </link>
 
-      <joint name="${name}_joint_roller_7_continuous" type="continuous">
+      <joint name="${namespace}${name}_joint_roller_7_continuous" type="continuous">
         <origin xyz="-0.013258688745465072728 0.028036857843754141306 -0.0049999999999999992367"
           rpy="-0.69813170079771968979 1.5707963267948958919 0" />
-        <parent link="${name}_wheel_link" />
-        <child link="${name}_roller_9" />
+        <parent link="${namespace}${name}_wheel_link" />
+        <child link="${namespace}${name}_roller_9" />
         <axis xyz="0 0 1" />
          <limit effort="1" velocity="200" />
         <joint_properties friction="0.0" />
@@ -442,9 +442,9 @@
     </xacro:if>
 
 
-    <joint name="${name}_joint" type="fixed">
+    <joint name="${namespace}${name}_joint" type="fixed">
       <parent link="${namespace}base_link" />
-      <child link="${name}_base_link" />
+      <child link="${namespace}${name}_base_link" />
       <origin xyz="${x} ${y} ${z}" rpy="${R} ${P} ${Y}" />
     </joint>
 
@@ -453,7 +453,7 @@
       <plugin filename="gz-sim-joint-controller-system"
         name="gz::sim::systems::JointController">
         <joint_name>${name}_wheel_joint</joint_name>
-        <use_velocity_commands>false</use_velocity_commands>
+        <use_velocity_commands>true</use_velocity_commands>
         <topic>${namespace}${name}/pos</topic>
         <name>${name}</name>
       </plugin>
