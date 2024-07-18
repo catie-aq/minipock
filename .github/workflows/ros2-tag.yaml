@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  poetry-test:
+  ros-tag:
     uses: catie-aq/ros_workflows/.github/workflows/ros-tag.yml@main
     with:
       path: "minipock/package.xml"
