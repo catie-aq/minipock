@@ -15,7 +15,11 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -31,6 +35,7 @@ def parse_config(context, *args, **kwargs):
     """
     nb_robots = int(LaunchConfiguration("nb_robots").perform(context))
     robot_name = LaunchConfiguration("robot_name").perform(context)
+    mode = LaunchConfiguration("mode").perform(context)
     world = LaunchConfiguration("world").perform(context)
     paused = LaunchConfiguration("paused").perform(context)
     use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
@@ -44,7 +49,7 @@ def parse_config(context, *args, **kwargs):
             use_sim_time=use_sim_time,
         )
     )
-    robots = make_robots(nb_robots, robot_name)
+    robots = make_robots(nb_robots, robot_name, mode)
     launch_processes.append(lidar_process(use_sim_time=bool(use_sim_time), robots=robots))
     launch_processes.extend(spawn(use_sim_time=use_sim_time, robots=robots))
     launch_processes.extend(
@@ -75,7 +80,7 @@ def generate_spiral_positions(num_entities, spacing=1):
     return positions
 
 
-def make_robots(nb_robots, robot_name):
+def make_robots(nb_robots, robot_name, mode):
     """
     Create a list of robots with their names and positions.
 
@@ -90,7 +95,7 @@ def make_robots(nb_robots, robot_name):
         if nb_robots == 1:
             name = robot_name
         robot_position_str = f"{positions[i][0]} {positions[i][1]} 0"
-        robots.append({"name": name, "position": robot_position_str})
+        robots.append({"name": name, "position": robot_position_str, "mode": mode})
     return robots
 
 
@@ -168,6 +173,7 @@ def spawn(use_sim_time, robots):
                 arguments=minipock_description.model.spawn_args(
                     robot_name=robot["name"],
                     robot_position_str=robot["position"],
+                    mode=robot["mode"],
                 ),
             )
         )
@@ -257,6 +263,11 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "use_sim_time",
                 default_value="False",
+                description="Use simulation time",
+            ),
+            DeclareLaunchArgument(
+                "mode",
+                default_value="differential",
                 description="Use simulation time",
             ),
             OpaqueFunction(function=parse_config),
