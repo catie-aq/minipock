@@ -11,25 +11,31 @@ import subprocess
 from launch_ros.substitutions import FindPackageShare
 
 PACKAGE_NAME = "minipock_description"
-ROBOT_NAME = "minipock"
 
 
-def xacro_cmd(urdf):
+def xacro_cmd(robot_name, urdf, mode):
     """
     Generate the command to run xacro and gz sdf print
 
     :param urdf: path to urdf file
+    :param mode: mode for xacro command (holonomic or differential)
     :return: command to run
     """
-    xacro_command = ["xacro", urdf, f"namespace:={ROBOT_NAME}/"]
-    xacro_process = subprocess.Popen(xacro_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if mode not in ["holonomic", "differential"]:
+        raise ValueError("Invalid mode")
+    xacro_command = ["xacro", urdf, f"namespace:={robot_name}/", f"mode:={mode}"]
+    xacro_process = subprocess.Popen(
+        xacro_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     stdout = xacro_process.communicate()[0]
     urdf_str = codecs.getdecoder("unicode_escape")(stdout)[0]
 
     # run gz sdf print to generate sdf file
-    model_dir = os.path.join(FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "models")
+    model_dir = os.path.join(
+        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "models"
+    )
     model_tmp_dir = os.path.join(model_dir, "tmp")
-    model_output_file = os.path.join(model_tmp_dir, f"{ROBOT_NAME}_model.urdf")
+    model_output_file = os.path.join(model_tmp_dir, f"{robot_name}_model.urdf")
     if not os.path.exists(model_tmp_dir):
         pathlib.Path(model_tmp_dir).mkdir(parents=True, exist_ok=True)
     with open(model_output_file, "w") as f:
@@ -50,7 +56,7 @@ def name_from_plugin(plugin_sdf):
         return result.group(1)
 
 
-def generate():
+def generate(robot_name, mode):
     """
     Generate the sdf file from the urdf file
 
@@ -61,10 +67,12 @@ def generate():
         "urdf",
         "minipock.urdf.xacro",
     )
-    command = xacro_cmd(urdf_path)
+    command = xacro_cmd(robot_name, urdf_path, mode)
     model_sdf = ""
     try:
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         # evaluate error output for the xacro process
         stderr = process.communicate()[1]
         err_output = codecs.getdecoder("unicode_escape")(stderr)[0]
@@ -80,7 +88,7 @@ def generate():
     return model_sdf
 
 
-def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0.0 0.0 0.0"):
+def spawn_args(robot_name="minipock", robot_position_str="0.0 0.0 0.0", mode="differential"):
     """
     Return the spawning arguments for the create command
 
@@ -88,15 +96,13 @@ def spawn_args(robot_name=ROBOT_NAME, robot_position_str="0.0 0.0 0.0"):
     :param robot_position_str: position of the robot in the world
     :return: list of arguments
     """
-    global ROBOT_NAME
-    ROBOT_NAME = robot_name
     x, y, z = robot_position_str.split(" ")
-    model_sdf = generate()
+    model_sdf = generate(robot_name, mode)
     return [
         "-string",
         model_sdf,
         "-name",
-        ROBOT_NAME,
+        robot_name,
         "-allow_renaming",
         "false",
         "-x",
