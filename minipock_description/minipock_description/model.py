@@ -22,18 +22,16 @@ def xacro_cmd(robot_name, urdf, mode):
     :return: command to run
     """
     if mode not in ["holonomic", "differential"]:
-        raise ValueError("Invalid mode")
+        raise ValueError(
+            f"Invalid mode choice for {robot_name} with mode {mode}. Choose between 'holonomic' and 'differential'"
+        )
     xacro_command = ["xacro", urdf, f"namespace:={robot_name}/", f"mode:={mode}"]
-    xacro_process = subprocess.Popen(
-        xacro_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
+    xacro_process = subprocess.Popen(xacro_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout = xacro_process.communicate()[0]
     urdf_str = codecs.getdecoder("unicode_escape")(stdout)[0]
 
     # run gz sdf print to generate sdf file
-    model_dir = os.path.join(
-        FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "models"
-    )
+    model_dir = os.path.join(FindPackageShare(PACKAGE_NAME).find(PACKAGE_NAME), "models")
     model_tmp_dir = os.path.join(model_dir, "tmp")
     model_output_file = os.path.join(model_tmp_dir, f"{robot_name}_model.urdf")
     if not os.path.exists(model_tmp_dir):
@@ -70,9 +68,7 @@ def generate(robot_name, mode):
     command = xacro_cmd(robot_name, urdf_path, mode)
     model_sdf = ""
     try:
-        process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # evaluate error output for the xacro process
         stderr = process.communicate()[1]
         err_output = codecs.getdecoder("unicode_escape")(stderr)[0]
