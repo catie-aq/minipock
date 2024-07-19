@@ -1,4 +1,4 @@
-name: "ROS2 CI/"
+name: "Docker Test"
 
 on:
   pull_request:
