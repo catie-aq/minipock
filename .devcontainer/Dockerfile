@@ -25,18 +25,18 @@ RUN if [ "$DEBUG" = "1" ]; then \
     ; fi
 
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
-    && echo 'source /workspaces/minipock/install/setup.bash' >> /root/.bashrc \
+    && echo 'source /workspaces/install/setup.bash' >> /root/.bashrc \
     && echo 'source /opt/ros/humble/setup.zsh' >> /root/.zshrc \
-    && echo 'source /workspaces/minipock/install/setup.zsh' >> /root/.zshrc
+    && echo 'source /workspaces/install/setup.zsh' >> /root/.zshrc
 
 FROM base as real
 
-WORKDIR /workspaces/minipock
+WORKDIR /workspaces/
 RUN git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git
 RUN apt update && rosdep update
 RUN rosdep install --from-paths . -y
 RUN . /opt/ros/humble/setup.sh  && colcon build --merge-install --packages-select micro_ros_setup
-RUN . /workspaces/minipock/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
+RUN . /workspaces/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
 
 FROM base as simulation
 
@@ -47,5 +47,5 @@ RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pk
     && apt-get install -y ros-humble-ros-gzgarden \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> /root/.bashrc \
-    && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/minipock/install/share:/workspaces/minipock/install/share/minipock_gz/worlds' >> /root/.zshrc
+RUN echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/install/share:/workspaces/install/share/minipock_gz/worlds' >> /root/.bashrc \
+    && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/install/share:/workspaces/install/share/minipock_gz/worlds' >> /root/.zshrc
