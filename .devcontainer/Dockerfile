@@ -9,6 +9,7 @@ RUN apt update && apt install -y \
     lsb-release wget gnupg \
     ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher ros-humble-xacro \
     ros-humble-topic-tools \
+    ros-humble-ament-cmake \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install transforms3d
@@ -28,6 +29,14 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
     && echo 'source /opt/ros/humble/setup.zsh' >> /root/.zshrc \
     && echo 'source /workspaces/minipock/install/setup.zsh' >> /root/.zshrc
 
+FROM base as real
+
+WORKDIR /workspaces/minipock
+RUN git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git
+RUN apt update && rosdep update
+RUN rosdep install --from-paths . -y
+RUN . /opt/ros/humble/setup.sh  && colcon build --merge-install --packages-select micro_ros_setup
+RUN . /workspaces/minipock/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
 
 FROM base as simulation
 
