@@ -10,19 +10,15 @@ It also bridges ROS messages and Gazebo simulator information.
 import math
 import os
 
-import minipock_description.model
 from ament_index_python.packages import get_package_share_directory
-from launch_ros.actions import Node
-
 from launch import LaunchDescription
-from launch.actions import (
-    DeclareLaunchArgument,
-    IncludeLaunchDescription,
-    OpaqueFunction,
-)
-from launch.conditions import IfCondition
+from launch.actions import (DeclareLaunchArgument, IncludeLaunchDescription,
+                            OpaqueFunction)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+
+import minipock_description.model
 from minipock_gz import bridges
 
 
@@ -30,7 +26,7 @@ def parse_config(context, *args, **kwargs):
     """
     Parse the launch arguments and spawn the robot in the Gazebo world.
 
-    :param context: LaunchContext with arguments
+    :param context: LaunchContext with arguments&
     :return: list of launch processes
     """
     nb_robots = int(LaunchConfiguration("nb_robots").perform(context))
@@ -82,10 +78,11 @@ def generate_spiral_positions(num_entities, spacing=1):
 
 def make_robots(nb_robots, robot_name, mode):
     """
-    Create a list of robots with their names and positions.
+    Create a list of robots with their names, positions, and mode.
 
     :param nb_robots: number of robots
     :param robot_name: name of the robot
+    :param mode: mode of the robot (e.g., "holonomic", "differential")
     :return: list of robots
     """
     robots = []
