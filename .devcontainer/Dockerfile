@@ -2,7 +2,7 @@ FROM osrf/ros:humble-desktop-jammy as base
 
 ARG DEBUG=$DEBUG
 
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-colcon-common-extensions \
     ros-humble-tf-transformations \
@@ -12,16 +12,16 @@ RUN apt update && apt install -y \
     ros-humble-ament-cmake \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install transforms3d
+RUN pip3 install --no-cache-dir transforms3d==0.3.1
 
 RUN if [ "$DEBUG" = "1" ]; then \
-    apt update && apt install -y \
-    sudo apt install -y ros-humble-rqt* \
-    ; fi
+    apt-get update && apt-get install -y \
+    ros-humble-rqt* \
+    && rm -rf /var/lib/apt/lists/*; fi
 
 RUN if [ "$DEBUG" = "1" ]; then \
-    sudo apt-get install -y ros-humble-rqt-tf-tree \
-    sudo apt-get install -y tf2-tools \
+    apt-get install -y ros-humble-rqt-tf-tree \
+    apt-get install -y tf2-tools \
     ; fi
 
 RUN echo 'source /opt/ros/humble/setup.bash' >> /root/.bashrc \
@@ -33,14 +33,15 @@ FROM base as real
 
 WORKDIR /workspaces/
 RUN git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git
-RUN apt update && rosdep update
+RUN apt-get update && rosdep update
 RUN rosdep install --from-paths . -y
 RUN . /opt/ros/humble/setup.sh  && colcon build --merge-install --packages-select micro_ros_setup
 RUN . /workspaces/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
 
 FROM base as simulation
 
-RUN wget https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+SHELL ["/bin/bash", "-o", "pipefail"]
+RUN wget --progress=dot:giga https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
     && apt-get update \
     && apt-get install -y gz-garden \

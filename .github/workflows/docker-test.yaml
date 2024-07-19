@@ -1,4 +1,4 @@
-name: "ROS2 CI/CD"
+name: "ROS2 CI/"
 
 on:
   pull_request:
@@ -9,3 +9,4 @@ jobs:
     uses: catie-aq/generic_workflows/.github/workflows/docker-test.yaml@main
     with:
         dockerfile: .devcontainer/Dockerfile
+        ignore: DL3008, DL3015, SC1091

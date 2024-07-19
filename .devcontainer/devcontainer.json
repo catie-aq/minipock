@@ -1,7 +1,7 @@
 {
   "dockerFile": "Dockerfile",
   "build": {
-    "target": "simulation"
+    "target": "real"
   },
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
@@ -26,6 +26,5 @@
   "features": {
     "ghcr.io/devcontainers-contrib/features/pipx-package:1": {},
     "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
-  },
-  "postStartCommand": "rm -rf build log install && /bin/bash -c 'source /opt/ros/humble/setup.bash && colcon build --symlink-install --merge-install'"
+  }
 }
