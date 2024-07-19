@@ -8,6 +8,13 @@
     "DEBUG": "1",
     "ROS_DOMAIN_ID": "2"
   },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros"
+      ]
+    }
+  },
   "runArgs": [
     "--network=host",
     "--privileged"
