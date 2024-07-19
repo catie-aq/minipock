@@ -1,0 +1,11 @@
+name: "ROS2 CI/CD"
+
+on:
+  pull_request:
+    paths: .devcontainer/Dockerfile
+
+jobs:
+  docker-test:
+    uses: catie-aq/generic_workflows/.github/workflows/docker-test.yaml@main
+    with:
+        dockerfile: .devcontainer/Dockerfile
