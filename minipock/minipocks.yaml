@@ -1,0 +1,6 @@
+namespace: minipock
+bringup: false
+fleet:
+  1:
+    mode: differential
+    position: null
