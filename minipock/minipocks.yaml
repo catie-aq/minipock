@@ -1,5 +1,6 @@
-namespace: minipock
+namespace: minipock_
 bringup: false
+use_sim_time: false
 fleet:
   1:
     mode: differential
