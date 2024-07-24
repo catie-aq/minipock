@@ -12,12 +12,17 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+)
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-import minipock_description.model
+from minipock_description.model import model
+from minipock_description import config
 from minipock_gz import bridges
 
 
@@ -28,13 +33,21 @@ def parse_config(context, *args, **kwargs):
     :param context: LaunchContext with arguments&
     :return: list of launch processes
     """
-    nb_robots = int(LaunchConfiguration("nb_robots").perform(context))
-    robot_name = LaunchConfiguration("robot_name").perform(context)
-    mode = LaunchConfiguration("mode").perform(context)
     world = LaunchConfiguration("world").perform(context)
     paused = LaunchConfiguration("paused").perform(context)
-    use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
     extra_gz_args = LaunchConfiguration("extra_gz_args").perform(context)
+
+    config_dict = config.config()
+
+    try:
+        namespace = config_dict["namespace"]
+        fleet = config_dict["fleet"]
+        use_sim_time = str(config_dict["use_sim_time"])
+    except KeyError as exc:
+        raise KeyError(
+            "The configuration file does not contain the required keys. "
+        ) from exc
+
     launch_processes = []
     launch_processes.extend(
         simulation(
@@ -44,8 +57,10 @@ def parse_config(context, *args, **kwargs):
             use_sim_time=use_sim_time,
         )
     )
-    robots = make_robots(nb_robots, robot_name, mode)
-    launch_processes.append(lidar_process(use_sim_time=bool(use_sim_time), robots=robots))
+    robots = make_robots(namespace, fleet)
+    launch_processes.append(
+        lidar_process(use_sim_time=bool(use_sim_time), robots=robots)
+    )
     launch_processes.extend(spawn(use_sim_time=use_sim_time, robots=robots))
     launch_processes.extend(
         bridge(world_name=world, robots=robots, use_sim_time=bool(use_sim_time))
@@ -75,7 +90,7 @@ def generate_spiral_positions(num_entities, spacing=1):
     return positions
 
 
-def make_robots(nb_robots, robot_name, mode):
+def make_robots(namespace, fleet):
     """
     Create a list of robots with their names, positions, and mode.
 
@@ -85,13 +100,21 @@ def make_robots(nb_robots, robot_name, mode):
     :return: list of robots
     """
     robots = []
-    positions = generate_spiral_positions(nb_robots)
-    for i in range(nb_robots):
-        name = f"{robot_name}{i}"
-        if nb_robots == 1:
-            name = robot_name
-        robot_position_str = f"{positions[i][0]} {positions[i][1]} 0"
-        robots.append({"name": name, "position": robot_position_str, "mode": mode})
+
+    positions = generate_spiral_positions(len(fleet))
+    for robot in fleet:
+        if len(fleet[robot]) == 1:
+            name = f"{namespace}"
+        else:
+            name = f"{namespace}{robot}"
+        if fleet[robot]["position"] is not None:
+            position = fleet[robot]["position"]
+            position_str = f"{position[0]} {position[1]} 0"
+        else:
+            pos = positions.pop(0)
+            position_str = f"{pos[0]} {pos[1]} 0"
+        mode = fleet[robot]["mode"]
+        robots.append({"name": name, "position": position_str, "mode": mode})
     return robots
 
 
@@ -166,7 +189,7 @@ def spawn(use_sim_time, robots):
                 package="ros_gz_sim",
                 executable="create",
                 output="screen",
-                arguments=minipock_description.model.spawn_args(
+                arguments=model.spawn_args(
                     robot_name=robot["name"],
                     robot_position_str=robot["position"],
                     mode=robot["mode"],
@@ -239,10 +262,6 @@ def generate_launch_description():
     """
     return LaunchDescription(
         [
-            DeclareLaunchArgument("nb_robots", default_value="1", description="Number of robots"),
-            DeclareLaunchArgument(
-                "robot_name", default_value="minipock", description="Name of robot"
-            ),
             DeclareLaunchArgument(
                 "world", default_value="minipock_world", description="Name of world"
             ),
@@ -255,16 +274,6 @@ def generate_launch_description():
                 "extra_gz_args",
                 default_value="",
                 description="Additional arguments to be " "passed to gz sim. ",
-            ),
-            DeclareLaunchArgument(
-                "use_sim_time",
-                default_value="False",
-                description="Use simulation time",
-            ),
-            DeclareLaunchArgument(
-                "mode",
-                default_value="differential",
-                description="Use simulation time",
             ),
             OpaqueFunction(function=parse_config),
         ]
