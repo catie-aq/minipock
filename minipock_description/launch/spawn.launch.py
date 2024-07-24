@@ -17,6 +17,7 @@ from launch.actions import GroupAction
 from launch.actions import OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from minipock_description import config
 
 
 def parse_config(context, *args, **kwargs):
@@ -29,13 +30,15 @@ def parse_config(context, *args, **kwargs):
     :return: a list of launch processes
     """
     robot_name = LaunchConfiguration("robot_name").perform(context)
-    use_sim_time = LaunchConfiguration("use_sim_time").perform(context)
+    config_dict = config.config()
+    use_sim_time = config_dict["use_sim_time"]
+    namespace = config_dict["namespace"]
     launch_processes = []
-    launch_processes.extend(spawn(robot_name, use_sim_time))
+    launch_processes.extend(spawn(use_sim_time, namespace, robot_name))
     return launch_processes
 
 
-def spawn(robot_name, use_sim_time):
+def spawn(use_sim_time, namespace, robot_name):
     """
     This method is used to spawn a robot in a simulation environment.
     It reads the URDF file of the robot model and generates launch processes to start the
@@ -46,7 +49,9 @@ def spawn(robot_name, use_sim_time):
     :return: A list of launch processes.
     """
     # robot_state_publisher
-    model_dir = os.path.join(get_package_share_directory(f"minipock_description"), "models/tmp")
+    model_dir = os.path.join(
+        get_package_share_directory(f"minipock_description"), "models/tmp"
+    )
     urdf_file = os.path.join(model_dir, f"{robot_name}_model.urdf")
     with open(urdf_file) as input_file:
         robot_desc = input_file.read()
@@ -54,7 +59,7 @@ def spawn(robot_name, use_sim_time):
     nodes = [
         Node(
             package="robot_state_publisher",
-            namespace=robot_name,
+            namespace=namespace,
             executable="robot_state_publisher",
             output="both",
             parameters=[params],
@@ -74,10 +79,9 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument(
-                "robot_name", default_value="minipock", description="Robot name"
-            ),
-            DeclareLaunchArgument(
-                "use_sim_time", default_value="False", description="Use simulation time"
+                "robot_name",
+                default_value="",
+                description="The namespace of the robot",
             ),
             OpaqueFunction(function=parse_config),
         ]

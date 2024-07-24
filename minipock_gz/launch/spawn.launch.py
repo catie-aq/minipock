@@ -39,14 +39,9 @@ def parse_config(context, *args, **kwargs):
 
     config_dict = config.config()
 
-    try:
-        namespace = config_dict["namespace"]
-        fleet = config_dict["fleet"]
-        use_sim_time = str(config_dict["use_sim_time"])
-    except KeyError as exc:
-        raise KeyError(
-            "The configuration file does not contain the required keys. "
-        ) from exc
+    namespace = config_dict["namespace"]
+    fleet = config_dict["fleet"]
+    use_sim_time = str(config_dict["use_sim_time"])
 
     launch_processes = []
     launch_processes.extend(
