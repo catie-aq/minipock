@@ -98,10 +98,7 @@ def make_robots(namespace, fleet):
 
     positions = generate_spiral_positions(len(fleet))
     for robot in fleet:
-        if len(fleet[robot]) == 1:
-            name = f"{namespace}"
-        else:
-            name = f"{namespace}{robot}"
+        name = f"{namespace}{robot}"
         if fleet[robot]["position"] is not None:
             position = fleet[robot]["position"]
             position_str = f"{position[0]} {position[1]} 0"

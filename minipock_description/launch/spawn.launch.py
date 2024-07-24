@@ -31,7 +31,7 @@ def parse_config(context, *args, **kwargs):
     """
     robot_name = LaunchConfiguration("robot_name").perform(context)
     config_dict = config.config()
-    use_sim_time = config_dict["use_sim_time"]
+    use_sim_time = str(config_dict["use_sim_time"])
     namespace = config_dict["namespace"]
     launch_processes = []
     launch_processes.extend(spawn(use_sim_time, namespace, robot_name))
