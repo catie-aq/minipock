@@ -14,6 +14,7 @@ setup(
     license="Apache 2.0",
     install_requires=[
         "python>=3.10",
+        "jsonschema",
     ],
     packages=[package_name],
     entry_points={

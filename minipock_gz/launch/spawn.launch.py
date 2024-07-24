@@ -21,7 +21,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-from minipock_description.model import model
+from minipock_description import model
 from minipock_description import config
 from minipock_gz import bridges
 
