@@ -19,13 +19,23 @@ setup(
     entry_points={
         "console_scripts": [
             "minipock_generate = minipock_description.model:generate",
+            "minipock_config = minipock_description.config:config",
         ],
     },
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         (os.path.join("share", package_name), ["package.xml"]),
-        (os.path.join("share", package_name, "models"), glob(os.path.join("models", "*.*"))),
-        (os.path.join("share", package_name, "urdf"), glob(os.path.join("urdf", "*.*"))),
-        (os.path.join("share", package_name, "launch"), glob(os.path.join("launch", "*.*"))),
+        (
+            os.path.join("share", package_name, "models"),
+            glob(os.path.join("models", "*.*")),
+        ),
+        (
+            os.path.join("share", package_name, "urdf"),
+            glob(os.path.join("urdf", "*.*")),
+        ),
+        (
+            os.path.join("share", package_name, "launch"),
+            glob(os.path.join("launch", "*.*")),
+        ),
     ],
 )
