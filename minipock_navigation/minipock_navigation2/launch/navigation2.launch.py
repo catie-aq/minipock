@@ -15,6 +15,7 @@ from launch_ros.actions import PushRosNamespace
 from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
 from nav2_common.launch import ReplaceString
+from minipock_description import config as minipock_config
 
 
 def parse_config(context, *args, **kwargs):
@@ -24,14 +25,18 @@ def parse_config(context, *args, **kwargs):
     :param context: The context of the launch.
     :return: A LaunchDescription object.
     """
-    nb_robots = int(LaunchConfiguration("nb_robots").perform(context))
-    robot_name = LaunchConfiguration("robot_name").perform(context)
+    config_dict = minipock_config.config()
+    use_sim_time = config_dict["use_sim_time"]
+    bringup = config_dict["bringup"]
+    namespace = config_dict["namespace"]
+    fleet = config_dict["fleet"]
+
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
-    use_sim_time = IfCondition(LaunchConfiguration("use_sim_time")).evaluate(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
-    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(context)
+    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(
+        context
+    )
     use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
-    bringup = IfCondition(LaunchConfiguration("bringup")).evaluate(context)
 
     map_yaml_file = LaunchConfiguration(
         "map_yaml_file",
@@ -44,7 +49,7 @@ def parse_config(context, *args, **kwargs):
         [FindPackageShare("minipock_navigation2"), "rviz", "navigation2.rviz"]
     )
 
-    robots = make_robots(nb_robots, robot_name)
+    robots = make_robots(namespace, fleet)
 
     namespaced_rviz_config_file = ReplaceString(
         source_file=rviz_config_file,
@@ -63,7 +68,9 @@ def parse_config(context, *args, **kwargs):
             ]
         )
         minipock_bringup = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([minipock_bringup_file_dir, "/bringup.launch.py"]),
+            PythonLaunchDescriptionSource(
+                [minipock_bringup_file_dir, "/bringup.launch.py"]
+            ),
             launch_arguments={
                 "use_sim_time": use_sim_time,
             }.items(),
@@ -98,19 +105,17 @@ def parse_config(context, *args, **kwargs):
     return launch_actions
 
 
-def make_robots(nb_robots, robot_name):
+def make_robots(namespace, fleet):
     """
     Create a list of robots with their names and positions.
 
-    :param nb_robots: number of robots
-    :param robot_name: name of the robot
-    :return: list of robots
+    :param namespace: namespace of the robots
+    :param fleet: list of robots
+    :return: list of robots names
     """
     robots = []
-    for i in range(nb_robots):
-        name = f"{robot_name}{i}"
-        if nb_robots == 1:
-            name = robot_name
+    for robot in fleet:
+        name = namespace + robot
         robots.append({"name": name})
     return robots
 
@@ -509,24 +514,12 @@ def generate_launch_description():
     """
     return LaunchDescription(
         [
-            DeclareLaunchArgument("nb_robots", default_value="1", description="Number of robots"),
-            DeclareLaunchArgument(
-                "robot_name", default_value="minipock", description="Name of robot"
-            ),
             DeclareLaunchArgument(
                 "start_rviz", default_value="true", description="Whether execute rviz2"
             ),
             DeclareLaunchArgument(
-                "use_sim_time", default_value="false", description="Set use_sim_time"
-            ),
-            DeclareLaunchArgument(
-                "bringup",
-                default_value="true",
-                description="Whether to bringup minipock",
-            ),
-            DeclareLaunchArgument(
                 "autostart",
-                default_value="false",
+                default_value="True",
                 description="Automatically startup the nav2 stack",
             ),
             DeclareLaunchArgument(

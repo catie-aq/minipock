@@ -22,11 +22,13 @@ from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from minipock_description import config
 
 
 def generate_launch_description():
     start_rviz = LaunchConfiguration("start_rviz")
-    use_sim = LaunchConfiguration("use_sim")
+    config_dict = config.config()
+    use_sim_time = config_dict["use_sim_time"]
 
     cartographer_config_dir = PathJoinSubstitution(
         [
@@ -48,9 +50,6 @@ def generate_launch_description():
                 "start_rviz", default_value="true", description="Whether execute rviz2"
             ),
             DeclareLaunchArgument(
-                "use_sim", default_value="false", description="Start robot in Gazebo simulation"
-            ),
-            DeclareLaunchArgument(
                 "cartographer_config_dir",
                 default_value=cartographer_config_dir,
                 description="Full direction of config file",
@@ -69,7 +68,7 @@ def generate_launch_description():
                 package="cartographer_ros",
                 executable="cartographer_node",
                 output="screen",
-                parameters=[{"use_sim_time": use_sim}],
+                parameters=[{"use_sim_time": use_sim_time}],
                 arguments=[
                     "-configuration_directory",
                     cartographer_config_dir,
@@ -81,7 +80,7 @@ def generate_launch_description():
                 package="cartographer_ros",
                 executable="cartographer_occupancy_grid_node",
                 output="screen",
-                parameters=[{"use_sim_time": use_sim}],
+                parameters=[{"use_sim_time": use_sim_time}],
                 arguments=["-resolution", resolution],
             ),
             Node(
