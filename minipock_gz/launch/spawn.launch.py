@@ -53,9 +53,7 @@ def parse_config(context, *args, **kwargs):
         )
     )
     robots = make_robots(namespace, fleet)
-    launch_processes.append(
-        lidar_process(use_sim_time=bool(use_sim_time), robots=robots)
-    )
+    launch_processes.append(lidar_process(use_sim_time=bool(use_sim_time), robots=robots))
     launch_processes.extend(spawn(use_sim_time=use_sim_time, robots=robots))
     launch_processes.extend(
         bridge(world_name=world, robots=robots, use_sim_time=bool(use_sim_time))
