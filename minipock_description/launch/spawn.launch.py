@@ -49,9 +49,7 @@ def spawn(use_sim_time, namespace, robot_name):
     :return: A list of launch processes.
     """
     # robot_state_publisher
-    model_dir = os.path.join(
-        get_package_share_directory(f"minipock_description"), "models/tmp"
-    )
+    model_dir = os.path.join(get_package_share_directory(f"minipock_description"), "models/tmp")
     urdf_file = os.path.join(model_dir, f"{robot_name}_model.urdf")
     with open(urdf_file) as input_file:
         robot_desc = input_file.read()
