@@ -5,3 +5,6 @@ fleet:
   diff:
     mode: differential
     position: null
+  holo:
+    mode: holonomic
+    position: null
