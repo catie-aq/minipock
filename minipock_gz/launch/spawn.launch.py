@@ -216,9 +216,9 @@ def bridge(world_name, robots, use_sim_time):
     if world_name[0] != "/":
         world_name = f"/{world_name}"
     for robot in robots:
-        robot_name = ""
-        if robot["name"] != "" and robot["name"][0] != "/":
-            robot_name = "/" + robot["name"]
+        robot_name = robot["name"]
+        if robot_name[0] != "/":
+            robot_name = f"/{robot_name}"
         bridges_list.extend(
             [
                 bridges.pose(model_name=robot_name),
