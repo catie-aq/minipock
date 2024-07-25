@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     ros-humble-ament-cmake \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir transforms3d==0.3.1 jsonschema
+RUN pip3 install --no-cache-dir transforms3d==0.3.1 jsonschema==4.10.3
 
 RUN if [ "$DEBUG" = "1" ]; then \
     apt-get update && apt-get install -y \
