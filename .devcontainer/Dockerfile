@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y \
     python3-colcon-common-extensions \
     ros-humble-tf-transformations \
     lsb-release wget gnupg \
-    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher ros-humble-xacro \
+    ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-joint-state-publisher ros-humble-xacro ros-humble-rqt-tf-tree \
     ros-humble-topic-tools \
     ros-humble-ament-cmake \
     && rm -rf /var/lib/apt/lists/*

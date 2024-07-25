@@ -59,7 +59,7 @@ def spawn(use_sim_time, namespace, robot_name):
     nodes = [
         Node(
             package="robot_state_publisher",
-            namespace=namespace,
+            namespace=robot_name,
             executable="robot_state_publisher",
             output="both",
             parameters=[params],
