@@ -87,10 +87,10 @@ def make_robots(namespace, fleet):
     """
     Create a list of robots with their names, positions, and mode.
 
-    :param nb_robots: number of robots
-    :param robot_name: name of the robot
-    :param mode: mode of the robot (e.g., "holonomic", "differential")
-    :return: list of robots
+    :param namespace: the namespace for the robots
+    :param fleet: a dictionary containing information about the robots
+
+    :return: a list of dictionaries representing the robots
     """
     robots = []
 

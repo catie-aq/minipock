@@ -34,11 +34,11 @@ def parse_config(context, *args, **kwargs):
     use_sim_time = str(config_dict["use_sim_time"])
     namespace = config_dict["namespace"]
     launch_processes = []
-    launch_processes.extend(spawn(use_sim_time, namespace, robot_name))
+    launch_processes.extend(spawn(use_sim_time, robot_name))
     return launch_processes
 
 
-def spawn(use_sim_time, namespace, robot_name):
+def spawn(use_sim_time, robot_name):
     """
     This method is used to spawn a robot in a simulation environment.
     It reads the URDF file of the robot model and generates launch processes to start the
