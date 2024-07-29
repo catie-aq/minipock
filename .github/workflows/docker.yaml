@@ -18,7 +18,6 @@ jobs:
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
       Dockerfile: .devcontainer/Dockerfile
-      image_name: "minipock"
       target: "base"
     secrets:
       PAT: ${{ secrets.GITHUB_TOKEN }}
