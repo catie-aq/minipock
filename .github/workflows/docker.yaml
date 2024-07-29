@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
-    paths: .devcontainer/Dockerfile
+    paths:
+      - .devcontainer/Dockerfile
+    tags:
+      - '*.*.*'
   workflow_dispatch:
 
 jobs:
