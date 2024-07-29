@@ -8,36 +8,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  # docker-test:
-  #   uses: catie-aq/generic_workflows/.github/workflows/docker-test.yaml@main
-  #   with:
-  #     dockerfile: .devcontainer/Dockerfile
-  #     ignore: DL3008, DL3015, SC1091
+  docker-test:
+    uses: catie-aq/generic_workflows/.github/workflows/docker-test.yaml@main
+    with:
+      dockerfile: .devcontainer/Dockerfile
+      ignore: DL3008, DL3015, SC1091
   docker-base:
-    # needs: docker-test
+    needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
       Dockerfile: .devcontainer
       target: "base"
     secrets:
       PAT: ${{ secrets.GITHUB_TOKEN }}
-
-  # docker-simulation:
-  #   # needs: docker-test
-  #   uses: catie-aq/generic_workflows/.github/workflows/docker-simulation.yml@main
-  #   with:
-  #     image_name: "minipock"
-  #     version: "simulation"
-  #     target: "simulation"
-  #   secrets:
-  #     PAT: ${{ secrets.GITHUB_TOKEN }}
-
-  # docker-real:
-  #   # needs: docker-test
-  #   uses: catie-aq/generic_workflows/.github/workflows/docker-real.yml@main
-  #   with:
-  #     image_name: "minipock"
-  #     version: "real"
-  #     target: "real"
-  #   secrets:
-  #     PAT: ${{ secrets.GITHUB_TOKEN }}
+  docker-simulation:
+    needs: docker-test
+    uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
+    with:
+      Dockerfile: .devcontainer
+      target: "simulation"
+    secrets:
+      PAT: ${{ secrets.GITHUB_TOKEN }}
+  docker-real:
+    needs: docker-test
+    uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
+    with:
+      Dockerfile: .devcontainer
+      target: "real"
+    secrets:
+      PAT: ${{ secrets.GITHUB_TOKEN }}
