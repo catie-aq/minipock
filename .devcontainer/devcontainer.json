@@ -1,8 +1,5 @@
 {
-  "dockerFile": "Dockerfile",
-  "build": {
-    "target": "real"
-  },
+  "image": "ghcr.io/catie-aq/minipock:main-base",
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "DEBUG": "1",
