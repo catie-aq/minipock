@@ -17,7 +17,7 @@ jobs:
     # needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
-      Dockerfile: .devcontainer/Dockerfile
+      Dockerfile: .devcontainer
       target: "base"
     secrets:
       PAT: ${{ secrets.GITHUB_TOKEN }}
