@@ -9,12 +9,18 @@ from geometry_msgs.msg import PoseStamped
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.create_subscription(PoseStamped, "/odom", self.callback, qos_profile_sensor_data)
+        self.create_subscription(
+            PoseStamped, "/odom", self.callback, qos_profile_sensor_data
+        )
         self.__tf_broadcaster = TransformBroadcaster(self)
 
+        self.declare_parameter("robot_name", "minipock")
+        self.__robot_name = self.get_parameter("robot_name").value
+        self.get_logger().info("Robot name: " + self.__robot_name)
+
         self.__odom_transform = TransformStamped()
-        self.__odom_transform.header.frame_id = "odom"
-        self.__odom_transform.child_frame_id = "base_link"
+        self.__odom_transform.header.frame_id = f"{self.__robot_name}/odom"
+        self.__odom_transform.child_frame_id = f"{self.__robot_name}/base_footprint"
 
     def callback(self, msg):
         """
@@ -23,6 +29,7 @@ class OdometryTransformPublisher(Node):
         :param msg: The message received.
         :return: None.
         """
+
         self.__odom_transform.header.stamp = self.get_clock().now().to_msg()
         self.__odom_transform.transform.translation.x = msg.pose.position.x
         self.__odom_transform.transform.translation.y = msg.pose.position.y
