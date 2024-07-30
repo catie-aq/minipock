@@ -1,5 +1,6 @@
 import rclpy
 from geometry_msgs.msg import TransformStamped
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from tf2_ros import TransformBroadcaster
@@ -9,14 +10,20 @@ from geometry_msgs.msg import PoseStamped
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.create_subscription(
-            PoseStamped, "/odom", self.callback, qos_profile_sensor_data
-        )
-        self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.declare_parameter("robot_name", "minipock")
         self.__robot_name = self.get_parameter("robot_name").value
-        self.get_logger().info("Robot name: " + self.__robot_name)
+
+        self.create_subscription(
+            PoseStamped,
+            f"{self.__robot_name}/odom_raw",
+            self.callback,
+            qos_profile_sensor_data,
+        )
+        self.___odom_publisher = self.create_publisher(
+            Odometry, f"{self.__robot_name}/odom", qos_profile_sensor_data
+        )
+        self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
         self.__odom_transform.header.frame_id = f"{self.__robot_name}/odom"
@@ -35,7 +42,14 @@ class OdometryTransformPublisher(Node):
         self.__odom_transform.transform.translation.y = msg.pose.position.y
         self.__odom_transform.transform.translation.z = msg.pose.position.z
         self.__odom_transform.transform.rotation = msg.pose.orientation
+
+        odom = Odometry()
+        odom.header = self.__odom_transform.header
+        odom.child_frame_id = self.__odom_transform.child_frame_id
+        odom.pose.pose = msg.pose
+
         self.__tf_broadcaster.sendTransform(self.__odom_transform)
+        self.___odom_publisher.publish(odom)
 
 
 def main(args=None):
