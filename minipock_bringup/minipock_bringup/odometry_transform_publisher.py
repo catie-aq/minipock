@@ -5,6 +5,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import LaserScan
 
 
 class OdometryTransformPublisher(Node):
@@ -20,8 +21,17 @@ class OdometryTransformPublisher(Node):
             self.callback,
             qos_profile_sensor_data,
         )
+        self.create_subscription(
+            LaserScan,
+            f"{self.__robot_name}/scan_raw",
+            self.callback_scan,
+            qos_profile_sensor_data,
+        )
         self.___odom_publisher = self.create_publisher(
             Odometry, f"{self.__robot_name}/odom", qos_profile_sensor_data
+        )
+        self.__scan_publisher = self.create_publisher(
+            LaserScan, f"{self.__robot_name}/scan", qos_profile_sensor_data
         )
         self.__tf_broadcaster = TransformBroadcaster(self)
 
@@ -50,6 +60,15 @@ class OdometryTransformPublisher(Node):
 
         self.__tf_broadcaster.sendTransform(self.__odom_transform)
         self.___odom_publisher.publish(odom)
+
+    def callback_scan(self, msg):
+        """
+        Callback to receive a message.
+
+        :param msg: The message received.
+        :return: None.
+        """
+        self.__scan_publisher.publish(msg)
 
 
 def main(args=None):

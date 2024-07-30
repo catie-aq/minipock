@@ -175,7 +175,7 @@ Visualization Manager:
       Class: rviz_default_plugins/LaserScan
       Color: 255; 255; 255
       Color Transformer: Intensity
-      Decay Time: 0
+      Decay Time: 0.5
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
@@ -187,9 +187,9 @@ Visualization Manager:
       Selectable: true
       Size (Pixels): 3
       Size (m): 0.029999999329447746
-      Style: Flat Squares
+      Style: Spheres
       Topic:
-        Depth: 5
+        Depth: 100
         Durability Policy: Volatile
         Filter size: 10
         History Policy: Keep Last
