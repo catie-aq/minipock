@@ -2,9 +2,6 @@ namespace: minipock_
 bringup: false
 use_sim_time: false
 fleet:
-  diff:
+  "0":
     mode: differential
-    position: null
-  holo:
-    mode: holonomic
     position: null
