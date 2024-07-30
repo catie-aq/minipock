@@ -34,8 +34,8 @@
 
   <!-- sensors -->
   <xacro:include filename="$(find minipock_description)/urdf/sensors.xacro" />
-  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.050" R="0.0" P="0.0"
-    Y="${pi}" />
+  <xacro:lds_01 namespace="${namespace}" name="lds_01" x="0.0" y="0.0" z="0.050" R="${pi}" P="0.0"
+    Y="0.0" />
 
   <gazebo>
     <xacro:if value="${mode == 'differential'}">
