@@ -10,14 +10,10 @@ from geometry_msgs.msg import PoseStamped
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.create_subscription(
-            PoseStamped, "/odom_raw", self.callback, qos_profile_sensor_data
-        )
+        self.create_subscription(PoseStamped, "/odom_raw", self.callback, qos_profile_sensor_data)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
-        self.odom_publisher = self.create_publisher(
-            Odometry, "/odom", qos_profile_sensor_data
-        )
+        self.odom_publisher = self.create_publisher(Odometry, "/odom", qos_profile_sensor_data)
 
         self.__odom_transform = TransformStamped()
         self.__odom_transform.header.frame_id = "odom"
