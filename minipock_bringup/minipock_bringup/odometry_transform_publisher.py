@@ -1,5 +1,6 @@
 import rclpy
 from geometry_msgs.msg import TransformStamped
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from tf2_ros import TransformBroadcaster
@@ -9,8 +10,14 @@ from geometry_msgs.msg import PoseStamped
 class OdometryTransformPublisher(Node):
     def __init__(self):
         super().__init__("odometry_transform_publisher")
-        self.create_subscription(PoseStamped, "/odom", self.callback, qos_profile_sensor_data)
+        self.create_subscription(
+            PoseStamped, "/odom_raw", self.callback, qos_profile_sensor_data
+        )
         self.__tf_broadcaster = TransformBroadcaster(self)
+
+        self.odom_publisher = self.create_publisher(
+            Odometry, "/odom", qos_profile_sensor_data
+        )
 
         self.__odom_transform = TransformStamped()
         self.__odom_transform.header.frame_id = "odom"
@@ -29,6 +36,13 @@ class OdometryTransformPublisher(Node):
         self.__odom_transform.transform.translation.z = msg.pose.position.z
         self.__odom_transform.transform.rotation = msg.pose.orientation
         self.__tf_broadcaster.sendTransform(self.__odom_transform)
+
+        odom = Odometry()
+        odom.header = self.__odom_transform.header
+        odom.header.stamp = self.get_clock().now().to_msg()
+        odom.child_frame_id = self.__odom_transform.child_frame_id
+        odom.pose.pose = msg.pose
+        self.odom_publisher.publish(odom)
 
 
 def main(args=None):
