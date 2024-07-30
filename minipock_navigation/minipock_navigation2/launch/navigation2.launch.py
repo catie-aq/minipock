@@ -68,7 +68,7 @@ def parse_config(context, *args, **kwargs):
         minipock_bringup = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([minipock_bringup_file_dir, "/bringup.launch.py"]),
             launch_arguments={
-                "use_sim_time": use_sim_time,
+                "use_sim_time": str(use_sim_time),
             }.items(),
         )
 
