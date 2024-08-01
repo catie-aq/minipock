@@ -1,5 +1,5 @@
 namespace: minipock_
-bringup: false
+bringup: true
 use_sim_time: false
 fleet:
   "0":
