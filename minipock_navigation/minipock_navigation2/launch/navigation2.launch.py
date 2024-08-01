@@ -85,7 +85,7 @@ def parse_config(context, *args, **kwargs):
         executable="rviz2",
         name="rviz2",
         arguments=["-d", namespaced_rviz_config_file],
-        output="screen",
+        output={'both': 'log'},
         condition=IfCondition(start_rviz),
         parameters=[{"use_sim_time": use_sim_time}],
     )
@@ -449,7 +449,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
                     "FootprintApproach": {
                         "type": "polygon",
                         "action_type": "approach",
-                        "footprint_topic": f"{namespace}/local_costmap/published_footprint",
+                        "footprint_topic": "local_costmap/published_footprint",
                         "time_before_collision": 1.2,
                         "simulation_time_step": 0.1,
                         "min_points": 6,
