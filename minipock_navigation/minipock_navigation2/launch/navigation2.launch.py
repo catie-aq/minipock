@@ -85,7 +85,7 @@ def parse_config(context, *args, **kwargs):
         executable="rviz2",
         name="rviz2",
         arguments=["-d", namespaced_rviz_config_file],
-        output={'both': 'log'},
+        output={"both": "log"},
         condition=IfCondition(start_rviz),
         parameters=[{"use_sim_time": use_sim_time}],
     )
