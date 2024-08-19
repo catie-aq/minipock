@@ -90,5 +90,24 @@ def generate_launch_description():
                 output="screen",
                 condition=IfCondition(start_rviz),
             ),
+            Node(
+                package="topic_tools",
+                executable="relay",
+                name="odom_relay",
+                arguments=[
+                    "minipock_0/odom",
+                    "odom"
+                ],
+            ),
+            Node(
+                package="topic_tools",
+                executable="relay",
+                name="scan_relay",
+                arguments=[
+                    "minipock_0/scan",
+                    "scan"
+                ],
+            ),
+
         ]
     )
