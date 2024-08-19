@@ -94,20 +94,13 @@ def generate_launch_description():
                 package="topic_tools",
                 executable="relay",
                 name="odom_relay",
-                arguments=[
-                    "minipock_0/odom",
-                    "odom"
-                ],
+                arguments=["minipock_0/odom", "odom"],
             ),
             Node(
                 package="topic_tools",
                 executable="relay",
                 name="scan_relay",
-                arguments=[
-                    "minipock_0/scan",
-                    "scan"
-                ],
+                arguments=["minipock_0/scan", "scan"],
             ),
-
         ]
     )
