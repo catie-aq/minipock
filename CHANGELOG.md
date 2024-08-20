@@ -1,16 +1,38 @@
 # Changelog
 
-## [Unreleased]
-
-## [2.0.0]
+## Unreleased
 
 ### Added
 
+- Publication d'une image Docker pour MiniPock sur GitHub Container Registry
+- Centralisation de la configuration dans un fichier YAML dans le package `minipock`
+
 ### Changed
 
-## [1.0.0]
+- Déplacement de la documentation dans [un dépôt dédié](https://github.com/catie-aq/minipock_documentation)
+- Modification de `minipock_description` pour supporter la mécanique holonome
+- Modification de `minipock_description` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
+- Modification de `minipock_bringup` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
+- Modification de `minipock_navigation` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
+- Modification de `minipock_gz` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
+- Réparation de `minipock_cartographer` pour fonctionner avec un unique robot (`minipock_0`)
 
-_Initial Release_
+## [2.0.0](https://github.com/catie-aq/minipock/releases/tag/2.0.0)
+
+### Added
+
+- Création d'un container Docker pour MiniPock (support avec devcontainer)
+- Ajout du package `micro_ros_agent` pour la communication ROS2 <-> Micro-ROS au lancement du bringup
+- Création du package `minipock`
+- Ajout de la CI/CD avec GitHub Actions
+
+### Changed
+
+- Mise à jour de `minipock_description` pour conformer à la mécanique 2.0.0
+- Refactorisation de `minipock_description` pour suivre les conventions de nommage des frames et ouvrir la possibilité d'utiliser un namespace par robot
+- Fusion des différents dépôts en un seul `minipock`
+
+## [1.0.0](https://github.com/catie-aq/minipock/releases/tag/1.0.0)
 
 ### Added
 
