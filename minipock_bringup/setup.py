@@ -23,7 +23,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
-            "odometry_transform_publisher = minipock_bringup.odometry_transform_publisher:main",
+            "raw_data_transformer = minipock_bringup.raw_data_transformer:main",
         ],
     },
 )
