@@ -8,9 +8,9 @@ from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import LaserScan
 
 
-class OdometryTransformPublisher(Node):
+class RawDataTransformer(Node):
     def __init__(self):
-        super().__init__("odometry_transform_publisher")
+        super().__init__("raw_data_transformer")
 
         self.declare_parameter("robot_name", "minipock")
         self.__robot_name = self.get_parameter("robot_name").value
@@ -79,8 +79,8 @@ def main(args=None):
     The main method is the entry point for the program.
     """
     rclpy.init(args=args)
-    odom_subscriber = OdometryTransformPublisher()
-    odom_subscriber.get_logger().info("Odometry transform publisher has been started.")
+    odom_subscriber = RawDataTransformer()
+    odom_subscriber.get_logger().info("Raw data transformer has been started.")
 
     rclpy.spin(odom_subscriber)
 

@@ -107,7 +107,7 @@ def odometry(robot_name):
         [
             Node(
                 package="minipock_bringup",
-                executable="odometry_transform_publisher",
+                executable="raw_data_transformer",
                 parameters=[
                     {"robot_name": robot_name},
                 ],
