@@ -99,10 +99,10 @@ def make_robots(namespace, fleet):
         name = f"{namespace}{robot}"
         if fleet[robot]["position"] is not None:
             position = fleet[robot]["position"]
-            position_str = f"{position[0]} {position[1]} 0"
+            position_str = f"{position[0]} {position[1]} 0.3"
         else:
             pos = positions.pop(0)
-            position_str = f"{pos[0]} {pos[1]} 0"
+            position_str = f"{pos[0]} {pos[1]} 0.3"
         mode = fleet[robot]["mode"]
         robots.append({"name": name, "position": position_str, "mode": mode})
     return robots
