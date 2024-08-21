@@ -72,10 +72,12 @@ class TeleopController(Node):
         namespace = self.get_parameter("namespace").value
         self.get_logger().info(f"Namespace: {namespace}")
 
-        self.check_ns_exists(namespace)
+        namespace = self.check_ns_exists(namespace)
         if namespace[-1] != "/" and namespace != "":
             namespace += "/"
-            self.get_logger().info("Non empty namespace set with no '/' at the end. Adding it.")
+            self.get_logger().info(
+                "Non empty namespace set with no '/' at the end. Adding it."
+            )
             self.get_logger().info(f"New namespace: {namespace}")
 
         self.check_topic_exists(f"/{namespace}cmd_vel")
@@ -122,10 +124,13 @@ class TeleopController(Node):
         :param namespace: The namespace to clean.
         :return: The cleaned namespace.
         """
-        if namespace[0] == "/":
-            namespace = namespace[1:]
-        if len(namespace) > 1 and namespace[-1] == "/":
-            namespace = namespace[:-1]
+        try:
+            if namespace[0] == "/":
+                namespace = namespace[1:]
+            if len(namespace) > 1 and namespace[-1] == "/":
+                namespace = namespace[:-1]
+        except IndexError:
+            return ""
         return namespace
 
     def retrieve_all_namespaces(self):
@@ -153,11 +158,11 @@ class TeleopController(Node):
         global_namespaces = self.retrieve_all_namespaces()
         namespace = self.clean_namespace(namespace)
         if namespace not in global_namespaces:
-            self.get_logger().error(
-                f"Namespace '{namespace}' not in global namespaces\n \t Existing namespaces are: {global_namespaces}"
+            self.get_logger().info(
+                f"Namespace '{namespace}' not in global namespaces. Existing namespaces are: {global_namespaces}. Selecting the first namespace in the list"
             )
-            exit(1)
-        self.get_logger().info(f"Namespace '{namespace}' found in global namespaces\n")
+            return global_namespaces[0]
+        return namespace
 
     def check_topic_exists(self, topic):
         """
@@ -201,7 +206,9 @@ class TeleopController(Node):
         :param velocity: The linear velocity to check.
         :return: The constrained linear velocity.
         """
-        return constrain(velocity, -self.MINIPOCK_MAX_LIN_VEL, self.MINIPOCK_MAX_LIN_VEL)
+        return constrain(
+            velocity, -self.MINIPOCK_MAX_LIN_VEL, self.MINIPOCK_MAX_LIN_VEL
+        )
 
     def check_angular_limit_velocity(self, velocity):
         """
@@ -211,7 +218,9 @@ class TeleopController(Node):
         :return: The constrained velocity value.
 
         """
-        return constrain(velocity, -self.MINIPOCK_MAX_ANG_VEL, self.MINIPOCK_MAX_ANG_VEL)
+        return constrain(
+            velocity, -self.MINIPOCK_MAX_ANG_VEL, self.MINIPOCK_MAX_ANG_VEL
+        )
 
     def set_terminal_settings(self):
         """
@@ -325,7 +334,9 @@ class TeleopController(Node):
                     or self.control_angular_velocity != self.previous_z_angular
                 ):
                     self.publisher.publish(
-                        make_twist(self.control_linear_velocity, self.control_angular_velocity)
+                        make_twist(
+                            self.control_linear_velocity, self.control_angular_velocity
+                        )
                     )
                     self.previous_x_linear = self.control_linear_velocity
                     self.previous_z_angular = self.control_angular_velocity
