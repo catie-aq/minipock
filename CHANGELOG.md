@@ -15,8 +15,8 @@
 - Modification de `minipock_bringup` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
 - Modification de `minipock_navigation` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
 - Modification de `minipock_gz` pour supporter plusieurs robots (préfixe des topics, des paramètres, etc.)
-- Réparation de `minipock_cartographer` pour fonctionner avec un unique robot (`minipock_0`)
-
+- Mise à jour sur ROS Jazzy et Gazebo Harmonic
+  
 ## [2.0.0](https://github.com/catie-aq/minipock/releases/tag/2.0.0)
 
 ### Added
