@@ -332,7 +332,7 @@
       <include>
         <uri>https://fuel.ignitionrobotics.org/1.0/OpenRobotics/models/aws_robomaker_warehouse_GroundB_01</uri>
       </include>
-      <pose>0.0 0.0 -0.25 0 0 0</pose>
+      <pose>0.0 0.0 0.0 0 0 0</pose>
     </model>
 
     <model name="aws_robomaker_warehouse_Lamp_01_005">
