@@ -75,9 +75,7 @@ class TeleopController(Node):
         namespace = self.check_ns_exists(namespace)
         if namespace[-1] != "/" and namespace != "":
             namespace += "/"
-            self.get_logger().info(
-                "Non empty namespace set with no '/' at the end. Adding it."
-            )
+            self.get_logger().info("Non empty namespace set with no '/' at the end. Adding it.")
             self.get_logger().info(f"New namespace: {namespace}")
 
         self.check_topic_exists(f"/{namespace}cmd_vel")
@@ -206,9 +204,7 @@ class TeleopController(Node):
         :param velocity: The linear velocity to check.
         :return: The constrained linear velocity.
         """
-        return constrain(
-            velocity, -self.MINIPOCK_MAX_LIN_VEL, self.MINIPOCK_MAX_LIN_VEL
-        )
+        return constrain(velocity, -self.MINIPOCK_MAX_LIN_VEL, self.MINIPOCK_MAX_LIN_VEL)
 
     def check_angular_limit_velocity(self, velocity):
         """
@@ -218,9 +214,7 @@ class TeleopController(Node):
         :return: The constrained velocity value.
 
         """
-        return constrain(
-            velocity, -self.MINIPOCK_MAX_ANG_VEL, self.MINIPOCK_MAX_ANG_VEL
-        )
+        return constrain(velocity, -self.MINIPOCK_MAX_ANG_VEL, self.MINIPOCK_MAX_ANG_VEL)
 
     def set_terminal_settings(self):
         """
@@ -334,9 +328,7 @@ class TeleopController(Node):
                     or self.control_angular_velocity != self.previous_z_angular
                 ):
                     self.publisher.publish(
-                        make_twist(
-                            self.control_linear_velocity, self.control_angular_velocity
-                        )
+                        make_twist(self.control_linear_velocity, self.control_angular_velocity)
                     )
                     self.previous_x_linear = self.control_linear_velocity
                     self.previous_z_angular = self.control_angular_velocity
