@@ -47,7 +47,7 @@ class RawDataTransformer(Node):
         :return: None.
         """
 
-        self.__odom_transform.header.stamp = self.get_clock().now().to_msg()
+        self.__odom_transform.header.stamp = msg.header.stamp
         self.__odom_transform.transform.translation.x = msg.pose.position.x
         self.__odom_transform.transform.translation.y = msg.pose.position.y
         self.__odom_transform.transform.translation.z = msg.pose.position.z
@@ -68,6 +68,7 @@ class RawDataTransformer(Node):
         :param msg: The message received.
         :return: None.
         """
+        msg.header.stamp = self.get_clock().now().to_msg()
         self.__scan_publisher.publish(msg)
 
 
