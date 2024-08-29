@@ -6,6 +6,7 @@
 
 - Publication d'une image Docker pour MiniPock sur GitHub Container Registry
 - Centralisation de la configuration dans un fichier YAML dans le package `minipock`
+- Ajout de la téléopération en mode FPS
 
 ### Changed
 
