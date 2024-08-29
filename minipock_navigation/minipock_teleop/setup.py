@@ -20,6 +20,7 @@ setup(
     entry_points={
         "console_scripts": [
             "teleop_keyboard = minipock_teleop.teleop_keyboard:main",
+            "teleop_fps = minipock_teleop.teleop_fps:main",
         ],
     },
 )

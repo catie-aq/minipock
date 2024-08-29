@@ -69,7 +69,8 @@ class RawDataTransformer(Node):
         :return: None.
         """
         msg.header.stamp = self.get_clock().now().to_msg()
-        self.__scan_publisher.publish(msg)
+        if msg.angle_max > msg.angle_min:
+            self.__scan_publisher.publish(msg)
 
 
 def main(args=None):
