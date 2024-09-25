@@ -4,6 +4,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from pynput import keyboard
 
+
 class TeleopFps(Node):
     def __init__(self):
         super().__init__("teleop_keyboard")
@@ -14,8 +15,8 @@ class TeleopFps(Node):
         if len(cmd_vel_topics) == 0:
             self.get_logger().error("No cmd_vel topic found")
             return
-        elif "/"+self.namespace+"/cmd_vel" in cmd_vel_topics:
-            cmd_vel_topic = "/"+self.namespace+"/cmd_vel"
+        elif "/" + self.namespace + "/cmd_vel" in cmd_vel_topics:
+            cmd_vel_topic = "/" + self.namespace + "/cmd_vel"
         else:
             cmd_vel_topic = cmd_vel_topics[0]
 
@@ -39,9 +40,12 @@ class TeleopFps(Node):
             if "cmd_vel" in topic[0]:
                 cmd_vel_topics.append(topic[0])
         return cmd_vel_topics
-    
+
     def send_cmd_vel(self):
-        if self.current_vel_lin != self.candidate_vel_lin or self.current_vel_ang != self.candidate_vel_ang:
+        if (
+            self.current_vel_lin != self.candidate_vel_lin
+            or self.current_vel_ang != self.candidate_vel_ang
+        ):
             self.current_vel_lin = self.candidate_vel_lin
             self.current_vel_ang = self.candidate_vel_ang
             twist = Twist()
@@ -52,31 +56,31 @@ class TeleopFps(Node):
                 twist.linear.x = self.current_vel_lin
                 twist.angular.z = self.current_vel_ang
             self.publisher.publish(twist)
-        
 
     def on_press(self, key):
         try:
-            if key.char == 'z':
+            if key.char == "z":
                 self.candidate_vel_lin = self.max_vel_lin
-            elif key.char == 's':
+            elif key.char == "s":
                 self.candidate_vel_lin = -self.max_vel_lin
-            elif key.char == 'q':
+            elif key.char == "q":
                 self.candidate_vel_ang = self.max_vel_ang
-            elif key.char == 'd':
+            elif key.char == "d":
                 self.candidate_vel_ang = -self.max_vel_ang
-            elif key.char == 'b':
+            elif key.char == "b":
                 self.boost = not self.boost
         except AttributeError:
             pass
 
     def on_release(self, key):
         try:
-            if key.char == 'z' or key.char == 's':
+            if key.char == "z" or key.char == "s":
                 self.candidate_vel_lin = 0.0
-            elif key.char == 'q' or key.char == 'd':
+            elif key.char == "q" or key.char == "d":
                 self.candidate_vel_ang = 0.0
         except AttributeError:
             pass
+
 
 def main():
     """

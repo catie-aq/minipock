@@ -1,5 +1,5 @@
 {
-  "image": "ghcr.io/catie-aq/minipock:main-base",
+  "image": "ghcr.io/catie-aq/minipock:main-real",
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "ROS_DOMAIN_ID": "2"
