@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  minipock-real:
+    image: ghcr.io/catie-aq/minipock:main-real
+    environment:
+      DISPLAY: ${DISPLAY}
+      ROS_DOMAIN_ID: "10"
+    network_mode: host
+    privileged: true
+    volumes:
+      - /dev/dri:/dev/dri
+      - /dev/shm:/dev/shm
+      - .:/workspaces/minipock # change this to the path to your workspace if needed
+    command: /bin/bash
+  minipock-simulation:
+    image: ghcr.io/catie-aq/minipock:main-simulation
+    environment:
+      DISPLAY: ${DISPLAY}
+      ROS_DOMAIN_ID: "10"
+    network_mode: host
+    privileged: true
+    volumes:
+      - /dev/dri:/dev/dri
+      - /dev/shm:/dev/shm
+      - .:/workspaces/minipock # change this to the path to your workspace if needed
+    command: /bin/bashs
