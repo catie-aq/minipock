@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [2.1.0](https://github.com/catie-aq/minipock/releases/tag/2.1.0)
+
 ### Added
 
 - Publication d'une image Docker pour MiniPock sur GitHub Container Registry
