@@ -1,6 +1,7 @@
 name: "ROS2 CI/CD"
 
 on:
+  workflow_dispatch:
   pull_request:
 
 jobs:
