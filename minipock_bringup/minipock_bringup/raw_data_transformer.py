@@ -14,7 +14,7 @@ class RawDataTransformer(Node):
 
         self.declare_parameter("robot_name", "minipock")
         self.__robot_name = self.get_parameter("robot_name").value
-        
+
         self.create_subscription(
             PoseStamped,
             f"odom_raw",
@@ -27,12 +27,8 @@ class RawDataTransformer(Node):
             self.callback_scan,
             qos_profile_sensor_data,
         )
-        self.___odom_publisher = self.create_publisher(
-            Odometry, f"odom", qos_profile_sensor_data
-        )
-        self.__scan_publisher = self.create_publisher(
-            LaserScan, f"scan", qos_profile_sensor_data
-        )
+        self.___odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
+        self.__scan_publisher = self.create_publisher(LaserScan, f"scan", qos_profile_sensor_data)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
