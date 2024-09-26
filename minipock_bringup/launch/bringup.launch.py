@@ -36,7 +36,6 @@ def parse_config(context, *args, **kwargs):
     launch_processes.append(micro_ros_agent())
     for robot in fleet:
         robot_name = f"{namespace}{robot}"
-        print(robot_name)
         launch_processes.extend(spawn(robot_name))
         launch_processes.append(state(robot_name))
         if odom_frame:
@@ -102,7 +101,6 @@ def odometry(robot_name):
     :return: LaunchDescription instance containing a Node with package 'joint_state_publisher'
     and executable 'joint_state_publisher'
     """
-    print(robot_name)
     return LaunchDescription(
         [
             Node(
