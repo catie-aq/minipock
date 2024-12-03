@@ -123,7 +123,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /floorplan_updates
       Use Timestamp: false
-      Value: true      
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
