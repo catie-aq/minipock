@@ -24,4 +24,4 @@ services:
       - /dev/dri:/dev/dri
       - /dev/shm:/dev/shm
       - .:/workspaces/minipock # change this to the path to your workspace if needed
-    command: /bin/bashs
+    command: /bin/bash
