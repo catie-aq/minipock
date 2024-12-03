@@ -1,0 +1,83 @@
+coordinate_system: reference_image
+crowd_sim:
+  agent_groups:
+    - {agents_name: [minipock_0], agents_number: 2, group_id: 0, profile_selector: external_agent, state_selector: external_static, x: 0, y: 0}
+  agent_profiles:
+    - {ORCA_tau: 1, ORCA_tauObst: 0.40000000000000002, class: 1, max_accel: 0, max_angle_vel: 0, max_neighbors: 10, max_speed: 0, name: external_agent, neighbor_dist: 5, obstacle_set: 1, pref_speed: 0, r: 0.25}
+  enable: 0
+  goal_sets: []
+  model_types: []
+  obstacle_set: {class: 1, file_name: ground_navmesh.nav, type: nav_mesh}
+  states:
+    - {final: 1, goal_set: -1, name: external_static, navmesh_file_name: ""}
+  transitions: []
+  update_time_step: 0.10000000000000001
+graphs:
+  {}
+levels:
+  ground:
+    doors:
+      - [14, 15, {motion_axis: [1, start], motion_degrees: [3, 90], motion_direction: [2, 1], name: [1, D1], plugin: [1, normal], right_left_ratio: [3, 1], type: [1, double_sliding]}]
+    drawing:
+      filename: empty_room.png
+    elevation: 0
+    floors:
+      - parameters: {ceiling_scale: [3, 1], ceiling_texture: [1, blue_linoleum], indoor: [2, 0], texture_name: [1, blue_linoleum], texture_rotation: [3, 0], texture_scale: [3, 1]}
+        vertices: [4, 13, 12, 11, 10, 9, 8, 7, 6, 5]
+    lanes:
+      - [16, 17, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [17, 18, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [18, 19, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [19, 16, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [16, 18, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+      - [17, 19, {bidirectional: [4, true], demo_mock_floor_name: [1, ""], demo_mock_lift_name: [1, ""], graph_idx: [2, 0], mutex: [1, ""], orientation: [1, ""], speed_limit: [3, 0]}]
+    layers:
+      rdc:
+        color: [0.66700000000000004, 0, 1, 0.5]
+        filename: empty_room.png
+        transform:
+          scale: 0.013979999999999999
+          translation_x: 0
+          translation_y: 0
+          yaw: 0
+        visible: true
+    measurements:
+      - [0, 1, {distance: [3, 7.2599999999999998]}]
+      - [2, 3, {distance: [3, 4.4500000000000002]}]
+    # models:
+    #   - {dispensable: false, model_name: OpenRobotics/WhiteChipChair, name: OpenRobotics/WhiteChipChair, static: true, x: 378.82400000000001, y: 507.30200000000002, yaw: 1.5708, z: 0}
+    vertices:
+      - [80.811999999999998, 235.64699999999999, 0, ""]
+      - [599.64599999999996, 236.93899999999999, 0, ""]
+      - [100.351, 214.75899999999999, 0, ""]
+      - [101.50700000000001, 533.55899999999997, 0, ""]
+      - [71.469999999999999, 207.011, 0, ""]
+      - [72.957999999999998, 541.95699999999999, 0, ""]
+      - [183.86199999999999, 541.95699999999999, 0, ""]
+      - [183.86199999999999, 514.41700000000003, 0, ""]
+      - [602.91600000000005, 514.41700000000003, 0, ""]
+      - [602.91600000000005, 487.62099999999998, 0, ""]
+      - [657.99599999999998, 488.36599999999999, 0, ""]
+      - [657.99599999999998, 256.88099999999997, 0, ""]
+      - [598.45000000000005, 256.88099999999997, 0, ""]
+      - [599.19500000000005, 205.523, 0, ""]
+      - [658.53999999999996, 403.57400000000001, 0, ""]
+      - [658.53999999999996, 475.423, 0, ""]
+      - [151.452, 273.00799999999998, 0, up_left]
+      - [567.34699999999998, 273.00799999999998, 0, up_right]
+      - [566.21699999999998, 444.791, 0, bottom_right]
+      - [146.93100000000001, 444.791, 0, bottom_left, {is_charger: [4, true], is_holding_point: [4, true], is_parking_spot: [4, true], spawn_robot_name: [1, minipock_0], spawn_robot_type: [1, minipock]}]
+    walls:
+      - [4, 5, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [5, 6, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [6, 7, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [7, 8, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [8, 9, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [9, 10, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [11, 12, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [12, 13, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [13, 4, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [11, 14, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+      - [15, 10, {alpha: [3, 1], texture_height: [3, 2.5], texture_name: [1, default], texture_scale: [3, 1], texture_width: [3, 1]}]
+lifts: {}
+name: empty_room
