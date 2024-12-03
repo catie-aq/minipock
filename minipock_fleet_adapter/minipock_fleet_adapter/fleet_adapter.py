@@ -87,7 +87,6 @@ def main(argv=sys.argv):
     # Parse the yaml in Python to get the fleet_manager info
     with open(config_path, "r") as f:
         config_yaml = yaml.safe_load(f)
-    print(f"Config file: {config_yaml}")
 
     # ROS 2 node for the command handle
     fleet_name = fleet_config.fleet_name
@@ -125,7 +124,7 @@ def main(argv=sys.argv):
     rclpy_executor = rclpy.executors.MultiThreadedExecutor()
 
     # Initialize robot API for this fleet
-    api = RobotAPI(config_yaml, rclpy_executor)
+    api = RobotAPI(config_yaml)
 
     robots = {}
     for robot_name in fleet_config.known_robots:
