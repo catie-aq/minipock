@@ -44,7 +44,7 @@ def parse_config(context, *args, **kwargs):
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("minipock_navigation2"), "rviz", "navigation2.rviz"]
+        [FindPackageShare("minipock_navigation2"), "rviz", "navigation2_rmf.rviz"]
     )
 
     robots = make_robots(namespace, fleet)
