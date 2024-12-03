@@ -1,0 +1,22 @@
+<?xml version='1.0' ?>
+
+<launch>
+  <arg name="use_sim_time" default="true"/>
+
+  <!-- Common launch -->
+  <include file="$(find-pkg-share minipock_fleet_adapter)/launch/common.launch.xml">
+    <arg name="use_sim_time" value="$(var use_sim_time)"/>
+    <arg name="viz_config_file" value ="$(find-pkg-share minipock_fleet_adapter)/rviz/empty_room.rviz"/>
+    <arg name="config_file" value="$(find-pkg-share minipock_fleet_adapter)/map/empty_room/empty_room.building.yaml"/>
+  </include>
+
+  <!-- Minipock fleet adapter -->
+  <group>
+    <include file="$(find-pkg-share minipock_fleet_adapter)/launch/fleet_adapter.launch.xml">
+      <arg name="use_sim_time" value="$(var use_sim_time)"/>
+      <arg name="nav_graph_file" value="$(find-pkg-share minipock_fleet_adapter)/map/empty_room/nav_graphs/0.yaml" />
+      <arg name="config_file" value="$(find-pkg-share minipock_fleet_adapter)/config/empty_room/minipock_config.yaml"/>
+    </include>
+  </group>
+
+</launch>
