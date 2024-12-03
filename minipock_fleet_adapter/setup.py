@@ -19,6 +19,7 @@ setup(
     entry_points={
         "console_scripts": [
             "fleet_adapter=minipock_fleet_adapter.fleet_adapter:main",
+            "dispatch_patrol=task.dispatch_patrol:main",
         ],
     },
     data_files=[
@@ -34,5 +35,6 @@ setup(
         (os.path.join("share", package_name, "map","empty_room"), glob(os.path.join("map","empty_room", "*.*"))),
         (os.path.join("share", package_name, "map","empty_room","nav_graphs"), glob(os.path.join("map","empty_room","nav_graphs", "*.*"))),
         (os.path.join("share", package_name, "rviz"), glob(os.path.join("rviz", "*.*"))),
+        (os.path.join("share", package_name, "task"), glob(os.path.join("task", "*.*"))),
     ],
 )
