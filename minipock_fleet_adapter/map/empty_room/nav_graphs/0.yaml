@@ -1,0 +1,63 @@
+building_name: empty_room
+doors:
+  D1:
+    endpoints:
+    - [9.203549068442918, -5.640223998159234]
+    - [9.203549068442918, -6.644363149947364]
+    map: ground
+levels:
+  ground:
+    lanes:
+    - - 0
+      - 1
+      - {}
+    - - 1
+      - 0
+      - {}
+    - - 1
+      - 2
+      - {}
+    - - 2
+      - 1
+      - {}
+    - - 2
+      - 3
+      - {}
+    - - 3
+      - 2
+      - {}
+    - - 3
+      - 0
+      - {}
+    - - 0
+      - 3
+      - {}
+    - - 0
+      - 2
+      - {}
+    - - 2
+      - 0
+      - {}
+    - - 1
+      - 3
+      - {}
+    - - 3
+      - 1
+      - {}
+    vertices:
+    - - 2.116645782357665
+      - -3.815474419287308
+      - {name: up_left}
+    - - 7.929064222877705
+      - -3.815474419287308
+      - {name: up_right}
+      # - {is_charger: true, is_holding_point: true, is_parking_spot: true, name: up_right,
+      #   spawn_robot_name: minipock1, spawn_robot_type: minipock}
+    - - 7.913271696307807
+      - -6.2162598987180635
+      - {name: bottom_right}
+    - - 2.053461700390844
+      - -6.2162598987180635
+      - {is_charger: true, is_holding_point: true, is_parking_spot: true, name: bottom_left,
+        spawn_robot_name: minipock_0, spawn_robot_type: minipock}
+lifts: {}
