@@ -44,3 +44,7 @@ RUN wget --progress=dot:giga https://packages.osrfoundation.org/gazebo.gpg -O /u
 
 RUN echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/install/share:/workspaces/install/share/minipock_gz/worlds' >> /root/.bashrc \
     && echo 'export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/workspaces/install/share:/workspaces/install/share/minipock_gz/worlds' >> /root/.zshrc
+RUN echo 'export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:/opt/ros/jazzy/lib/rmf_robot_sim_gz_plugins:/opt/ros/jazzy/lib/rmf_building_sim_gz_plugins' >> /root/.bashrc \
+    && echo 'export GZ_SIM_SYSTEM_PLUGIN_PATH=$GZ_SIM_SYSTEM_PLUGIN_PATH:/opt/ros/jazzy/lib/rmf_robot_sim_gz_plugins:/opt/ros/jazzy/lib/rmf_building_sim_gz_plugins' >> /root/.zshrc \
+    && echo 'export GZ_GUI_PLUGIN_PATH=$GZ_GUI_PLUGIN_PATH:/opt/ros/jazzy/lib/rmf_robot_sim_gz_plugins:/opt/ros/jazzy/lib/rmf_building_sim_gz_plugins' >> /root/.bashrc \
+    && echo 'export GZ_GUI_PLUGIN_PATH=$GZ_GUI_PLUGIN_PATH:/opt/ros/jazzy/lib/rmf_robot_sim_gz_plugins:/opt/ros/jazzy/lib/rmf_building_sim_gz_plugins' >> /root/.zshrc
