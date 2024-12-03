@@ -29,11 +29,11 @@ from geometry_msgs.msg import PoseWithCovarianceStamped
 from geometry_msgs.msg import PoseStamped
 
 class AmclPoseListener(Node):
-    def __init__(self):
-        super().__init__('amcl_pose_listener')
+    def __init__(self, robot_name):
+        super().__init__('amcl_pose_listener_' + robot_name)
         self.subscription = self.create_subscription(
             PoseWithCovarianceStamped,
-            '/minipock_0/amcl_pose',
+            f'/{robot_name}/amcl_pose',
             self.listener_callback,
             10
         )
@@ -67,7 +67,7 @@ class AmclPoseListener(Node):
 
 class GoalPosePulisher(Node):
     def __init__(self, robot_name):
-        super().__init__('goal_pose_publisher')
+        super().__init__('goal_pose_publisher'+robot_name)
         self.publisher = self.create_publisher(PoseStamped, f'/{robot_name}/goal_pose', 10)
 
 
@@ -94,28 +94,26 @@ class RobotAPI:
     # The constructor below accepts parameters typically required to submit
     # http requests. Users should modify the constructor as per the
     # requirements of their robot's API
-    def __init__(self, config_yaml, executor=None):
+    def __init__(self, config_yaml):
         self.fleet_mgr = config_yaml['fleet_manager']
         self.prefix = 'http://' + self.fleet_mgr['ip'] + ':' + str(self.fleet_mgr['port'])
         self.user = self.fleet_mgr['user']
         self.password = self.fleet_mgr['password']
         self.timeout = 5.0
         self.debug = False
-        self.executor = executor
-        self.current_pose = [2.053461700390844, -6.2162598987180635, 0.0]
 
-        if self.executor is not None:
-            self.amcl_pose_listener = AmclPoseListener()
-            self.executor.add_node(self.amcl_pose_listener)
-        else:
-            print('Executor is None. Cannot initialize amcl pose listener.')
-        
         self.robots = config_yaml['rmf_fleet']['robots']
-        # create a dictionary to store the goal pose publisher for each robot
-        self.goal_pose_publisher = {}
+        self.goal_pose_publishers = {}
+        self.amcl_pose_listeners = {}
         for robot_name in self.robots:
-            self.goal_pose_publisher[robot_name] = GoalPosePulisher(robot_name)
-            print(f'Goal pose publisher for {robot_name} created')
+            self.amcl_pose_listeners[robot_name] = AmclPoseListener(robot_name)
+            self.goal_pose_publishers[robot_name] = GoalPosePulisher(robot_name)
+
+    def get_amcl_pose_listener(self, robot_name):
+        return self.amcl_pose_listeners[robot_name]
+    
+    def get_goal_pose_publisher(self, robot_name):
+        return self.goal_pose_publishers[robot_name]
         
     def check_connection(self):
         ''' Return True if connection to the robot API server is successful '''
@@ -135,7 +133,7 @@ class RobotAPI:
             and theta are in the robot's coordinate convention. This function
             should return True if the robot has accepted the request,
             else False '''
-        goal_pose_publisher = self.goal_pose_publisher[robot_name]
+        goal_pose_publisher = self.goal_pose_publishers[robot_name]
         goal_pose_publisher.publish_goal_pose(pose, map_name)
         return goal_pose_publisher.check_goal_pose_sent()
 
@@ -158,7 +156,7 @@ class RobotAPI:
     def stop(self, robot_name: str):
         ''' Command the robot to stop.
             Return True if robot has successfully stopped. Else False. '''
-        goal_pose_publisher = self.goal_pose_publisher[robot_name]
+        goal_pose_publisher = self.goal_pose_publishers[robot_name]
         goal_pose_publisher.publish_goal_pose(self.current_pose, 'ground')
         print('Stop command sent to ', robot_name)
         return True
@@ -166,12 +164,20 @@ class RobotAPI:
     def position(self, robot_name: str):
         ''' Return [x, y, theta] expressed in the robot's coordinate frame or
         None if any errors are encountered '''
-        amcl_pose = self.amcl_pose_listener.get_pose()
-        if amcl_pose is not None:
-            pose_xyt = [amcl_pose['position']['x'], amcl_pose['position']['y'], amcl_pose['orientation']['tetha']]
-            self.current_pose = pose_xyt
+        amcl_pose_listener = self.amcl_pose_listeners[robot_name]
+        amcl_pose = amcl_pose_listener.get_pose()
+        pose_xyt = None
+        if amcl_pose is None:
+            # Hardcoded initial pose for minipock robots because the amcl_pose is not available
+            # or not accessed at launch --> need to change this
+            if robot_name == "minipock_0":
+                pose_xyt = [2.053461700390844, -6.2162598987180635, 0.0]
+            elif robot_name == "minipock_1":
+                pose_xyt = [7.929064222877705, -3.815474419287308, 0.0]
+            else:
+                pose_xyt = [0.0, 0.0, 0.0]
         else:
-            pose_xyt = None
+            pose_xyt = [amcl_pose['position']['x'], amcl_pose['position']['y'], amcl_pose['orientation']['tetha']]
         return pose_xyt
 
     def battery_soc(self, robot_name: str):

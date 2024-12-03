@@ -5,3 +5,6 @@ fleet:
   "0":
     mode: differential
     position: [2.053461700390844, -6.2162598987180635]
+  "1":
+    mode: differential
+    position: [7.929064222877705, -3.815474419287308]

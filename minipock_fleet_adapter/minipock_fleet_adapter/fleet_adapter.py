@@ -162,6 +162,10 @@ def main(argv=sys.argv):
     # Create executor for the command handle node
     rclpy_executor.add_node(node)
 
+    for robot in robots.values():
+        amcl_pose_listener = api.get_amcl_pose_listener(robot.name)
+        rclpy_executor.add_node(amcl_pose_listener)
+
     # Start the fleet adapter
     rclpy_executor.spin()
 
