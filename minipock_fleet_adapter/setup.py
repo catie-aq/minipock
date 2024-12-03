@@ -1,4 +1,5 @@
 import os
+from glob import glob
 
 from setuptools import setup
 
@@ -16,7 +17,9 @@ setup(
     ],
     packages=[package_name],
     entry_points={
-        "console_scripts": [],
+        "console_scripts": [
+            "fleet_adapter=minipock_fleet_adapter.fleet_adapter:main",
+        ],
     },
     data_files=[
         (
@@ -24,5 +27,6 @@ setup(
             ["resource/" + package_name],
         ),
         (os.path.join("share", package_name), ["package.xml"]),
+        (os.path.join("share", package_name, "launch"), glob(os.path.join("launch", "*.*"))),
     ],
 )
