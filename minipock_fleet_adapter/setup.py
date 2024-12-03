@@ -33,5 +33,6 @@ setup(
         (os.path.join("share", package_name, "map"), glob(os.path.join("map", "*.*"))),
         (os.path.join("share", package_name, "map","empty_room"), glob(os.path.join("map","empty_room", "*.*"))),
         (os.path.join("share", package_name, "map","empty_room","nav_graphs"), glob(os.path.join("map","empty_room","nav_graphs", "*.*"))),
+        (os.path.join("share", package_name, "rviz"), glob(os.path.join("rviz", "*.*"))),
     ],
 )
