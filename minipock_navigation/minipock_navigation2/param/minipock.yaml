@@ -12,6 +12,10 @@
     beam_skip_threshold: 0.3
     do_beamskip: false
     set_initial_pose: true
+    initial_pose:
+      x: 2.053461700390844
+      y: -6.2162598987180635
+      yaw: 0.0
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 12.0
@@ -138,6 +142,7 @@
       global_frame: <relative_namespace>/odom
       robot_base_frame: <relative_namespace>/base_footprint
       use_sim_time: <use_sim_time>
+      global_frame: map
       map_topic: /map
       rolling_window: true
       width: 3
