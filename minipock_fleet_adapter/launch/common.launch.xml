@@ -11,6 +11,19 @@
   <arg name="use_unique_hex_string_with_task_id" default="true" description="Appends a unique hex string to the task ID"/>
   <arg name="server_uri" default="" description="The URI of the api server to transmit state and task information."/>
 
+  <!-- Schedule Visualization -->
+  <arg name="rate" default="10.0" description= "The rate in hz at which the scheduler markers should publish"/>
+  <arg name="path_width" default="0.2" description="Width of schedule path(m) to be rendered"/>
+  <arg name="wait_secs" default="10" description="The nummber of seconds the schedule visualizer should keep trying to connect to the rmf_schedule_node"/>
+  <arg name="websocket_port" default="8006"/>
+  <arg name="retained_history_count" default="50" description="The retained history count for negotiations"/>
+
+  <!-- Navgraph Visualization -->
+  <arg name="lane_width" default="0.3" description="Width of lanes(m) to be rendered"/>
+  <arg name="waypoint_scale" default="0.8" description="The relative size of a waypoint wrt the lane width"/>
+  <arg name="text_scale" default="0.7" description="The relative size of a text label wrt the lane width"/>
+  <arg name="lane_transparency" default="0.3" description="The transparency of a rendered lane in default state"/>
+
   <!-- Traffic Schedule  -->
   <node pkg="rmf_traffic_ros2" exec="rmf_traffic_schedule" output="both" name="rmf_traffic_schedule_primary" args="--ros-args --log-level FATAL">
     <param name="use_sim_time" value="$(var use_sim_time)"/>
@@ -28,14 +41,25 @@
     </node>
   </group>
 
-  <!-- Visualizer -->
+  <!-- Visualization rviz -->
   <group>
-    <include file="$(find-pkg-share rmf_visualization)/visualization.launch.xml">
-      <arg name="use_sim_time" value="$(var use_sim_time)"/>
-      <arg name="map_name" value="$(var initial_map)"/>
-      <arg name="viz_config_file" value ="$(var viz_config_file)"/>
-      <arg name="headless" value="$(var headless)"/>
-    </include>
+  <node pkg="rmf_visualization_schedule" exec="schedule_visualizer_node">
+      <param name="use_sim_time" value="$(var use_sim_time)"/>
+      <param name="rate" value="$(var rate)"/>
+      <param name="path_width" value="$(var path_width)"/>
+      <param name="initial_map_name" value="$(var initial_map)"/>
+      <param name="wait_secs" value="$(var wait_secs)"/>
+      <param name="port" value="$(var websocket_port)"/>
+      <param name="retained_history_count" value="$(var retained_history_count)"/>
+    </node>
+    <node pkg="rmf_visualization_navgraphs" exec="navgraph_visualizer_node">
+        <param name="use_sim_time" value="$(var use_sim_time)"/>
+        <param name="initial_map_name" value="$(var initial_map)"/>
+        <param name="lane_width" value="$(var lane_width)"/>
+        <param name="waypoint_scale" value="$(var waypoint_scale)"/>
+        <param name="text_scale" value="$(var text_scale)"/>
+        <param name="lane_transparency" value="$(var lane_transparency)"/>
+      </node>
   </group>
 
   <!-- Door Supervisor -->
