@@ -50,9 +50,8 @@ levels:
       - {name: up_left}
     - - 7.929064222877705
       - -3.815474419287308
-      - {name: up_right}
-      # - {is_charger: true, is_holding_point: true, is_parking_spot: true, name: up_right,
-      #   spawn_robot_name: minipock1, spawn_robot_type: minipock}
+      - {is_charger: true, is_holding_point: true, is_parking_spot: true, name: up_right,
+        spawn_robot_name: minipock1, spawn_robot_type: minipock}
     - - 7.913271696307807
       - -6.2162598987180635
       - {name: bottom_right}

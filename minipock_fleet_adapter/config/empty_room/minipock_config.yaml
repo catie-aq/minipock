@@ -39,6 +39,9 @@ rmf_fleet:
         charger: "bottom_left"
         responsive_wait: False 
         # No mention of responsive_wait means the fleet-wide setting will be used
+    minipock_1:
+        charger: "up_right"
+        responsive_wait: False
 
 fleet_manager:
   ip: "127.0.0.1"

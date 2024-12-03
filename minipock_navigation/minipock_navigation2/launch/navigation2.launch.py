@@ -112,7 +112,11 @@ def make_robots(namespace, fleet):
     robots = []
     for robot in fleet:
         name = namespace + robot
-        robots.append({"name": name})
+        if fleet[robot]["position"] is not None:
+            position = fleet[robot]["position"]
+        else:
+            position = [0.0, 0.0, 0.0]
+        robots.append({"name": name, "position": position})
     return robots
 
 
@@ -151,6 +155,7 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
     launch_amcl = LaunchDescription()
     for robot in robots:
         namespace = robot["name"]
+        position = robot["position"]
         absolute_namespace = namespace
         if namespace != "":
             absolute_namespace = "/" + namespace
@@ -180,6 +185,12 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 respawn_delay=2.0,
                 parameters=[
                     params_file,
+                    {"initial_pose":
+                        {
+                            "x": position[0],
+                            "y": position[1],
+                        }
+                    },
                 ],
             )
         )
