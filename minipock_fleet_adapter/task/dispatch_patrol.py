@@ -36,59 +36,59 @@ from rmf_task_msgs.msg import ApiResponse
 class TaskRequester(Node):
 
     def __init__(self, argv=sys.argv):
-        super().__init__('task_requester')
+        super().__init__("task_requester")
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            '-p',
-            '--places',
+            "-p",
+            "--places",
             required=True,
-            nargs='+',
+            nargs="+",
             type=str,
-            help='Places to patrol through',
+            help="Places to patrol through",
         )
         parser.add_argument(
-            '-n',
-            '--rounds',
-            help='Number of loops to perform',
+            "-n",
+            "--rounds",
+            help="Number of loops to perform",
             type=int,
             default=1,
         )
         parser.add_argument(
-            '-F',
-            '--fleet',
+            "-F",
+            "--fleet",
             type=str,
-            help='Fleet name, should define together with robot',
+            help="Fleet name, should define together with robot",
         )
         parser.add_argument(
-            '-R',
-            '--robot',
+            "-R",
+            "--robot",
             type=str,
-            help='Robot name, should define together with fleet',
+            help="Robot name, should define together with fleet",
         )
         parser.add_argument(
-            '-st',
-            '--start_time',
-            help='Start time from now in secs, default: 0',
+            "-st",
+            "--start_time",
+            help="Start time from now in secs, default: 0",
             type=int,
             default=0,
         )
         parser.add_argument(
-            '-pt',
-            '--priority',
-            help='Priority value for this request',
+            "-pt",
+            "--priority",
+            help="Priority value for this request",
             type=int,
             default=0,
         )
         parser.add_argument(
-            '--use_sim_time',
-            action='store_true',
-            help='Use sim time, default: false',
+            "--use_sim_time",
+            action="store_true",
+            help="Use sim time, default: false",
         )
         parser.add_argument(
-            '--requester',
-            help='Entity that is requesting this task',
+            "--requester",
+            help="Entity that is requesting this task",
             type=str,
-            default='rmf_demos_tasks'
+            default="rmf_demos_tasks",
         )
 
         self.args = parser.parse_args(argv[1:])
@@ -100,29 +100,27 @@ class TaskRequester(Node):
             reliability=Reliability.RELIABLE,
             durability=Durability.TRANSIENT_LOCAL,
         )
-        self.pub = self.create_publisher(
-            ApiRequest, 'task_api_requests', transient_qos
-        )
+        self.pub = self.create_publisher(ApiRequest, "task_api_requests", transient_qos)
 
         # enable ros sim time
         if self.args.use_sim_time:
-            self.get_logger().info('Using Sim Time')
-            param = Parameter('use_sim_time', Parameter.Type.BOOL, True)
+            self.get_logger().info("Using Sim Time")
+            param = Parameter("use_sim_time", Parameter.Type.BOOL, True)
             self.set_parameters([param])
 
         # Construct task
         msg = ApiRequest()
-        msg.request_id = 'patrol_' + str(uuid.uuid4())
+        msg.request_id = "patrol_" + str(uuid.uuid4())
         payload = {}
 
         if self.args.robot and self.args.fleet:
             self.get_logger().info("Using 'robot_task_request'")
-            payload['type'] = 'robot_task_request'
-            payload['robot'] = self.args.robot
-            payload['fleet'] = self.args.fleet
+            payload["type"] = "robot_task_request"
+            payload["robot"] = self.args.robot
+            payload["fleet"] = self.args.fleet
         else:
             self.get_logger().info("Using 'dispatch_task_request'")
-            payload['type'] = 'dispatch_task_request'
+            payload["type"] = "dispatch_task_request"
 
         request = {}
 
@@ -130,22 +128,22 @@ class TaskRequester(Node):
         now = self.get_clock().now().to_msg()
         now.sec = now.sec + self.args.start_time
         start_time = now.sec * 1000 + round(now.nanosec / 10**6)
-        request['unix_millis_request_time'] = start_time
-        request['unix_millis_earliest_start_time'] = start_time
+        request["unix_millis_request_time"] = start_time
+        request["unix_millis_earliest_start_time"] = start_time
         # todo(YV): Fill priority after schema is added
 
-        request['requester'] = self.args.requester
+        request["requester"] = self.args.requester
 
         # Define task request category
-        request['category'] = 'patrol'
+        request["category"] = "patrol"
 
         if self.args.fleet:
-            request['fleet_name'] = self.args.fleet
+            request["fleet_name"] = self.args.fleet
 
         # Define task request description
-        description = {'places': self.args.places, 'rounds': self.args.rounds}
-        request['description'] = description
-        payload['request'] = request
+        description = {"places": self.args.places, "rounds": self.args.rounds}
+        request["description"] = description
+        payload["request"] = request
         msg.json_msg = json.dumps(payload)
 
         def receive_response(response_msg: ApiResponse):
@@ -154,10 +152,10 @@ class TaskRequester(Node):
 
         transient_qos.depth = 10
         self.sub = self.create_subscription(
-            ApiResponse, 'task_api_responses', receive_response, transient_qos
+            ApiResponse, "task_api_responses", receive_response, transient_qos
         )
 
-        print(f'Json msg payload: \n{json.dumps(payload, indent=2)}')
+        print(f"Json msg payload: \n{json.dumps(payload, indent=2)}")
         self.pub.publish(msg)
 
 
@@ -169,15 +167,13 @@ def main(argv=sys.argv):
     args_without_ros = rclpy.utilities.remove_ros_args(sys.argv)
 
     task_requester = TaskRequester(args_without_ros)
-    rclpy.spin_until_future_complete(
-        task_requester, task_requester.response, timeout_sec=5.0
-    )
+    rclpy.spin_until_future_complete(task_requester, task_requester.response, timeout_sec=5.0)
     if task_requester.response.done():
-        print(f'Got response:\n{task_requester.response.result()}')
+        print(f"Got response:\n{task_requester.response.result()}")
     else:
-        print('Did not get a response')
+        print("Did not get a response")
     rclpy.shutdown()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv)

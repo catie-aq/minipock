@@ -38,20 +38,15 @@ from .RobotClientAPI import RobotAPI
 # ------------------------------------------------------------------------------
 def compute_transforms(level, coords, node=None):
     """Get transforms between RMF and robot coordinates."""
-    rmf_coords = coords['rmf']
-    robot_coords = coords['robot']
+    rmf_coords = coords["rmf"]
+    robot_coords = coords["robot"]
     tf = nudged.estimate(rmf_coords, robot_coords)
     if node:
         mse = nudged.estimate_error(tf, rmf_coords, robot_coords)
-        node.get_logger().info(
-            f"Transformation error estimate for {level}: {mse}"
-        )
+        node.get_logger().info(f"Transformation error estimate for {level}: {mse}")
 
-    return Transformation(
-        tf.get_rotation(),
-        tf.get_scale(),
-        tf.get_translation()
-    )
+    return Transformation(tf.get_rotation(), tf.get_scale(), tf.get_translation())
+
 
 # ------------------------------------------------------------------------------
 # Main
@@ -63,26 +58,37 @@ def main(argv=sys.argv):
     args_without_ros = rclpy.utilities.remove_ros_args(argv)
 
     parser = argparse.ArgumentParser(
-        prog="fleet_adapter",
-        description="Configure and spin up the fleet adapter")
-    parser.add_argument("-c", "--config_file", type=str, required=True,
-                        help="Path to the config.yaml file")
-    parser.add_argument("-n", "--nav_graph", type=str, required=True,
-                        help="Path to the nav_graph for this fleet adapter")
-    parser.add_argument("-s", "--server_uri", type=str, required=False, default="",
-                        help="URI of the api server to transmit state and task information.")
-    parser.add_argument("-sim", "--use_sim_time", action="store_true",
-                        help='Use sim time, default: false')
+        prog="fleet_adapter", description="Configure and spin up the fleet adapter"
+    )
+    parser.add_argument(
+        "-c", "--config_file", type=str, required=True, help="Path to the config.yaml file"
+    )
+    parser.add_argument(
+        "-n",
+        "--nav_graph",
+        type=str,
+        required=True,
+        help="Path to the nav_graph for this fleet adapter",
+    )
+    parser.add_argument(
+        "-s",
+        "--server_uri",
+        type=str,
+        required=False,
+        default="",
+        help="URI of the api server to transmit state and task information.",
+    )
+    parser.add_argument(
+        "-sim", "--use_sim_time", action="store_true", help="Use sim time, default: false"
+    )
     args = parser.parse_args(args_without_ros[1:])
     print(f"Starting fleet adapter...")
 
     config_path = args.config_file
     nav_graph_path = args.nav_graph
 
-    fleet_config = rmf_easy.FleetConfiguration.from_config_files(
-        config_path, nav_graph_path
-    )
-    assert fleet_config, f'Failed to parse config file [{config_path}]'
+    fleet_config = rmf_easy.FleetConfiguration.from_config_files(config_path, nav_graph_path)
+    assert fleet_config, f"Failed to parse config file [{config_path}]"
 
     # Parse the yaml in Python to get the fleet_manager info
     with open(config_path, "r") as f:
@@ -90,11 +96,10 @@ def main(argv=sys.argv):
 
     # ROS 2 node for the command handle
     fleet_name = fleet_config.fleet_name
-    node = rclpy.node.Node(f'{fleet_name}_command_handle')
-    adapter = Adapter.make(f'{fleet_name}_fleet_adapter')
+    node = rclpy.node.Node(f"{fleet_name}_command_handle")
+    adapter = Adapter.make(f"{fleet_name}_fleet_adapter")
     assert adapter, (
-        'Unable to initialize fleet adapter. '
-        'Please ensure RMF Schedule Node is running'
+        "Unable to initialize fleet adapter. " "Please ensure RMF Schedule Node is running"
     )
 
     # Enable sim time for testing offline
@@ -106,7 +111,7 @@ def main(argv=sys.argv):
     adapter.start()
     time.sleep(1.0)
 
-    if args.server_uri == '':
+    if args.server_uri == "":
         server_uri = None
     else:
         server_uri = args.server_uri
@@ -114,7 +119,7 @@ def main(argv=sys.argv):
     fleet_config.server_uri = server_uri
 
     # Configure the transforms between robot and RMF frames
-    for level, coords in config_yaml['reference_coordinates'].items():
+    for level, coords in config_yaml["reference_coordinates"].items():
         tf = compute_transforms(level, coords, node)
         fleet_config.add_robot_coordinates_transformation(level, tf)
 
@@ -129,13 +134,9 @@ def main(argv=sys.argv):
     robots = {}
     for robot_name in fleet_config.known_robots:
         robot_config = fleet_config.get_known_robot_configuration(robot_name)
-        robots[robot_name] = RobotAdapter(
-            robot_name, robot_config, node, api, fleet_handle
-        )
+        robots[robot_name] = RobotAdapter(robot_name, robot_config, node, api, fleet_handle)
 
-    update_period = 1.0/config_yaml['rmf_fleet'].get(
-        'robot_state_update_frequency', 10.0
-    )
+    update_period = 1.0 / config_yaml["rmf_fleet"].get("robot_state_update_frequency", 10.0)
 
     def update_loop():
         asyncio.set_event_loop(asyncio.new_event_loop())
@@ -147,11 +148,9 @@ def main(argv=sys.argv):
             for robot in robots.values():
                 update_jobs.append(update_robot(robot))
 
-            asyncio.get_event_loop().run_until_complete(
-                asyncio.wait(update_jobs)
-            )
+            asyncio.get_event_loop().run_until_complete(asyncio.wait(update_jobs))
 
-            next_wakeup = now + Duration(nanoseconds=update_period*1e9)
+            next_wakeup = now + Duration(nanoseconds=update_period * 1e9)
             while node.get_clock().now() < next_wakeup:
                 time.sleep(0.001)
 
@@ -173,15 +172,9 @@ def main(argv=sys.argv):
     rclpy_executor.shutdown()
     rclpy.shutdown()
 
+
 class RobotAdapter:
-    def __init__(
-        self,
-        name: str,
-        configuration,
-        node,
-        api: RobotAPI,
-        fleet_handle
-    ):
+    def __init__(self, name: str, configuration, node, api: RobotAPI, fleet_handle):
         self.name = name
         self.execution = None
         self.update_handle = None
@@ -189,8 +182,8 @@ class RobotAdapter:
         self.node = node
         self.api = api
         self.fleet_handle = fleet_handle
-        self.node.get_logger().info(f'Robot [{self.name}] initialized')
-    
+        self.node.get_logger().info(f"Robot [{self.name}] initialized")
+
     def update(self, state):
         activity_identifier = None
         if self.execution:
@@ -204,27 +197,22 @@ class RobotAdapter:
 
     def make_callbacks(self):
         return rmf_easy.RobotCallbacks(
-            lambda destination, execution: self.navigate(
-                destination, execution
-            ),
+            lambda destination, execution: self.navigate(destination, execution),
             lambda activity: self.stop(activity),
             lambda category, description, execution: self.execute_action(
                 category, description, execution
-            )
+            ),
         )
 
     def navigate(self, destination, execution):
         self.execution = execution
         self.node.get_logger().info(
-            f'Commanding [{self.name}] to navigate to {destination.position} '
-            f'on map [{destination.map}]'
+            f"Commanding [{self.name}] to navigate to {destination.position} "
+            f"on map [{destination.map}]"
         )
 
         self.api.navigate(
-            self.name,
-            destination.position,
-            destination.map,
-            destination.speed_limit
+            self.name, destination.position, destination.map, destination.speed_limit
         )
 
     def stop(self, activity):
@@ -234,9 +222,9 @@ class RobotAdapter:
                 self.api.stop(self.name)
 
     def execute_action(self, category: str, description: dict, execution):
-        ''' Trigger a custom action you would like your robot to perform.
+        """Trigger a custom action you would like your robot to perform.
         You may wish to use RobotAPI.start_activity to trigger different
-        types of actions to your robot.'''
+        types of actions to your robot."""
         self.execution = execution
         # ------------------------ #
         # IMPLEMENT YOUR CODE HERE #
@@ -248,9 +236,7 @@ class RobotAdapter:
 # https://stackoverflow.com/a/59385935
 def parallel(f):
     def run_in_parallel(*args, **kwargs):
-        return asyncio.get_event_loop().run_in_executor(
-            None, f, *args, **kwargs
-        )
+        return asyncio.get_event_loop().run_in_executor(None, f, *args, **kwargs)
 
     return run_in_parallel
 
@@ -261,23 +247,16 @@ def update_robot(robot: RobotAdapter):
     if data is None:
         return
 
-    state = rmf_easy.RobotState(
-        data.map,
-        data.position,
-        data.battery_soc
-    )
+    state = rmf_easy.RobotState(data.map, data.position, data.battery_soc)
 
     if robot.update_handle is None:
         robot.update_handle = robot.fleet_handle.add_robot(
-            robot.name,
-            state,
-            robot.configuration,
-            robot.make_callbacks()
+            robot.name, state, robot.configuration, robot.make_callbacks()
         )
         return
 
     robot.update(state)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main(sys.argv)

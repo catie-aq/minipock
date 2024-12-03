@@ -185,8 +185,8 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
                 respawn_delay=2.0,
                 parameters=[
                     params_file,
-                    {"initial_pose":
-                        {
+                    {
+                        "initial_pose": {
                             "x": position[0],
                             "y": position[1],
                         }
@@ -215,10 +215,7 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
         ]
     )
     launch_localization = LaunchDescription(
-        [
-            launch_map_server, 
-            launch_amcl, 
-            launch_lifecycle_manager_localization]
+        [launch_map_server, launch_amcl, launch_lifecycle_manager_localization]
     )
     return launch_localization
 
