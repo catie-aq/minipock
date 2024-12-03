@@ -122,7 +122,7 @@ def main(argv=sys.argv):
     fleet_handle = adapter.add_easy_fleet(fleet_config)
 
     # Create executor for the nodes
-    rclpy_executor = rclpy.executors.SingleThreadedExecutor()
+    rclpy_executor = rclpy.executors.MultiThreadedExecutor()
 
     # Initialize robot API for this fleet
     api = RobotAPI(config_yaml, rclpy_executor)
