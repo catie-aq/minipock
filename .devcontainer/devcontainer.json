@@ -1,5 +1,5 @@
 {
-  "image": "ghcr.io/catie-aq/minipock:35-migration-vers-jazzy-harmonic-simulation",
+  "image": "ghcr.io/catie-aq/minipock:main-simulation",
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "ROS_DOMAIN_ID": "2"
