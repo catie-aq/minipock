@@ -39,7 +39,7 @@ def parse_config(context, *args, **kwargs):
     map_yaml_file = LaunchConfiguration(
         "map_yaml_file",
         default=PathJoinSubstitution(
-            [FindPackageShare("minipock_navigation2"), "map", "map.yaml"]
+            [FindPackageShare("minipock_navigation2"), "map", "empty_room_map.yaml"]
         ),
     )
 
@@ -204,7 +204,10 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
         ]
     )
     launch_localization = LaunchDescription(
-        [launch_map_server, launch_amcl, launch_lifecycle_manager_localization]
+        [
+            launch_map_server, 
+            launch_amcl, 
+            launch_lifecycle_manager_localization]
     )
     return launch_localization
 
