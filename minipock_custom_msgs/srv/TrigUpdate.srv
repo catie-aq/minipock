@@ -1,0 +1,6 @@
+string actual_version
+---
+int8 success
+bool new_version_available
+string new_version
+int64 size # in bytes

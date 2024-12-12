@@ -1,0 +1,19 @@
+{
+  "template": "git@github.com:catie-aq/cookiecutter_ros-python-generic.git",
+  "commit": "d645362b33191fbc9d6ee95e994e1404d9bdc9a9",
+  "checkout": "jazzy-devel",
+  "context": {
+    "cookiecutter": {
+      "email": "s.delpeuch@catie.fr",
+      "name": "Sébastien Delpeuch",
+      "project_name": "minipock_firmware_updater",
+      "project_description": "Node for firmware update in µROS",
+      "project_slug": "minipock_firmware_updater",
+      "_copy_without_render": [
+        ".github/workflows/update.yml"
+      ],
+      "_template": "git@github.com:catie-aq/cookiecutter_ros-python-generic.git"
+    }
+  },
+  "directory": null
+}

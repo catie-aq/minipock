@@ -1,0 +1,7 @@
+string version
+int64 chunk_id
+int64 chunk_size
+---
+int64 chunk_id
+string chunk_byte
+string chunk_checksum
