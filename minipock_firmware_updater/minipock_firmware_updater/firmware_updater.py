@@ -6,6 +6,7 @@ import rclpy
 import requests
 from jsonschema.exceptions import ValidationError
 from rclpy.node import Node
+from crc import Calculator, Crc8
 
 from minipock_custom_msgs.srv import (
     GetChunk,
@@ -30,7 +31,7 @@ STORED_VERSION_SCHEMA = {
 }
 
 
-class ErrorCode(Enum):
+class TrigUpdateErrorCode(Enum):
     """
     ErrorCode is an enumeration that represents various error codes that can be encountered
     in the firmware updater process.
@@ -43,6 +44,17 @@ class ErrorCode(Enum):
     NO_BIN_FILE = 4
     BIN_DOWNLOAD_ERROR = 5
     SCHEMA_VALIDATION_FAILED = 6
+
+
+class GetChunkErrorCode(Enum):
+    """
+    ErrorCode is an enumeration that represents various error codes that can be encountered
+    in the firmware updater process.
+    """
+
+    SUCCESS = 0
+    VERSION_NOT_FOUND = 1
+    END_OF_FILE = 2
 
 
 class FirmwareUpdater(Node):
@@ -68,6 +80,7 @@ class FirmwareUpdater(Node):
         self.firmware_chunk_service = self.create_service(
             GetChunk, f"{namespace}/firmware_update/chunk", self.firmware_chunk_callback
         )
+        self.calculator = Calculator(Crc8.CCITT, optimized=True)
 
     def __get_github_tags(self) -> list:
         url = "https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases"
@@ -82,7 +95,9 @@ class FirmwareUpdater(Node):
             )
             return []
 
-    def __return_no_update(self, error_code: ErrorCode) -> TrigUpdate_Response:
+    def __return_no_update(
+        self, error_code: TrigUpdateErrorCode
+    ) -> TrigUpdate_Response:
         response = TrigUpdate_Response()
         response.success = error_code.value
         response.new_version_available = False
@@ -95,19 +110,19 @@ class FirmwareUpdater(Node):
             method = self.get_parameter("method").get_parameter_value().string_value
         else:
             self.get_logger().error("Parameter 'method' is not declared.")
-            return self.__return_no_update(ErrorCode.PARAMETER_NOT_DECLARED)
+            return self.__return_no_update(TrigUpdateErrorCode.PARAMETER_NOT_DECLARED)
         if method not in self.allowed_methods:
-            return self.__return_no_update(ErrorCode.INVALID_METHOD)
+            return self.__return_no_update(TrigUpdateErrorCode.INVALID_METHOD)
         return method
 
-    def __download_and_store_firmware(self, version) -> ErrorCode:
+    def __download_and_store_firmware(self, version) -> TrigUpdateErrorCode:
         url = f"https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases/tags/{version}"
         download_response = requests.get(url, timeout=10)
         if download_response.status_code != 200:
             self.get_logger().error(
                 f"Failed to fetch release details from GitHub: {download_response.status_code}"
             )
-            return ErrorCode.GITHUB_FETCH_ERROR
+            return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
         bin_file = next(
             (
@@ -119,14 +134,14 @@ class FirmwareUpdater(Node):
         )
         if not bin_file:
             self.get_logger().error("No .bin file found in the release assets.")
-            return ErrorCode.NO_BIN_FILE
+            return TrigUpdateErrorCode.NO_BIN_FILE
         bin_url = bin_file["browser_download_url"]
         bin_response = requests.get(bin_url, timeout=10, stream=True)
         if bin_response.status_code != 200:
             self.get_logger().error(
                 f"Failed to download .bin file: {bin_response.status_code}"
             )
-            return ErrorCode.BIN_DOWNLOAD_ERROR
+            return TrigUpdateErrorCode.BIN_DOWNLOAD_ERROR
         content = bytearray()
         for chunk in bin_response.iter_content(chunk_size=8192):
             if chunk:
@@ -144,8 +159,8 @@ class FirmwareUpdater(Node):
             self.get_logger().error(
                 f"Stored version schema validation failed: {e.message}"
             )
-            return ErrorCode.SCHEMA_VALIDATION_FAILED
-        return ErrorCode.SUCCESS
+            return TrigUpdateErrorCode.SCHEMA_VALIDATION_FAILED
+        return TrigUpdateErrorCode.SUCCESS
 
     def firmware_update_callback(self, request, response) -> TrigUpdate_Response:
         """
@@ -177,7 +192,7 @@ class FirmwareUpdater(Node):
             version = method
 
         if not version:
-            return self.__return_no_update(ErrorCode.SUCCESS)
+            return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
         parsed_actual_version = request.actual_version.replace(".", "")[1:]
         parsed_version = version.replace(".", "")[1:]
@@ -189,13 +204,13 @@ class FirmwareUpdater(Node):
             or not parsed_version.isdigit()
             or parsed_actual_version > self.github_tags[0].replace(".", "")[1:]
         ):
-            return self.__return_no_update(ErrorCode.INVALID_METHOD)
+            return self.__return_no_update(TrigUpdateErrorCode.INVALID_METHOD)
 
         if parsed_actual_version >= parsed_version:
-            return self.__return_no_update(ErrorCode.SUCCESS)
+            return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
-        error_code: ErrorCode = self.__download_and_store_firmware(version)
-        if error_code != ErrorCode.SUCCESS:
+        error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(version)
+        if error_code != TrigUpdateErrorCode.SUCCESS:
             return self.__return_no_update(error_code)
         response.new_version_available = True
         response.new_version = version
@@ -203,11 +218,35 @@ class FirmwareUpdater(Node):
 
         return response
 
-    def firmware_chunk_callback(self, request, response):
+    def __return_no_chunk(self, error_code: GetChunkErrorCode) -> GetChunk_Response:
         response = GetChunk_Response()
-        response.chunk_id = request.chunk_id
-        response.chunk_byte = "todo"
-        response.chunk_checksum = 1  # TODO: https://pypi.org/project/crc/
+        response.success = error_code.value
+        response.chunk_id = 0
+        response.chunk_byte = ""
+        response.chunk_checksum = 0
+        return response
+
+    def firmware_chunk_callback(self, request, response):
+        if request.version not in self.stored_version:
+            self.get_logger().error(f"Version {request.version} not found.")
+            return self.__return_no_chunk(GetChunkErrorCode.VERSION_NOT_FOUND)
+        version = self.stored_version[request.version]
+        update_size = version["size"]
+        chunk_id = request.chunk_id
+        chunk_size = request.chunk_size
+        chunk_start = chunk_id * chunk_size
+        chunk_end = min(chunk_start + chunk_size, update_size)
+        data_hex = version["content"]
+        data_bytes = bytearray.fromhex(data_hex)
+        chunk = data_bytes[chunk_start:chunk_end]
+        if chunk.hex() == "":
+            self.get_logger().info("End of file reached.")
+            return self.__return_no_chunk(GetChunkErrorCode.END_OF_FILE)
+        chunk_checksum = self.calculator.checksum(chunk)
+        response.success = GetChunkErrorCode.SUCCESS.value
+        response.chunk_id = chunk_id
+        response.chunk_byte = chunk.hex()
+        response.chunk_checksum = chunk_checksum
         return response
 
 
