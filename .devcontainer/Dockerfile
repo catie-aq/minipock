@@ -16,7 +16,7 @@ RUN apt-get update && \
     apt-get install -y ros-jazzy-cartographer-ros && \
     rm -rf /var/lib/apt/lists/* && \
     rm /usr/lib/python3.12/EXTERNALLY-MANAGED && \
-    pip3 install --no-cache-dir transforms3d==0.4.2 jsonschema==4.23.0
+    pip3 install --no-cache-dir transforms3d==0.4.2 jsonschema==4.23.0 requests==2.32.3 crc==7.1.0
 
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /root/.bashrc \
     && echo 'source /workspaces/install/setup.bash' >> /root/.bashrc \
