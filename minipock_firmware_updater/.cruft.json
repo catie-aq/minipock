@@ -1,14 +1,14 @@
 {
   "template": "git@github.com:catie-aq/cookiecutter_ros-python-generic.git",
-  "commit": "932ad94e77836f5ccf3c7df4efcf957632b37fa4",
-  "checkout": "humble-devel",
+  "commit": "d645362b33191fbc9d6ee95e994e1404d9bdc9a9",
+  "checkout": "jazzy-devel",
   "context": {
     "cookiecutter": {
       "email": "s.delpeuch@catie.fr",
       "name": "Sébastien Delpeuch",
-      "project_name": "minipock_fleet_adapter",
-      "project_description": "Open RMF Fleet Adapter",
-      "project_slug": "minipock_fleet_adapter",
+      "project_name": "minipock_firmware_updater",
+      "project_description": "Node for firmware update in µROS",
+      "project_slug": "minipock_firmware_updater",
       "_copy_without_render": [
         ".github/workflows/update.yml"
       ],
