@@ -16,9 +16,7 @@ setup(
     ],
     packages=[package_name],
     entry_points={
-        "console_scripts": [
-            "firmware_updater = minipock_firmware_updater.firmware_updater:main"
-        ],
+        "console_scripts": ["firmware_updater = minipock_firmware_updater.firmware_updater:main"],
     },
     data_files=[
         (
