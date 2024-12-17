@@ -13,9 +13,10 @@ from minipock_msgs.srv import (
     GetChunk_Response,
     TrigUpdate,
     TrigUpdate_Response,
-    Version,
 )
 
+from minipock_msgs.msg import Version
+from std_msgs.msg import ByteMultiArray
 
 STORED_VERSION_SCHEMA = {
     "type": "object",
@@ -92,14 +93,22 @@ class FirmwareUpdater(Node):
             tags = [release["tag_name"] for release in releases]
             return tags
         else:
-            self.get_logger().error(f"Failed to fetch tags from GitHub: {response.status_code}")
+            self.get_logger().error(
+                f"Failed to fetch tags from GitHub: {response.status_code}"
+            )
             return []
 
-    def __return_no_update(self, error_code: TrigUpdateErrorCode) -> TrigUpdate_Response:
+    def __return_no_update(
+        self, error_code: TrigUpdateErrorCode
+    ) -> TrigUpdate_Response:
+        version = Version()
+        version.major = 0
+        version.minor = 0
+        version.patch = 0
         response = TrigUpdate_Response()
         response.success = error_code.value
         response.new_version_available = False
-        response.new_version = ""
+        response.new_version = version
         response.size = 0
         return response
 
@@ -113,7 +122,7 @@ class FirmwareUpdater(Node):
             return self.__return_no_update(TrigUpdateErrorCode.INVALID_METHOD)
         return method
 
-    def __download_and_store_firmware(self, version) -> TrigUpdateErrorCode:
+    def __download_and_store_firmware(self, version: str) -> TrigUpdateErrorCode:
         url = f"https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases/tags/{version}"
         download_response = requests.get(url, timeout=10)
         if download_response.status_code != 200:
@@ -123,7 +132,11 @@ class FirmwareUpdater(Node):
             return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
         bin_file = next(
-            (asset for asset in release.get("assets", []) if asset["name"].endswith(".bin")),
+            (
+                asset
+                for asset in release.get("assets", [])
+                if asset["name"].endswith(".bin")
+            ),
             None,
         )
         if not bin_file:
@@ -132,7 +145,9 @@ class FirmwareUpdater(Node):
         bin_url = bin_file["browser_download_url"]
         bin_response = requests.get(bin_url, timeout=10, stream=True)
         if bin_response.status_code != 200:
-            self.get_logger().error(f"Failed to download .bin file: {bin_response.status_code}")
+            self.get_logger().error(
+                f"Failed to download .bin file: {bin_response.status_code}"
+            )
             return TrigUpdateErrorCode.BIN_DOWNLOAD_ERROR
         content = bytearray()
         for chunk in bin_response.iter_content(chunk_size=8192):
@@ -144,9 +159,13 @@ class FirmwareUpdater(Node):
         }
         self.stored_version[version] = json_version
         try:
-            jsonschema.validate(instance=self.stored_version, schema=STORED_VERSION_SCHEMA)
+            jsonschema.validate(
+                instance=self.stored_version, schema=STORED_VERSION_SCHEMA
+            )
         except ValidationError as e:
-            self.get_logger().error(f"Stored version schema validation failed: {e.message}")
+            self.get_logger().error(
+                f"Stored version schema validation failed: {e.message}"
+            )
             return TrigUpdateErrorCode.SCHEMA_VALIDATION_FAILED
         return TrigUpdateErrorCode.SUCCESS
 
@@ -177,8 +196,7 @@ class FirmwareUpdater(Node):
         version.patch = 0
         response.success = TrigUpdateErrorCode.SUCCESS.value
         response.new_version_available = True
-        response.version = version
-        response.new_version = "v2.1.0"
+        response.new_version = version
         response.size = 263512
         self.get_logger().info(f"{response}")
         return response
@@ -195,22 +213,25 @@ class FirmwareUpdater(Node):
         if not version:
             return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
-        parsed_actual_version = request.actual_version.replace(".", "")[1:]
-        parsed_version = version.replace(".", "")[1:]
+        actual_version_major = request.actual_version.major
+        actual_version_minor = request.actual_version.minor
+        actual_version_patch = request.actual_version.patch
 
-        if (
-            len(parsed_actual_version) != 3
-            or len(parsed_version) != 3
-            or not parsed_actual_version.isdigit()
-            or not parsed_version.isdigit()
-            or parsed_actual_version > self.github_tags[0].replace(".", "")[1:]
+        parsed_version = version[1:].split(".")
+        parsed_version_major = int(parsed_version[0])
+        parsed_version_minor = int(parsed_version[1])
+        parsed_version_patch = int(parsed_version[2])
+        if (actual_version_major, actual_version_minor, actual_version_patch) >= (
+            parsed_version_major,
+            parsed_version_minor,
+            parsed_version_patch,
         ):
-            return self.__return_no_update(TrigUpdateErrorCode.INVALID_METHOD)
-
-        if parsed_actual_version >= parsed_version:
             return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
-        error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(version)
+        formatted_version = f"v{version.major}.{version.minor}.{version.patch}"
+        error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(
+            formatted_version
+        )
         if error_code != TrigUpdateErrorCode.SUCCESS:
             return self.__return_no_update(error_code)
         response.new_version_available = True
@@ -227,27 +248,45 @@ class FirmwareUpdater(Node):
         response.chunk_checksum = 0
         return response
 
-    def firmware_chunk_callback(self, request, response):
-        if request.version not in self.stored_version:
+    def firmware_chunk_callback(
+        self, request: GetChunk.Request, response: GetChunk.Response
+    ) -> GetChunk_Response:
+        """
+        Callback function to handle firmware chunk requests.
+
+        Args:
+            request (GetChunk.Request): The request object containing the chunk details.
+            response (GetChunk.Response): The response object to be populated with the chunk data.
+
+        Returns:
+            GetChunk.Response: The response object containing the chunk data and status.
+        """
+        formatted_version = (
+            f"v{request.version.major}.{request.version.minor}.{request.version.patch}"
+        )
+        if formatted_version not in self.stored_version:
             self.get_logger().error(f"Version {request.version} not found.")
             return self.__return_no_chunk(GetChunkErrorCode.VERSION_NOT_FOUND)
-        version = self.stored_version[request.version]
-        update_size = version["size"]
-        chunk_id = request.chunk_id
-        chunk_size = request.chunk_size
-        chunk_start = chunk_id * chunk_size
-        chunk_end = min(chunk_start + chunk_size, update_size)
-        data_hex = version["content"]
-        data_bytes = bytearray.fromhex(data_hex)
-        chunk = data_bytes[chunk_start:chunk_end]
-        if chunk.hex() == "":
+
+        target_version = self.stored_version[formatted_version]
+        firmware_chunk_index = request.chunk_id
+        firmware_chunk_size = request.chunk_size
+        firmware_chunk_start = firmware_chunk_index * firmware_chunk_size
+        firmware_chunk_end = min(
+            firmware_chunk_start + firmware_chunk_size, target_version["size"]
+        )
+
+        firmware_data_segment = bytearray.fromhex(target_version["content"])[
+            firmware_chunk_start:firmware_chunk_end
+        ]
+        if not firmware_data_segment:
             self.get_logger().info("End of file reached.")
             return self.__return_no_chunk(GetChunkErrorCode.END_OF_FILE)
-        chunk_checksum = self.calculator.checksum(chunk)
+
         response.success = GetChunkErrorCode.SUCCESS.value
-        response.chunk_id = chunk_id
-        response.chunk_byte = chunk.hex()
-        response.chunk_checksum = chunk_checksum
+        response.chunk_id = firmware_chunk_index
+        response.chunk_byte = firmware_data_segment
+        response.chunk_checksum = self.calculator.checksum(firmware_data_segment)
         return response
 
 
