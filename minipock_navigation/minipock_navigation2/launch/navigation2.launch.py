@@ -45,7 +45,7 @@ def parse_config(context, *args, **kwargs):
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("minipock_navigation2"), "rviz", "navigation2_rmf.rviz"]
+        [FindPackageShare("minipock_navigation2"), "rviz", "two_minipock.rviz"]
     )
 
     robots = make_robots(namespace, fleet)
@@ -117,7 +117,7 @@ def make_robots(namespace, fleet):
             position = fleet[robot]["position"]
         else:
             position = [0.0, 0.0, 0.0]
-        robots.append({"name": name, "position": position})
+        robots.append({"name": name, "position": position, "mode": fleet[robot]["mode"]})
     return robots
 
 
@@ -160,12 +160,22 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
         absolute_namespace = namespace
         if namespace != "":
             absolute_namespace = "/" + namespace
-        params_file = LaunchConfiguration(
-            "params_file",
-            default=PathJoinSubstitution(
-                [FindPackageShare("minipock_navigation2"), "param", "minipock.yaml"]
-            ),
-        )
+        if robot["mode"] == "differential":
+            params_file = LaunchConfiguration(
+                "params_file",
+                default=PathJoinSubstitution(
+                    [FindPackageShare("minipock_navigation2"), "param", "differential.yaml"]
+                ),
+            )
+        elif robot["mode"] == "holonomic":
+            params_file = LaunchConfiguration(
+                "params_file",
+                default=PathJoinSubstitution(
+                    [FindPackageShare("minipock_navigation2"), "param", "holonomic.yaml"]
+                ),
+            )
+        else:
+            raise ValueError("Invalid robot mode")
         params_file = ReplaceString(
             source_file=params_file,
             replacements={
@@ -381,13 +391,22 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
         absolute_namespace = namespace
         if namespace != "":
             absolute_namespace = "/" + namespace
-
-        params_file = LaunchConfiguration(
-            "params_file",
-            default=PathJoinSubstitution(
-                [FindPackageShare("minipock_navigation2"), "param", "minipock.yaml"]
-            ),
-        )
+        if robot["mode"] == "differential":
+            params_file = LaunchConfiguration(
+                "params_file",
+                default=PathJoinSubstitution(
+                    [FindPackageShare("minipock_navigation2"), "param", "differential.yaml"]
+                ),
+            )
+        elif robot["mode"] == "holonomic":
+            params_file = LaunchConfiguration(
+                "params_file",
+                default=PathJoinSubstitution(
+                    [FindPackageShare("minipock_navigation2"), "param", "holonomic.yaml"]
+                ),
+            )
+        else:
+            raise ValueError("Invalid robot mode")
         configured_params_file = ReplaceString(
             source_file=params_file,
             replacements={
