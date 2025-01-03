@@ -31,10 +31,13 @@ def parse_config(context, *args, **kwargs):
     namespace = config_dict["namespace"]
     fleet = config_dict["fleet"]
     map_file = config_dict["map"]
+    rviz_file = config_dict["rviz"]
 
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
-    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(context)
+    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(
+        context
+    )
     use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
 
     map_yaml_file = LaunchConfiguration(
@@ -45,7 +48,7 @@ def parse_config(context, *args, **kwargs):
     )
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("minipock_navigation2"), "rviz", "two_minipock.rviz"]
+        [FindPackageShare("minipock_navigation2"), "rviz", rviz_file + ".rviz"]
     )
 
     robots = make_robots(namespace, fleet)
@@ -67,7 +70,9 @@ def parse_config(context, *args, **kwargs):
             ]
         )
         minipock_bringup = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([minipock_bringup_file_dir, "/bringup.launch.py"]),
+            PythonLaunchDescriptionSource(
+                [minipock_bringup_file_dir, "/bringup.launch.py"]
+            ),
             launch_arguments={
                 "use_sim_time": str(use_sim_time),
             }.items(),
@@ -117,7 +122,9 @@ def make_robots(namespace, fleet):
             position = fleet[robot]["position"]
         else:
             position = [0.0, 0.0, 0.0]
-        robots.append({"name": name, "position": position, "mode": fleet[robot]["mode"]})
+        robots.append(
+            {"name": name, "position": position, "mode": fleet[robot]["mode"]}
+        )
     return robots
 
 
@@ -164,14 +171,22 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
             params_file = LaunchConfiguration(
                 "params_file",
                 default=PathJoinSubstitution(
-                    [FindPackageShare("minipock_navigation2"), "param", "differential.yaml"]
+                    [
+                        FindPackageShare("minipock_navigation2"),
+                        "param",
+                        "differential.yaml",
+                    ]
                 ),
             )
         elif robot["mode"] == "holonomic":
             params_file = LaunchConfiguration(
                 "params_file",
                 default=PathJoinSubstitution(
-                    [FindPackageShare("minipock_navigation2"), "param", "holonomic.yaml"]
+                    [
+                        FindPackageShare("minipock_navigation2"),
+                        "param",
+                        "holonomic.yaml",
+                    ]
                 ),
             )
         else:
@@ -395,14 +410,22 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
             params_file = LaunchConfiguration(
                 "params_file",
                 default=PathJoinSubstitution(
-                    [FindPackageShare("minipock_navigation2"), "param", "differential.yaml"]
+                    [
+                        FindPackageShare("minipock_navigation2"),
+                        "param",
+                        "differential.yaml",
+                    ]
                 ),
             )
         elif robot["mode"] == "holonomic":
             params_file = LaunchConfiguration(
                 "params_file",
                 default=PathJoinSubstitution(
-                    [FindPackageShare("minipock_navigation2"), "param", "holonomic.yaml"]
+                    [
+                        FindPackageShare("minipock_navigation2"),
+                        "param",
+                        "holonomic.yaml",
+                    ]
                 ),
             )
         else:
