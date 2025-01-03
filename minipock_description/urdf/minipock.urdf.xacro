@@ -55,6 +55,22 @@
       </plugin>
     </xacro:if>
 
+    <xacro:if value="${mode == 'holonomic'}">
+      <plugin
+        filename="gz-sim-velocity-control-system"
+        name="gz::sim::systems::VelocityControl">
+        <topic>${namespace}cmd_vel</topic>
+      </plugin>
+      <plugin
+        filename="gz-sim-odometry-publisher-system"
+        name="gz::sim::systems::OdometryPublisher">
+        <odom_frame>${namespace}odom</odom_frame>
+        <odom_topic>${namespace}odom</odom_topic>
+        <robot_base_frame>${namespace}base_footprint</robot_base_frame>
+        <tf_topic>/model/${namespace}tf</tf_topic>
+      </plugin>
+    </xacro:if>
+
     <plugin filename="libgz-sim-pose-publisher-system.so"
       name="gz::sim::systems::PosePublisher">
       <publish_link_pose>false</publish_link_pose>
