@@ -33,7 +33,6 @@ def parse_config(context, *args, **kwargs):
     :param context: LaunchContext with arguments&
     :return: list of launch processes
     """
-    world = LaunchConfiguration("world").perform(context)
     paused = LaunchConfiguration("paused").perform(context)
     extra_gz_args = LaunchConfiguration("extra_gz_args").perform(context)
 
@@ -42,6 +41,7 @@ def parse_config(context, *args, **kwargs):
     namespace = config_dict["namespace"]
     fleet = config_dict["fleet"]
     use_sim_time = str(config_dict["use_sim_time"])
+    world = config_dict["world"]
 
     launch_processes = []
     launch_processes.extend(
@@ -252,9 +252,6 @@ def generate_launch_description():
     """
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                "world", default_value="minipock_world", description="Name of world"
-            ),
             DeclareLaunchArgument(
                 "paused",
                 default_value="False",
