@@ -9,3 +9,5 @@ jobs:
     uses: catie-aq/generic_workflows/.github/workflows/pre-commit.yaml@main
   ros2-build-test:
     uses: catie-aq/ros_workflows/.github/workflows/ros2.yml@main
+    secrets:
+      PAT: ${{ secrets.GITHUB_TOKEN}}
