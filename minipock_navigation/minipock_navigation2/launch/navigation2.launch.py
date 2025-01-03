@@ -30,6 +30,7 @@ def parse_config(context, *args, **kwargs):
     bringup = config_dict["bringup"]
     namespace = config_dict["namespace"]
     fleet = config_dict["fleet"]
+    map_file = config_dict["map"]
 
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
@@ -39,7 +40,7 @@ def parse_config(context, *args, **kwargs):
     map_yaml_file = LaunchConfiguration(
         "map_yaml_file",
         default=PathJoinSubstitution(
-            [FindPackageShare("minipock_navigation2"), "map", "empty_room_map.yaml"]
+            [FindPackageShare("minipock_navigation2"), "map", map_file + ".yaml"]
         ),
     )
 
