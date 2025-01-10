@@ -1,0 +1,3 @@
+[submodule "minipock_msgs"]
+	path = minipock_msgs
+	url = git@github.com:catie-aq/minipock_msgs
