@@ -13,7 +13,9 @@ from minipock_msgs.srv import (
     GetChunk_Response,
     TrigUpdate,
     TrigUpdate_Response,
+    Version,
 )
+
 
 STORED_VERSION_SCHEMA = {
     "type": "object",
@@ -169,8 +171,13 @@ class FirmwareUpdater(Node):
         6. Populates the response object with the update information.
         """
         self.get_logger().info(f"{request}")
+        version = Version()
+        version.major = 2
+        version.minor = 1
+        version.patch = 0
         response.success = TrigUpdateErrorCode.SUCCESS.value
         response.new_version_available = True
+        response.version = version
         response.new_version = "v2.1.0"
         response.size = 263512
         self.get_logger().info(f"{response}")
