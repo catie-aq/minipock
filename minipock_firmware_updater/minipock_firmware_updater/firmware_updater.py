@@ -8,7 +8,7 @@ from jsonschema.exceptions import ValidationError
 from rclpy.node import Node
 from crc import Calculator, Crc8
 
-from minipock_custom_msgs.srv import (
+from minipock_msgs.srv import (
     GetChunk,
     GetChunk_Response,
     TrigUpdate,
@@ -64,7 +64,7 @@ class FirmwareUpdater(Node):
 
     def __init__(self):
         super().__init__("firmware_updater")
-        self.declare_parameter("namespace", "minipock")
+        self.declare_parameter("namespace", "minipock_0")
         self.declare_parameter("method", "latest")
         namespace = self.get_parameter("namespace").get_parameter_value().string_value
         self.stored_version = {}
@@ -168,6 +168,14 @@ class FirmwareUpdater(Node):
         5. Downloads and stores the new firmware if an update is available.
         6. Populates the response object with the update information.
         """
+        self.get_logger().info(f"{request}")
+        response.success = TrigUpdateErrorCode.SUCCESS.value
+        response.new_version_available = True
+        response.new_version = "v2.1.0"
+        response.size = 263512
+        self.get_logger().info(f"{response}")
+        return response
+
         method = self.__get_method()
         if isinstance(method, TrigUpdate_Response):
             return method
@@ -201,7 +209,7 @@ class FirmwareUpdater(Node):
         response.new_version_available = True
         response.new_version = version
         response.size = self.stored_version[version]["size"]
-
+        self.get_logger().info(f"New version available: {version}")
         return response
 
     def __return_no_chunk(self, error_code: GetChunkErrorCode) -> GetChunk_Response:
