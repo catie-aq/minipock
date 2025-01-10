@@ -83,7 +83,7 @@ class FirmwareUpdater(Node):
         self.firmware_chunk_service = self.create_service(
             GetChunk, f"{namespace}/firmware_update/chunk", self.firmware_chunk_callback
         )
-        self.calculator = Calculator(Crc8.CCITT, optimized=True)
+        self.calculator = Calculator(Crc8.CCITT, optimized=False)
 
     def __get_github_tags(self) -> list:
         url = "https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases"
@@ -127,7 +127,7 @@ class FirmwareUpdater(Node):
         download_response = requests.get(url, timeout=10)
         if download_response.status_code != 200:
             self.get_logger().error(
-                f"Failed to fetch release details from GitHub: {download_response.status_code}"
+                f"Failed to fetch release {version} details from GitHub: {download_response.status_code}"
             )
             return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
@@ -190,16 +190,6 @@ class FirmwareUpdater(Node):
         6. Populates the response object with the update information.
         """
         self.get_logger().info(f"{request}")
-        version = Version()
-        version.major = 2
-        version.minor = 1
-        version.patch = 0
-        response.success = TrigUpdateErrorCode.SUCCESS.value
-        response.new_version_available = True
-        response.new_version = version
-        response.size = 263512
-        self.get_logger().info(f"{response}")
-        return response
 
         method = self.__get_method()
         if isinstance(method, TrigUpdate_Response):
@@ -228,14 +218,16 @@ class FirmwareUpdater(Node):
         ):
             return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
-        formatted_version = f"v{version.major}.{version.minor}.{version.patch}"
+        formatted_version = f"v{parsed_version_major}.{parsed_version_minor}.{parsed_version_patch}"
         error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(
             formatted_version
         )
         if error_code != TrigUpdateErrorCode.SUCCESS:
             return self.__return_no_update(error_code)
         response.new_version_available = True
-        response.new_version = version
+        response.new_version.major = parsed_version_major
+        response.new_version.minor = parsed_version_minor
+        response.new_version.patch = parsed_version_patch
         response.size = self.stored_version[version]["size"]
         self.get_logger().info(f"New version available: {version}")
         return response
@@ -261,6 +253,7 @@ class FirmwareUpdater(Node):
         Returns:
             GetChunk.Response: The response object containing the chunk data and status.
         """
+        self.get_logger().info(f"{request}")
         formatted_version = (
             f"v{request.version.major}.{request.version.minor}.{request.version.patch}"
         )
@@ -270,23 +263,26 @@ class FirmwareUpdater(Node):
 
         target_version = self.stored_version[formatted_version]
         firmware_chunk_index = request.chunk_id
-        firmware_chunk_size = request.chunk_size
+        firmware_chunk_size = request.chunk_size * 2
         firmware_chunk_start = firmware_chunk_index * firmware_chunk_size
         firmware_chunk_end = min(
             firmware_chunk_start + firmware_chunk_size, target_version["size"]
         )
 
-        firmware_data_segment = bytearray.fromhex(target_version["content"])[
+        firmware_data_segment = target_version["content"][
             firmware_chunk_start:firmware_chunk_end
         ]
         if not firmware_data_segment:
             self.get_logger().info("End of file reached.")
             return self.__return_no_chunk(GetChunkErrorCode.END_OF_FILE)
+        
+        checksum = self.calculator.checksum(bytes.fromhex(firmware_data_segment))
 
         response.success = GetChunkErrorCode.SUCCESS.value
         response.chunk_id = firmware_chunk_index
-        response.chunk_byte = firmware_data_segment
-        response.chunk_checksum = self.calculator.checksum(firmware_data_segment)
+        response.chunk_byte = bytes.fromhex(firmware_data_segment)
+        response.chunk_checksum = checksum
+        self.get_logger().info(f"{response.chunk_id} / {target_version['size']/firmware_chunk_size} - {checksum}")
         return response
 
 
