@@ -90,14 +90,10 @@ class FirmwareUpdater(Node):
             tags = [release["tag_name"] for release in releases]
             return tags
         else:
-            self.get_logger().error(
-                f"Failed to fetch tags from GitHub: {response.status_code}"
-            )
+            self.get_logger().error(f"Failed to fetch tags from GitHub: {response.status_code}")
             return []
 
-    def __return_no_update(
-        self, error_code: TrigUpdateErrorCode
-    ) -> TrigUpdate_Response:
+    def __return_no_update(self, error_code: TrigUpdateErrorCode) -> TrigUpdate_Response:
         response = TrigUpdate_Response()
         response.success = error_code.value
         response.new_version_available = False
@@ -125,11 +121,7 @@ class FirmwareUpdater(Node):
             return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
         bin_file = next(
-            (
-                asset
-                for asset in release.get("assets", [])
-                if asset["name"].endswith(".bin")
-            ),
+            (asset for asset in release.get("assets", []) if asset["name"].endswith(".bin")),
             None,
         )
         if not bin_file:
@@ -138,9 +130,7 @@ class FirmwareUpdater(Node):
         bin_url = bin_file["browser_download_url"]
         bin_response = requests.get(bin_url, timeout=10, stream=True)
         if bin_response.status_code != 200:
-            self.get_logger().error(
-                f"Failed to download .bin file: {bin_response.status_code}"
-            )
+            self.get_logger().error(f"Failed to download .bin file: {bin_response.status_code}")
             return TrigUpdateErrorCode.BIN_DOWNLOAD_ERROR
         content = bytearray()
         for chunk in bin_response.iter_content(chunk_size=8192):
@@ -152,13 +142,9 @@ class FirmwareUpdater(Node):
         }
         self.stored_version[version] = json_version
         try:
-            jsonschema.validate(
-                instance=self.stored_version, schema=STORED_VERSION_SCHEMA
-            )
+            jsonschema.validate(instance=self.stored_version, schema=STORED_VERSION_SCHEMA)
         except ValidationError as e:
-            self.get_logger().error(
-                f"Stored version schema validation failed: {e.message}"
-            )
+            self.get_logger().error(f"Stored version schema validation failed: {e.message}")
             return TrigUpdateErrorCode.SCHEMA_VALIDATION_FAILED
         return TrigUpdateErrorCode.SUCCESS
 
