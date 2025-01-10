@@ -61,7 +61,11 @@ def main(argv=sys.argv):
         prog="fleet_adapter", description="Configure and spin up the fleet adapter"
     )
     parser.add_argument(
-        "-c", "--config_file", type=str, required=True, help="Path to the config.yaml file"
+        "-c",
+        "--config_file",
+        type=str,
+        required=True,
+        help="Path to the config.yaml file",
     )
     parser.add_argument(
         "-n",
@@ -79,7 +83,10 @@ def main(argv=sys.argv):
         help="URI of the api server to transmit state and task information.",
     )
     parser.add_argument(
-        "-sim", "--use_sim_time", action="store_true", help="Use sim time, default: false"
+        "-sim",
+        "--use_sim_time",
+        action="store_true",
+        help="Use sim time, default: false",
     )
     args = parser.parse_args(args_without_ros[1:])
     print(f"Starting fleet adapter...")
@@ -87,7 +94,9 @@ def main(argv=sys.argv):
     config_path = args.config_file
     nav_graph_path = args.nav_graph
 
-    fleet_config = rmf_easy.FleetConfiguration.from_config_files(config_path, nav_graph_path)
+    fleet_config = rmf_easy.FleetConfiguration.from_config_files(
+        config_path, nav_graph_path
+    )
     assert fleet_config, f"Failed to parse config file [{config_path}]"
 
     # Parse the yaml in Python to get the fleet_manager info
@@ -99,7 +108,8 @@ def main(argv=sys.argv):
     node = rclpy.node.Node(f"{fleet_name}_command_handle")
     adapter = Adapter.make(f"{fleet_name}_fleet_adapter")
     assert adapter, (
-        "Unable to initialize fleet adapter. " "Please ensure RMF Schedule Node is running"
+        "Unable to initialize fleet adapter. "
+        "Please ensure RMF Schedule Node is running"
     )
 
     # Enable sim time for testing offline
@@ -134,9 +144,13 @@ def main(argv=sys.argv):
     robots = {}
     for robot_name in fleet_config.known_robots:
         robot_config = fleet_config.get_known_robot_configuration(robot_name)
-        robots[robot_name] = RobotAdapter(robot_name, robot_config, node, api, fleet_handle)
+        robots[robot_name] = RobotAdapter(
+            robot_name, robot_config, node, api, fleet_handle
+        )
 
-    update_period = 1.0 / config_yaml["rmf_fleet"].get("robot_state_update_frequency", 10.0)
+    update_period = 1.0 / config_yaml["rmf_fleet"].get(
+        "robot_state_update_frequency", 10.0
+    )
 
     def update_loop():
         asyncio.set_event_loop(asyncio.new_event_loop())
