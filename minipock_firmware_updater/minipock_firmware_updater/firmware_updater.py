@@ -93,14 +93,10 @@ class FirmwareUpdater(Node):
             tags = [release["tag_name"] for release in releases]
             return tags
         else:
-            self.get_logger().error(
-                f"Failed to fetch tags from GitHub: {response.status_code}"
-            )
+            self.get_logger().error(f"Failed to fetch tags from GitHub: {response.status_code}")
             return []
 
-    def __return_no_update(
-        self, error_code: TrigUpdateErrorCode
-    ) -> TrigUpdate_Response:
+    def __return_no_update(self, error_code: TrigUpdateErrorCode) -> TrigUpdate_Response:
         version = Version()
         version.major = 0
         version.minor = 0
@@ -132,11 +128,7 @@ class FirmwareUpdater(Node):
             return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
         bin_file = next(
-            (
-                asset
-                for asset in release.get("assets", [])
-                if asset["name"].endswith(".bin")
-            ),
+            (asset for asset in release.get("assets", []) if asset["name"].endswith(".bin")),
             None,
         )
         if not bin_file:
@@ -145,9 +137,7 @@ class FirmwareUpdater(Node):
         bin_url = bin_file["browser_download_url"]
         bin_response = requests.get(bin_url, timeout=10, stream=True)
         if bin_response.status_code != 200:
-            self.get_logger().error(
-                f"Failed to download .bin file: {bin_response.status_code}"
-            )
+            self.get_logger().error(f"Failed to download .bin file: {bin_response.status_code}")
             return TrigUpdateErrorCode.BIN_DOWNLOAD_ERROR
         content = bytearray()
         for chunk in bin_response.iter_content(chunk_size=8192):
@@ -159,13 +149,9 @@ class FirmwareUpdater(Node):
         }
         self.stored_version[version] = json_version
         try:
-            jsonschema.validate(
-                instance=self.stored_version, schema=STORED_VERSION_SCHEMA
-            )
+            jsonschema.validate(instance=self.stored_version, schema=STORED_VERSION_SCHEMA)
         except ValidationError as e:
-            self.get_logger().error(
-                f"Stored version schema validation failed: {e.message}"
-            )
+            self.get_logger().error(f"Stored version schema validation failed: {e.message}")
             return TrigUpdateErrorCode.SCHEMA_VALIDATION_FAILED
         return TrigUpdateErrorCode.SUCCESS
 
@@ -218,10 +204,10 @@ class FirmwareUpdater(Node):
         ):
             return self.__return_no_update(TrigUpdateErrorCode.SUCCESS)
 
-        formatted_version = f"v{parsed_version_major}.{parsed_version_minor}.{parsed_version_patch}"
-        error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(
-            formatted_version
+        formatted_version = (
+            f"v{parsed_version_major}.{parsed_version_minor}.{parsed_version_patch}"
         )
+        error_code: TrigUpdateErrorCode = self.__download_and_store_firmware(formatted_version)
         if error_code != TrigUpdateErrorCode.SUCCESS:
             return self.__return_no_update(error_code)
         response.new_version_available = True
@@ -269,20 +255,20 @@ class FirmwareUpdater(Node):
             firmware_chunk_start + firmware_chunk_size, target_version["size"]
         )
 
-        firmware_data_segment = target_version["content"][
-            firmware_chunk_start:firmware_chunk_end
-        ]
+        firmware_data_segment = target_version["content"][firmware_chunk_start:firmware_chunk_end]
         if not firmware_data_segment:
             self.get_logger().info("End of file reached.")
             return self.__return_no_chunk(GetChunkErrorCode.END_OF_FILE)
-        
+
         checksum = self.calculator.checksum(bytes.fromhex(firmware_data_segment))
 
         response.success = GetChunkErrorCode.SUCCESS.value
         response.chunk_id = firmware_chunk_index
         response.chunk_byte = bytes.fromhex(firmware_data_segment)
         response.chunk_checksum = checksum
-        self.get_logger().info(f"{response.chunk_id} / {target_version['size']/firmware_chunk_size} - {checksum}")
+        self.get_logger().info(
+            f"{response.chunk_id} / {target_version['size']/firmware_chunk_size} - {checksum}"
+        )
         return response
 
 

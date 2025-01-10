@@ -42,9 +42,7 @@ class AmclPoseListener(Node):
         position = msg.pose.pose.position
         orientation = msg.pose.pose.orientation
         tetha = self.quaternion_to_yaw(orientation)
-        self.get_logger().info(
-            f"Position -> x: {position.x}, y: {position.y}, z: {position.z}"
-        )
+        self.get_logger().info(f"Position -> x: {position.x}, y: {position.y}, z: {position.z}")
         self.get_logger().info(
             f"Orientation -> x: {orientation.x}, y: {orientation.y}, z: {orientation.z}, w: {orientation.w}"
         )
@@ -54,12 +52,8 @@ class AmclPoseListener(Node):
         }
 
     def quaternion_to_yaw(self, orientation):
-        siny_cosp = 2.0 * (
-            orientation.w * orientation.z + orientation.x * orientation.y
-        )
-        cosy_cosp = 1.0 - 2.0 * (
-            orientation.y * orientation.y + orientation.z * orientation.z
-        )
+        siny_cosp = 2.0 * (orientation.w * orientation.z + orientation.x * orientation.y)
+        cosy_cosp = 1.0 - 2.0 * (orientation.y * orientation.y + orientation.z * orientation.z)
         return math.atan2(siny_cosp, cosy_cosp)
 
     def get_pose(self):
@@ -70,9 +64,7 @@ class AmclPoseListener(Node):
 class GoalPosePulisher(Node):
     def __init__(self, robot_name):
         super().__init__("goal_pose_publisher" + robot_name)
-        self.publisher = self.create_publisher(
-            PoseStamped, f"/{robot_name}/goal_pose", 10
-        )
+        self.publisher = self.create_publisher(PoseStamped, f"/{robot_name}/goal_pose", 10)
 
     def publish_goal_pose(self, goal_pose, map_name):
         msg = PoseStamped()
@@ -99,9 +91,7 @@ class RobotAPI:
     # requirements of their robot's API
     def __init__(self, config_yaml):
         self.fleet_mgr = config_yaml["fleet_manager"]
-        self.prefix = (
-            "http://" + self.fleet_mgr["ip"] + ":" + str(self.fleet_mgr["port"])
-        )
+        self.prefix = "http://" + self.fleet_mgr["ip"] + ":" + str(self.fleet_mgr["port"])
         self.user = self.fleet_mgr["user"]
         self.password = self.fleet_mgr["password"]
         self.timeout = 5.0
