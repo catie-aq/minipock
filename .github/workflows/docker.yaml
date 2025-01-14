@@ -23,7 +23,7 @@ jobs:
       Dockerfile: .devcontainer
       target: "base"
     secrets:
-      PAT: ${{ secrets.GITHUB_TOKEN }}
+      PAT: ${{ secrets.PAT }}
   docker-simulation:
     needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
@@ -31,7 +31,7 @@ jobs:
       Dockerfile: .devcontainer
       target: "simulation"
     secrets:
-      PAT: ${{ secrets.GITHUB_TOKEN }}
+      PAT: ${{ secrets.PAT }}
   docker-real:
     needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
@@ -39,4 +39,4 @@ jobs:
       Dockerfile: .devcontainer
       target: "real"
     secrets:
-      PAT: ${{ secrets.GITHUB_TOKEN }}
+      PAT: ${{ secrets.PAT }}
