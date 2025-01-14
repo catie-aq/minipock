@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## [2.2.0](https://github.com/catie-aq/minipock/releases/tag/2.2.0)
+
+### Added
+
+- Ajout de l'adaptateur de flotte minipock et de la configuration de salle vide
+- Ajout de `minipock_firmware_updater` et des messages personnalisés pour MiniPock
 
 ## [2.1.0](https://github.com/catie-aq/minipock/releases/tag/2.1.0)
 
