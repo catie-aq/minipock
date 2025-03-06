@@ -6,7 +6,26 @@ from rclpy.qos import qos_profile_sensor_data
 from tf2_ros import TransformBroadcaster
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import LaserScan
+from filterpy.kalman import KalmanFilter
+import numpy as np
 
+class ExtendedKalmanFilter:
+    def __init__(self):
+        # Initialize the Kalman Filter
+        self.kf = KalmanFilter(dim_x=3, dim_z=3)
+        self.kf.x = np.array([0., 0., 0.])  # initial state
+        self.kf.P *= 1.  # initial uncertainty
+        self.kf.R = np.eye(3)  # measurement noise
+        self.kf.Q = np.eye(3)  # process noise
+        self.kf.F = np.eye(3)  # state transition matrix
+        self.kf.H = np.eye(3)  # measurement function
+
+    def update(self, measurement):
+        # Update the state with the new measurement
+        self.kf.update(np.array(measurement))
+
+    def get_state(self):
+        return self.kf.x
 
 class RawDataTransformer(Node):
     def __init__(self):
@@ -76,11 +95,25 @@ class RawDataTransformer(Node):
         if self.__last_odom_msg is None or self.__last_odom_optc_msg is None:
             return
 
+        # Assuming you have an EKF implementation available
+        ekf = ExtendedKalmanFilter()
+
+        # Prepare the measurements
+        z1 = [self.__last_odom_msg.pose.position.x, self.__last_odom_msg.pose.position.y, self.__last_odom_msg.pose.position.z]
+        z2 = [self.__last_odom_optc_msg.pose.position.x, self.__last_odom_optc_msg.pose.position.y, self.__last_odom_optc_msg.pose.position.z]
+
+        # Update the EKF with the measurements
+        ekf.update(z1)
+        ekf.update(z2)
+
+        # Get the estimated state
+        estimated_state = ekf.get_state()
+
         mean_pose = PoseStamped()
         mean_pose.header.stamp = self.get_clock().now().to_msg()
-        mean_pose.pose.position.x = (self.__last_odom_msg.pose.position.x + self.__last_odom_optc_msg.pose.position.x) / 2
-        mean_pose.pose.position.y = (self.__last_odom_msg.pose.position.y + self.__last_odom_optc_msg.pose.position.y) / 2
-        mean_pose.pose.position.z = (self.__last_odom_msg.pose.position.z + self.__last_odom_optc_msg.pose.position.z) / 2
+        mean_pose.pose.position.x = estimated_state[0]
+        mean_pose.pose.position.y = estimated_state[1]
+        mean_pose.pose.position.z = estimated_state[2]
         mean_pose.pose.orientation = self.__last_odom_msg.pose.orientation  # Assuming orientation is the same
 
         self.__publish_odom(mean_pose, self.___odom_fusion_publisher)
