@@ -9,12 +9,13 @@ from sensor_msgs.msg import LaserScan
 from filterpy.kalman import KalmanFilter
 import numpy as np
 
+
 class ExtendedKalmanFilter:
     def __init__(self):
         # Initialize the Kalman Filter
         self.kf = KalmanFilter(dim_x=3, dim_z=3)
-        self.kf.x = np.array([0., 0., 0.])  # initial state
-        self.kf.P *= 1.  # initial uncertainty
+        self.kf.x = np.array([0.0, 0.0, 0.0])  # initial state
+        self.kf.P *= 1.0  # initial uncertainty
         self.kf.R = np.eye(3)  # measurement noise
         self.kf.Q = np.eye(3)  # process noise
         self.kf.F = np.eye(3)  # state transition matrix
@@ -26,6 +27,7 @@ class ExtendedKalmanFilter:
 
     def get_state(self):
         return self.kf.x
+
 
 class RawDataTransformer(Node):
     def __init__(self):
@@ -54,8 +56,12 @@ class RawDataTransformer(Node):
         )
 
         self.___odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
-        self.___odom_optc_publisher = self.create_publisher(Odometry, f"odom_optc", qos_profile_sensor_data)
-        self.___odom_fusion_publisher = self.create_publisher(Odometry, f"odom_fusion", qos_profile_sensor_data)
+        self.___odom_optc_publisher = self.create_publisher(
+            Odometry, f"odom_optc", qos_profile_sensor_data
+        )
+        self.___odom_fusion_publisher = self.create_publisher(
+            Odometry, f"odom_fusion", qos_profile_sensor_data
+        )
         self.__scan_publisher = self.create_publisher(LaserScan, f"scan", qos_profile_sensor_data)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
@@ -99,8 +105,16 @@ class RawDataTransformer(Node):
         ekf = ExtendedKalmanFilter()
 
         # Prepare the measurements
-        z1 = [self.__last_odom_msg.pose.position.x, self.__last_odom_msg.pose.position.y, self.__last_odom_msg.pose.position.z]
-        z2 = [self.__last_odom_optc_msg.pose.position.x, self.__last_odom_optc_msg.pose.position.y, self.__last_odom_optc_msg.pose.position.z]
+        z1 = [
+            self.__last_odom_msg.pose.position.x,
+            self.__last_odom_msg.pose.position.y,
+            self.__last_odom_msg.pose.position.z,
+        ]
+        z2 = [
+            self.__last_odom_optc_msg.pose.position.x,
+            self.__last_odom_optc_msg.pose.position.y,
+            self.__last_odom_optc_msg.pose.position.z,
+        ]
 
         # Update the EKF with the measurements
         ekf.update(z1)
@@ -114,7 +128,9 @@ class RawDataTransformer(Node):
         mean_pose.pose.position.x = estimated_state[0]
         mean_pose.pose.position.y = estimated_state[1]
         mean_pose.pose.position.z = estimated_state[2]
-        mean_pose.pose.orientation = self.__last_odom_msg.pose.orientation  # Assuming orientation is the same
+        mean_pose.pose.orientation = (
+            self.__last_odom_msg.pose.orientation
+        )  # Assuming orientation is the same
 
         self.__publish_odom(mean_pose, self.___odom_fusion_publisher)
 
