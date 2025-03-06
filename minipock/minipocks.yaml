@@ -1,9 +1,9 @@
 namespace: minipock_
-bringup: false
+bringup: true
 use_sim_time: false
 map: "empty_room_map" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
 world: "minipock_world" # for simulation, must be stored in minipock_gz/worlds
 fleet:
   "0":
-    mode: differential
+    mode: holonomic
     position: [2.053461700390844, -6.2162598987180635]
