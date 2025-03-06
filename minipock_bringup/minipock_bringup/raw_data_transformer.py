@@ -33,12 +33,7 @@ class RawDataTransformer(Node):
             self.callback_optc,
             qos_profile_sensor_data,
         )
-        self.create_subscription(
-            PoseStamped,
-            f"odom_fusion_raw",
-            self.callback_fusion,
-            qos_profile_sensor_data,
-        )
+
         self.___odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
         self.___odom_optc_publisher = self.create_publisher(Odometry, f"odom_optc", qos_profile_sensor_data)
         self.___odom_fusion_publisher = self.create_publisher(Odometry, f"odom_fusion", qos_profile_sensor_data)
@@ -49,6 +44,9 @@ class RawDataTransformer(Node):
         self.__odom_transform.header.frame_id = f"{self.__robot_name}/odom"
         self.__odom_transform.child_frame_id = f"{self.__robot_name}/base_footprint"
 
+        self.__last_odom_msg = None
+        self.__last_odom_optc_msg = None
+
     def callback(self, msg):
         """
         Callback to receive a message.
@@ -56,20 +54,8 @@ class RawDataTransformer(Node):
         :param msg: The message received.
         :return: None.
         """
-
-        self.__odom_transform.header.stamp = msg.header.stamp
-        self.__odom_transform.transform.translation.x = msg.pose.position.x
-        self.__odom_transform.transform.translation.y = msg.pose.position.y
-        self.__odom_transform.transform.translation.z = msg.pose.position.z
-        self.__odom_transform.transform.rotation = msg.pose.orientation
-
-        odom = Odometry()
-        odom.header = self.__odom_transform.header
-        odom.child_frame_id = self.__odom_transform.child_frame_id
-        odom.pose.pose = msg.pose
-
-        self.__tf_broadcaster.sendTransform(self.__odom_transform)
-        self.___odom_publisher.publish(odom)
+        self.__last_odom_msg = msg
+        self.__publish_odom(msg, self.___odom_publisher)
 
     def callback_optc(self, msg):
         """
@@ -78,29 +64,28 @@ class RawDataTransformer(Node):
         :param msg: The message received.
         :return: None.
         """
-                
-        self.__odom_transform.header.stamp = msg.header.stamp
-        self.__odom_transform.transform.translation.x = msg.pose.position.x
-        self.__odom_transform.transform.translation.y = msg.pose.position.y
-        self.__odom_transform.transform.translation.z = msg.pose.position.z
-        self.__odom_transform.transform.rotation = msg.pose.orientation
+        self.__last_odom_optc_msg = msg
+        self.__publish_odom(msg, self.___odom_optc_publisher)
+        self.callback_fusion()
 
-        odom = Odometry()
-        odom.header = self.__odom_transform.header
-        odom.child_frame_id = self.__odom_transform.child_frame_id
-        odom.pose.pose = msg.pose
-
-        self.__tf_broadcaster.sendTransform(self.__odom_transform)
-        self.___odom_optc_publisher.publish(odom)
-
-    def callback_fusion(self, msg):
+    def callback_fusion(self):
         """
-        Callback to receive a message.
-
-        :param msg: The message received.
+        Callback to publish the mean pose of the two messages.
         :return: None.
         """
-                
+        if self.__last_odom_msg is None or self.__last_odom_optc_msg is None:
+            return
+
+        mean_pose = PoseStamped()
+        mean_pose.header.stamp = self.get_clock().now().to_msg()
+        mean_pose.pose.position.x = (self.__last_odom_msg.pose.position.x + self.__last_odom_optc_msg.pose.position.x) / 2
+        mean_pose.pose.position.y = (self.__last_odom_msg.pose.position.y + self.__last_odom_optc_msg.pose.position.y) / 2
+        mean_pose.pose.position.z = (self.__last_odom_msg.pose.position.z + self.__last_odom_optc_msg.pose.position.z) / 2
+        mean_pose.pose.orientation = self.__last_odom_msg.pose.orientation  # Assuming orientation is the same
+
+        self.__publish_odom(mean_pose, self.___odom_fusion_publisher)
+
+    def __publish_odom(self, msg, publisher):
         self.__odom_transform.header.stamp = msg.header.stamp
         self.__odom_transform.transform.translation.x = msg.pose.position.x
         self.__odom_transform.transform.translation.y = msg.pose.position.y
@@ -113,7 +98,7 @@ class RawDataTransformer(Node):
         odom.pose.pose = msg.pose
 
         self.__tf_broadcaster.sendTransform(self.__odom_transform)
-        self.___odom_fusion_publisher.publish(odom)
+        publisher.publish(odom)
 
     def callback_scan(self, msg):
         """
@@ -136,7 +121,7 @@ def main(args=None):
     """
     rclpy.init(args=args)
     odom_subscriber = RawDataTransformer()
-    odom_subscriber.get_logger().info("Raw data transformer has been started. -")
+    odom_subscriber.get_logger().info("Raw data transformer has been started. /")
 
     rclpy.spin(odom_subscriber)
 
