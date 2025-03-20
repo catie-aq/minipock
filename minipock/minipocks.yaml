@@ -5,5 +5,8 @@ map: "empty_room_map" # for navigation, must be stored in minipock_navigation/m
 world: "minipock_world" # for simulation, must be stored in minipock_gz/worlds
 fleet:
   "0":
+    mode: holonomic
+    position: [0.0, 0.0]
+  "1":
     mode: differential
-    position: [2.053461700390844, -6.2162598987180635]
+    position: [0.5, 0.0]
