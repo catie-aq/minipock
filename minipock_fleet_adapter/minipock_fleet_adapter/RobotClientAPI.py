@@ -14,11 +14,11 @@
 
 
 """
-    The RobotAPI class is a wrapper for API calls to the robot. Here users
-    are expected to fill up the implementations of functions which will be used
-    by the RobotCommandHandle. For example, if your robot has a REST API, you
-    will need to make http request calls to the appropriate endpoints within
-    these functions.
+The RobotAPI class is a wrapper for API calls to the robot. Here users
+are expected to fill up the implementations of functions which will be used
+by the RobotCommandHandle. For example, if your robot has a REST API, you
+will need to make http request calls to the appropriate endpoints within
+these functions.
 """
 import math
 from rclpy.node import Node
