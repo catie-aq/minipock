@@ -35,9 +35,7 @@ def parse_config(context, *args, **kwargs):
 
     start_rviz = LaunchConfiguration("start_rviz").perform(context)
     autostart = IfCondition(LaunchConfiguration("autostart")).evaluate(context)
-    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(
-        context
-    )
+    use_composition = IfCondition(LaunchConfiguration("use_composition")).evaluate(context)
     use_respawn = IfCondition(LaunchConfiguration("use_respawn")).evaluate(context)
 
     map_yaml_file = LaunchConfiguration(
@@ -70,9 +68,7 @@ def parse_config(context, *args, **kwargs):
             ]
         )
         minipock_bringup = IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [minipock_bringup_file_dir, "/bringup.launch.py"]
-            ),
+            PythonLaunchDescriptionSource([minipock_bringup_file_dir, "/bringup.launch.py"]),
             launch_arguments={
                 "use_sim_time": str(use_sim_time),
             }.items(),
@@ -122,9 +118,7 @@ def make_robots(namespace, fleet):
             position = fleet[robot]["position"]
         else:
             position = [0.0, 0.0, 0.0]
-        robots.append(
-            {"name": name, "position": position, "mode": fleet[robot]["mode"]}
-        )
+        robots.append({"name": name, "position": position, "mode": fleet[robot]["mode"]})
     return robots
 
 
