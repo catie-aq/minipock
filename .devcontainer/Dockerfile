@@ -14,6 +14,7 @@ RUN apt-get update && \
     apt-get install -y ros-jazzy-ament-cmake && \
     apt-get install -y ros-jazzy-tf2-tools && \
     apt-get install -y ros-jazzy-cartographer-ros && \
+    apt-get install -y ros-jazzy-rmf-dev && \
     rm -rf /var/lib/apt/lists/* && \
     rm /usr/lib/python3.12/EXTERNALLY-MANAGED && \
     pip3 install --no-cache-dir transforms3d==0.4.2 jsonschema==4.23.0 requests==2.32.3 crc==7.1.0
