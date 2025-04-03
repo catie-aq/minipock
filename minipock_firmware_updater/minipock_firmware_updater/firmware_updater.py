@@ -252,7 +252,7 @@ class FirmwareUpdater(Node):
         firmware_chunk_size = request.chunk_size * 2
         firmware_chunk_start = firmware_chunk_index * firmware_chunk_size
         firmware_chunk_end = min(
-            firmware_chunk_start + firmware_chunk_size, target_version["size"]
+            firmware_chunk_start + firmware_chunk_size, target_version["size"] * 2
         )
 
         firmware_data_segment = target_version["content"][firmware_chunk_start:firmware_chunk_end]
@@ -267,7 +267,7 @@ class FirmwareUpdater(Node):
         response.chunk_byte = bytes.fromhex(firmware_data_segment)
         response.chunk_checksum = checksum
         self.get_logger().info(
-            f"{response.chunk_id} / {target_version['size']/firmware_chunk_size} - {checksum}"
+            f"{response.chunk_id} / {target_version['size']/request.chunk_size} - {checksum}"
         )
         return response
 
