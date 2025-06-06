@@ -1,4 +1,4 @@
-FROM osrf/ros:jazzy-desktop-full as base
+FROM osrf/ros:jazzy-desktop-full AS base
 
 RUN apt-get update && \
     apt-get install -y python3-pip && \
@@ -15,16 +15,17 @@ RUN apt-get update && \
     apt-get install -y ros-jazzy-tf2-tools && \
     apt-get install -y ros-jazzy-cartographer-ros && \
     apt-get install -y ros-jazzy-rmf-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm /usr/lib/python3.12/EXTERNALLY-MANAGED && \
-    pip3 install --no-cache-dir transforms3d==0.4.2 jsonschema==4.23.0 requests==2.32.3 crc==7.1.0
+    rm -rf /var/lib/apt/lists/*
+
+RUN rm -f /usr/lib/python3.12/EXTERNALLY-MANAGED && \
+    pip3 install --no-cache-dir transforms3d==0.4.2 jsonschema==4.10.3 requests==2.32.3 crc==7.1.0 pynput==1.8.1
 
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /root/.bashrc \
     && echo 'source /workspaces/install/setup.bash' >> /root/.bashrc \
     && echo 'source /opt/ros/jazzy/setup.zsh' >> /root/.zshrc \
     && echo 'source /workspaces/install/setup.zsh' >> /root/.zshrc
 
-FROM base as real
+FROM base AS real
 
 WORKDIR /workspaces/
 RUN git clone -b jazzy https://github.com/micro-ROS/micro_ros_setup.git
@@ -33,7 +34,7 @@ RUN rosdep install --from-paths . -y
 RUN . /opt/ros/jazzy/setup.sh  && colcon build --merge-install --packages-select micro_ros_setup
 RUN . /workspaces/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
 
-FROM base as simulation
+FROM base AS simulation
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN wget --progress=dot:giga https://packages.osrfoundation.org/gazebo.gpg -O /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
