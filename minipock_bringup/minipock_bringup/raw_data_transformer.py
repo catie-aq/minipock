@@ -10,7 +10,7 @@ from filterpy.kalman import KalmanFilter
 import numpy as np
 
 
-class ExtendedKalmanFilter:
+class LinearKalmanFilter:
     def __init__(self):
         # Initialize the Kalman Filter
         self.kf = KalmanFilter(dim_x=3, dim_z=3)
@@ -55,11 +55,11 @@ class RawDataTransformer(Node):
             qos_profile_sensor_data,
         )
 
-        self.___odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
-        self.___odom_optc_publisher = self.create_publisher(
+        self.__odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
+        self.__odom_optc_publisher = self.create_publisher(
             Odometry, f"odom_optc", qos_profile_sensor_data
         )
-        self.___odom_fusion_publisher = self.create_publisher(
+        self.__odom_fusion_publisher = self.create_publisher(
             Odometry, f"odom_fusion", qos_profile_sensor_data
         )
         self.__scan_publisher = self.create_publisher(LaserScan, f"scan", qos_profile_sensor_data)
@@ -80,7 +80,7 @@ class RawDataTransformer(Node):
         :return: None.
         """
         self.__last_odom_msg = msg
-        self.__publish_odom(msg, self.___odom_publisher)
+        self.__publish_odom(msg, self.__odom_publisher)
 
     def callback_optc(self, msg):
         """
@@ -90,19 +90,19 @@ class RawDataTransformer(Node):
         :return: None.
         """
         self.__last_odom_optc_msg = msg
-        self.__publish_odom(msg, self.___odom_optc_publisher)
+        self.__publish_odom(msg, self.__odom_optc_publisher)
         self.callback_fusion()
 
     def callback_fusion(self):
         """
-        Callback to publish the mean pose of the two messages.
+        Callback to perform sensor fusion using a Kalman filter to combine odometry measurements from two sources and publish the fused pose.
         :return: None.
         """
         if self.__last_odom_msg is None or self.__last_odom_optc_msg is None:
             return
 
         # Assuming you have an EKF implementation available
-        ekf = ExtendedKalmanFilter()
+        ekf = LinearKalmanFilter()
 
         # Prepare the measurements
         z1 = [
@@ -132,7 +132,7 @@ class RawDataTransformer(Node):
             self.__last_odom_msg.pose.orientation
         )  # Assuming orientation is the same
 
-        self.__publish_odom(mean_pose, self.___odom_fusion_publisher)
+        self.__publish_odom(mean_pose, self.__odom_fusion_publisher)
 
     def __publish_odom(self, msg, publisher):
         self.__odom_transform.header.stamp = msg.header.stamp
@@ -170,7 +170,7 @@ def main(args=None):
     """
     rclpy.init(args=args)
     odom_subscriber = RawDataTransformer()
-    odom_subscriber.get_logger().info("Raw data transformer has been started. /")
+    odom_subscriber.get_logger().info("Raw data transformer has been started.")
 
     rclpy.spin(odom_subscriber)
 
