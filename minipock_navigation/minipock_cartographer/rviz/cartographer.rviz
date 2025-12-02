@@ -60,7 +60,7 @@ Visualization Manager:
           Value: true
         minipock_0/base_link:
           Value: true
-        minipock_0/lds_01_link:
+        minipock_0/lidar_link:
           Value: true
         minipock_0/minipock_structure_misc_link:
           Value: true
@@ -88,7 +88,7 @@ Visualization Manager:
           minipock_0/odom:
             minipock_0/base_footprint:
               minipock_0/base_link:
-                minipock_0/lds_01_link:
+                minipock_0/lidar_link:
                   {}
                 minipock_0/minipock_structure_misc_link:
                   {}
