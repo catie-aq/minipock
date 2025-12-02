@@ -116,7 +116,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        minipock_0/lds_01_link:
+        minipock_0/lidar_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -428,7 +428,7 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        minipock_1/lds_01_link:
+        minipock_1/lidar_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false

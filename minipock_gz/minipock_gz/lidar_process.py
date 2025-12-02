@@ -33,12 +33,12 @@ class ScanFilterNode(Node):
     def listener_callback(self, msg):
         """
         This listener_callback method is used to process the received LaserScan message.
-        It updates the frame_id of the message to 'lds_01_link' and publishes it using a publisher.
+        It updates the frame_id of the message to 'lidar_link' and publishes it using a publisher.
 
         :param msg: The LaserScan message received from the listener.
         :return: None
         """
-        msg.header.frame_id = self.robot_name + "lds_01_link"
+        msg.header.frame_id = self.robot_name + "lidar_link"
         self.publisher.publish(msg)
 
 
