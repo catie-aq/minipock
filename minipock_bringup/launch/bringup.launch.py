@@ -36,7 +36,8 @@ def parse_config(context, *args, **kwargs):
     launch_processes.append(micro_ros_agent())
     for robot in fleet:
         robot_name = f"{namespace}{robot}"
-        launch_processes.extend(spawn(robot_name))
+        robot_mode = fleet[robot]["mode"]
+        launch_processes.extend(spawn(robot_name, robot_mode))
         launch_processes.append(state(robot_name))
         if odom_frame:
             launch_processes.append(odometry(robot_name))
@@ -59,13 +60,13 @@ def micro_ros_agent():
     )
 
 
-def spawn(robot_name):
+def spawn(robot_name, robot_mode):
     """
     Spawn the robot in the current Gazebo world.
 
     :return: list of launch processes
     """
-    model.spawn_args(robot_name)
+    model.spawn_args(robot_name, mode=robot_mode)
     spawn_launch_path = os.path.join(
         get_package_share_directory("minipock_description"), "launch", "spawn.launch.py"
     )
