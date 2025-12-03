@@ -18,9 +18,5 @@
   "mounts": [
     "source=/dev/dri,target=/dev/dri,type=bind",
     "source=/dev/shm,target=/dev/shm,type=bind"
-  ],
-  "features": {
-    "ghcr.io/devcontainers-contrib/features/pipx-package:1": {},
-    "ghcr.io/devcontainers-contrib/features/pre-commit:2": {}
-  }
+  ]
 }

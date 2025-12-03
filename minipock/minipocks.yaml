@@ -1,7 +1,7 @@
 namespace: minipock_
-bringup: true
+bringup: false
 use_sim_time: false
-map: "empty_room_map" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
+map: "catie" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
 world: "empty_room_world" # for simulation, must be stored in minipock_gz/worlds
 rviz: "navigation2_rmf" # for visualization, must be stored in minipock_navigation/minipock_navigation2/rviz
 fleet:
