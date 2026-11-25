@@ -109,7 +109,28 @@ La doc utilisateur reste dans `catie-aq/minipock_documentation`, publiée automa
 
 Dans `minipock`, `docs/` ne contient que les documents de travail : design et plan dans `docs/superpowers/`.
 
-## 9. Ordre des commits
+## 9. Revue critique au regard des pratiques ROS 2 (25/11)
+
+Décisions validées par Seb et la session pilote :
+
+- Roues holonomes sans galets articulés : 27 joints continus inutiles, le mouvement vient de `VelocityControl`. Galets gardés en géométrie visuelle fixe.
+- Config de flotte dans `minipock_bringup/config/` : supprime le cycle de dépendances avec le métapaquet `minipock`, qui redevient un pur métapaquet.
+- Une seule carte : un `map_server` global sur `/map`, un AMCL par robot, un `lifecycle_manager` de localisation pour l'ensemble ; `navigation_launch.py` de Nav2 pour le reste.
+- Paramètres Nav2 : un fichier commun et une surcouche par cinématique, fusionnés au lancement, puis la surcouche optionnelle du robot.
+
+Décisions techniques prises dans le chantier :
+
+- Pas de `ros2_control`. Le contrôle des moteurs vit dans le firmware, qui consomme `cmd_vel` et publie l'odométrie, comme une base Create 3. Un `ros2_control` côté PC demanderait une interface matérielle par micro-ROS, et `gz_ros2_control` ferait diverger la sim du réel. Le contrat `cmd_vel` / `odom` / `scan` est l'interface.
+- `use_sim_time` posé une fois par le launch d'entrée avec `SetParameter`, pour tous les nœuds, en plus des arguments des launches par robot (lancement isolé).
+- QoS : `scan` et `odom` en profil capteur (best effort) en sim et en réel ; les abonnés Nav2 sont compatibles.
+- Préfixe des frames par xacro, pas par `frame_prefix` de `robot_state_publisher` : les plugins Gazebo ont besoin des frames préfixées dans le SDF.
+- Paramètres des nœuds du dépôt déclarés avec descripteur (type, description, lecture seule si besoin).
+- Métadonnées des paquets homogènes : même version pour tous les paquets du dépôt, identifiants de licence SPDX, adresse de maintenance CATIE, `package.xml` validés par `ament_xmllint`.
+- Frames conformes à REP-105 (`map`, `odom`, `base_footprint`, `base_link`) et unités REP-103.
+
+Reportés au chantier réel : odométrie complète (twist) publiée par le firmware au lieu d'une dérivée côté PC ; orientation du LiDAR monté à l'envers à vérifier.
+
+## 10. Ordre des commits
 
 1. Socle : dépendances, Dockerfile, ruff, hygiène.
 2. Config et launches (description, gz, nav2, bringup, cartographer).
