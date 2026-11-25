@@ -34,8 +34,8 @@ def test_load_default_file() -> None:
     config = load_config(default_config_path())
     assert len(config.robots) == 2
     assert config.robots[0].name == "minipock_0"
-    assert config.world == "empty_room_world"
-    assert config.map == "empty_room_map"
+    assert config.world == "office"
+    assert config.map == "office"
 
 
 def test_position_with_yaw(tmp_path: Path) -> None:

@@ -54,6 +54,30 @@ Cartographer pour un robot (carte sur `/minipock_0/map`) :
 ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 use_sim_time:=true
 ```
 
+## Mondes de simulation
+
+- Mondes dans `minipock_gz/worlds/` (argument `world` de `world.launch.py`, sans
+  `.sdf`) : `office` (défaut de `minipocks.yaml`, bureaux meublés tirés de
+  `husarion_office` de Husarion), `empty_room_world`, `minipock_world`. Carte
+  Nav2 de même nom dans `minipock_navigation/minipock_navigation2/map/`.
+- Le monde `office` ne charge rien par le réseau : ses modèles sont copiés dans
+  `minipock_gz/models/` (ajouté à `GZ_SIM_RESOURCE_PATH` par `world.launch.py`).
+  Origine et licence de chaque modèle dans `minipock_gz/worlds/ATTRIBUTION.md`,
+  vérifiées par `minipock_gz/test/test_office_world.py` : tout modèle ajouté
+  doit y figurer. Pas d'URI `https://fuel...` dans un monde.
+- Positions de départ de `minipocks.yaml` : dans l'open space, cellules libres
+  dans un rayon de 0,25 m (testé sur la carte).
+- Après toute modification du monde, régénérer la carte (sur l'hôte, depuis la
+  racine du dépôt) ; `--z-max` = hauteur du LiDAR au-dessus du sol (0,1475 m :
+  `lidar_link` à 0,05 m au-dessus de `base_link`, bas des roues à 0,0975 m en
+  dessous, d'après l'URDF) + 0,05 m :
+
+```bash
+uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf \
+  --models minipock_gz/models --z-min 0.02 --z-max 0.1975 --resolution 0.05 \
+  --out minipock_navigation/minipock_navigation2/map/office
+```
+
 ## Conventions ROS
 
 - Un robot = un namespace `minipock_<id>` (`<id>` = clé de `fleet` dans la config).

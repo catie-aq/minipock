@@ -35,6 +35,8 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("world", default_value="minipock_world"),
             DeclareLaunchArgument("headless", default_value="false"),
             AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(gz_share / "worlds")),
+            # Vendored models of the office world, referenced as `model://<name>`.
+            AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(gz_share / "models")),
             # Models are referenced as `model://minipock_description/...`.
             AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(description_share.parent)),
             IncludeLaunchDescription(

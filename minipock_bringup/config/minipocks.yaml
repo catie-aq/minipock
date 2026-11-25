@@ -1,11 +1,11 @@
 namespace: minipock_
-map: "empty_room_map" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
-world: "empty_room_world" # for simulation, must be stored in minipock_gz/worlds
+map: "office" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
+world: "office" # for simulation, must be stored in minipock_gz/worlds
 rviz: "navigation2_rmf" # for visualization, must be stored in minipock_navigation/minipock_navigation2/rviz
 fleet:
   "0":
     mode: holonomic
-    position: [2.053461700390844, -6.2162598987180635]
+    position: [6.2, -5.5]
   "1":
     mode: differential
-    position: [7.929064222877705, -3.815474419287308]
+    position: [8.05, -6.3]
