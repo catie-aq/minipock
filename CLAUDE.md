@@ -75,7 +75,10 @@ ros2 launch minipock_navigation2 navigation2.launch.py
 - Commits Conventional Commits en anglais (`type(scope): subject`), branches
   `type/short-description`.
 - `pre-commit run --all-files` avant de pousser.
-- Livraison par PR vers `main`, CI verte avant merge (workflow `ROS2 CI/CD`).
+- Livraison : branche, PR vers `main`, merge dès que la CI est verte, sans
+  relecture obligatoire. Les dépôts firmware (`minipock_zephyr-demo`,
+  `minipock_mbed-rbdc`) suivent une autre règle : toute modification passe par
+  une PR relue par un collègue avant merge.
 - Les versions suivent `minipock/package.xml` ; un push sur `main` crée le tag.
 
 ## Suivi Jira (géré par l'agent, sans demande)
