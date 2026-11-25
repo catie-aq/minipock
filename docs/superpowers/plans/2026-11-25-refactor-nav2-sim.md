@@ -129,6 +129,23 @@
 - [ ] **Step 4:** tests au vert, puis contrôle manuel sans écran (`DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1"`) : world + description + robot pour `minipock_0` holonome et `minipock_1` différentiel ; `ros2 topic hz /minipock_0/scan` > 0, `frame_id` du scan `minipock_0/lidar_link`, `tf2_echo minipock_1/odom minipock_1/lidar_link` répond. Sans `--merge-install` aussi (build dans un dossier séparé `ws_iso`) : le monde se charge.
 - [ ] **Step 5:** commit `refactor(gz): spawn robots from robot_description and drop lidar_process`.
 
+### Task 4c: Monde de bureaux (amendement validé par Seb le 25/11)
+
+**Files:**
+- Create: `minipock_gz/worlds/office.sdf`, `minipock_gz/models/` (modèles du monde, copiés), `minipock_gz/worlds/ATTRIBUTION.md`, `minipock_gz/scripts/world_to_map.py` (script `uv run` avec dépendances inline), `minipock_navigation/minipock_navigation2/map/office.pgm` et `office.yaml`, `minipock_gz/test/test_office_world.py`
+- Modify: `minipock_gz/setup.py` (installer `models/` et le monde), `minipock_gz/launch/world.launch.py` (ajouter `share/minipock_gz/models` à `GZ_SIM_RESOURCE_PATH`), `minipock_bringup/config/minipocks.yaml` (défaut : monde `office`, carte `office`, deux robots placés dans l'open space), `CLAUDE.md`
+
+**Interfaces:**
+- Base : monde `husarion_office.sdf` de [husarion/husarion_gz_worlds](https://github.com/husarion/husarion_gz_worlds) (Apache-2.0, Gazebo Harmonic), commit noté dans `ATTRIBUTION.md`. Nom du monde dans le SDF : `office`.
+- Aucune ressource chargée par le réseau : chaque URI `https://fuel.gazebosim.org/...` remplacée par un `model://` local ; modèles Fuel copiés avec leur licence (vérifiée modèle par modèle dans leur `metadata.pbtxt` ou leur page Fuel) ; modèles propres à Husarion copiés (Laptop, Surfaces, Kitchen, Tv, WaterDispenser, ConferenceTable, Door) ; retirés : robots ROSbot posés dans le monde et logo Husarion.
+- `world_to_map.py --world <sdf> --models <dir> --z-min 0.02 --z-max <hauteur LiDAR + 0.05> --resolution 0.05 --out <prefix>` : coupe les géométries de collision (boîtes, cylindres, maillages via trimesh) dans la bande de hauteur, écrit `.pgm` (trinaire) et `.yaml` (origine en repère monde, donc repère `map` aligné sur la sim). La hauteur du LiDAR se lit dans l'URDF (composition des origines jusqu'à `lidar_link`).
+
+- [ ] **Step 1: tests qui échouent** (`test_office_world.py`) : `test_world_has_no_network_uri` (aucune chaîne `http` dans `office.sdf` ni dans `models/**/*.sdf`) ; `test_every_model_uri_resolves` (chaque `model://X` correspond à un dossier `models/X` avec `model.config`) ; `test_every_model_has_license` (chaque modèle copié figure dans `ATTRIBUTION.md` avec sa licence) ; `test_map_matches_world` (`office.yaml` existe, résolution 0,05, origine cohérente avec l'emprise du monde) ; `test_default_spawns_are_free` (pour chaque robot de `minipocks.yaml`, toutes les cellules de `office.pgm` dans un rayon de 0,25 m autour de sa position sont libres).
+- [ ] **Step 2:** importer et nettoyer le monde, copier les modèles, écrire `ATTRIBUTION.md`.
+- [ ] **Step 3:** écrire `world_to_map.py`, générer la carte, choisir deux positions de départ dans l'open space.
+- [ ] **Step 4:** tests au vert ; contrôle manuel sans écran : le monde se charge sans réseau (`--network none` sur le conteneur), deux robots apparaissent, facteur temps réel mesuré en rendu logiciel (noté dans le rapport) ; une capture d'écran du monde rendu (rendu hors écran ou GUI Gazebo avec `DISPLAY`) jointe au rapport, pour la doc.
+- [ ] **Step 5:** commit `feat(gz): add an office world with its generated map`.
+
 ### Task 1b: Métadonnées des paquets (amendement du 25/11)
 
 **Files:**
@@ -282,6 +299,13 @@
 - Dans `~/CATIE/RD/minipock/minipock_documentation`, dossier `latest/` seulement (les dossiers de version publiés ne bougent pas ; la 2.2.1 est figée) : toutes les pages existantes réécrites ou complétées, structure et numérotation gardées, plus une page « Conventions ROS » et la page multi-robot de la 2.1.0 reprise et mise à jour (numérotation décalée en conséquence) ; images dans `img/`.
 
 Constat de départ (Seb, 25/11) : la structure est bonne, le contenu manque (4 850 mots en tout, `10-Mécanique.md` vide, `1-Vue-d'ensemble.md` à 131 mots).
+
+Publication (vérifiée dans `~/CATIE/server/sonu_www` le 25/11) : le site SONU (Docusaurus) est alimenté par `sonu_documentation-bot`, qui suit la branche par défaut de `minipock_documentation` via un fichier `.git` posé dans Dropbox (`git ls-remote` toutes les 5 min) et publie toute l'arborescence. Barres latérales autogénérées par dossier : les sous-dossiers avec `_category_.json` sont pris en charge. La page `/qualite` du site signale les titres génériques ou en `snake_case` sans espace, les dossiers à une seule page, les pages vides et les doublons de texte : à éviter.
+
+Structure de `latest/` (validée par Seb le 25/11, deux publics) :
+- `utilisateur/` (« je viens de recevoir mon MiniPock ») : présentation et caractéristiques ; premier démarrage (alimentation, Wi-Fi, IP, namespace par le shell ou l'interface web, image sur le PC, vérification) ; piloter le robot (téléopération clavier et FPS) ; cartographier son espace ; naviguer (carte, position initiale, buts dans RViz) ; plusieurs robots ; simuler sans robot ; mettre à jour le firmware ; dépannage.
+- `developpeur/` : architecture (schéma, paquets, nœuds, flux, arbre TF) ; environnement de dev (Docker, devcontainer, colcon, tests, skills) ; conventions ROS ; configuration de flotte (schéma du YAML) ; simulation (mondes, ponts, sans écran) ; navigation (paramètres, surcouches, limites, tableau de réglage) ; système embarqué et contrat firmware (micro-ROS, topics, endpoints HTTP) ; mission Open-RMF ; contribuer et publier une version.
+- Les sections « API Documentation » des pages utilisateur actuelles passent côté développeur ; rien n'est supprimé sans être redistribué.
 
 - [ ] **Step 1:** inventaire page par page de `latest/` : ce qui est faux après le refactor, ce qui manque. Écrit dans le rapport de tâche avant toute rédaction.
 - [ ] **Step 2:** schéma d'archi global (skill `stack-diagram`, PNG) : PC hôte (launch d'entrée, nœuds par robot, Nav2, localisation partagée, Gazebo ou agent micro-ROS), robot (firmware), arbre TF multi-robot.
