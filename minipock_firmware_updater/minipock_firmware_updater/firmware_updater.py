@@ -8,8 +8,6 @@ import rclpy
 import requests
 from crc import Calculator, Crc8
 from jsonschema.exceptions import ValidationError
-from rclpy.node import Node
-
 from minipock_msgs.msg import Version
 from minipock_msgs.srv import (
     GetChunk,
@@ -17,6 +15,7 @@ from minipock_msgs.srv import (
     TrigUpdate,
     TrigUpdate_Response,
 )
+from rclpy.node import Node
 
 STORED_VERSION_SCHEMA = {
     "type": "object",

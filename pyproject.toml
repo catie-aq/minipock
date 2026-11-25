@@ -19,6 +19,8 @@ ignore = ["T20", "S101", "D104", "COM812", "CPY001"]
 convention = "google"
 
 [tool.ruff.lint.isort]
+# Submodule, absent from checkouts without submodules (CI): classify it the same everywhere.
+known-third-party = ["minipock_msgs"]
 known-first-party = [
   "minipock_bringup",
   "minipock_description",
