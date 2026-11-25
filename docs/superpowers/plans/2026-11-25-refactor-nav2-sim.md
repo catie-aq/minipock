@@ -318,7 +318,7 @@ Structure de `latest/` (validée par Seb le 25/11, deux publics) :
   - Navigation : architecture Nav2 par robot, carte partagée, paramètres (commun, surcouches, `nav2_params` par robot), limites du robot réel, tableau de réglage de la tâche 7b, envoi de buts.
   - SLAM : Cartographer par robot, sauvegarde de carte.
   - Multi-robot : namespaces, YAML de flotte, carte unique, TF.
-  - Conventions ROS (nouvelle page) : namespaces, frames REP-105 et arbre TF, topics et types, QoS, `use_sim_time`, YAML de flotte (schéma champ par champ), launches et leurs arguments, contrat avec le firmware.
+  - Conventions ROS (nouvelle page) : renvoie au standard d'équipe `SONU/Méthodes/ROS/ros.md` pour les règles communes et ne garde que ce qui est propre à MiniPock : YAML de flotte, contrat avec le firmware, arbre TF de la flotte, choix de QoS, launches et leurs arguments.
   - Système embarqué, Endpoints, Mise à jour, Logiciel de mission : relus et corrigés là où le refactor les touche ; Mécanique : contenu minimal (dimensions, entraxe, rayon de roue, limites, lien Dropbox), à partir des valeurs du firmware.
   - Changelog dans `index.md` : entrée de la prochaine version.
 - [ ] **Step 4:** passage au skill `humanizer`, `uvx pre-commit run --files` sur les fichiers touchés (corriger aussi les erreurs markdownlint préexistantes de `latest/`).
