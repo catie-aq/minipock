@@ -7,7 +7,18 @@
   <maintainer email="s.delpeuch@catie.fr">sedelpeuch</maintainer>
   <license>Apache License 2.0</license>
 
+  <exec_depend>python3-jsonschema</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <!-- micro_ros_agent: no rosdep key, installed by the real image -->
+
   <test_depend>python3-pytest</test_depend>
+  <test_depend>python3-pytest-cov</test_depend>
+  <test_depend>launch_testing</test_depend>
+  <test_depend>launch_testing_ros</test_depend>
 
   <export>
     <build_type>ament_python</build_type>
