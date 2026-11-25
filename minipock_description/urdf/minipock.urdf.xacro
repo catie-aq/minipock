@@ -17,9 +17,9 @@
   <!-- motor -->
   <xacro:include filename="$(find minipock_description)/urdf/motor.xacro" />
   <xacro:if value="${mode == 'differential'}">
-    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_left" x="0.0" y="0.132" z="-0.086"
       R="0.0" P="0.0" Y="0.0" side="1" mode="${mode}" />
-    <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.133" z="-0.086"
+    <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.132" z="-0.086"
       R="0.0" P="0.0" Y="${-pi}" side="-1" mode="${mode}" />
   </xacro:if>
 
@@ -44,8 +44,8 @@
         name="gz::sim::systems::DiffDrive">
         <left_joint>${namespace}motor_left_wheel_joint</left_joint>
         <right_joint>${namespace}motor_right_wheel_joint</right_joint>
-        <wheel_separation>0.335</wheel_separation>
-        <wheel_radius>0.036</wheel_radius>
+        <wheel_separation>0.328</wheel_separation>
+        <wheel_radius>0.0355</wheel_radius>
         <odom_publish_frequency>50</odom_publish_frequency>
 
         <topic>${namespace}cmd_vel</topic>

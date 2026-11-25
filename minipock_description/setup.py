@@ -27,17 +27,9 @@ setup(
     author="Sébastien Delpeuch",
     author_email="s.delpeuch@catie.fr",
     license="Apache 2.0",
-    install_requires=[
-        "python>=3.10",
-        "jsonschema",
-    ],
+    install_requires=["python>=3.10"],
+    tests_require=["pytest"],
     packages=[package_name],
-    entry_points={
-        "console_scripts": [
-            "minipock_generate = minipock_description.model:generate",
-            "minipock_config = minipock_description.config:config",
-        ],
-    },
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
         (f"share/{package_name}", ["package.xml"]),
