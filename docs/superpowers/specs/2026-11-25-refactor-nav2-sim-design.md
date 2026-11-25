@@ -35,7 +35,7 @@ minipock_bringup/launch/real.launch.py  config:=<yaml> rviz:=false
     └── minipock_navigation2/launch/robot.launch.py
 ```
 
-- Config : `minipock/minipocks.yaml` reste le fichier de flotte, au même endroit. Il devient la valeur par défaut de l'argument `config:=` des launches d'entrée, qui le lisent une seule fois ; on peut passer un autre fichier sans recompiler. `map:=` et `world:=` en argument surchargent la valeur du fichier (par exemple `map:=catie` en réel). Champs gardés : `namespace`, `world` (sim), `map`, `rviz`, `fleet.<id>.mode`, `fleet.<id>.position` (`[x, y]` ou `[x, y, yaw]` dans le repère `map`, `null` en sim pour le placement en spirale). Champs retirés : `bringup` et `use_sim_time`, que le launch d'entrée fixe selon le mode. Valeurs par défaut cohérentes pour la sim (`empty_room_world` et `empty_room_map`, au lieu de `catie` avec la salle vide aujourd'hui). Validation jsonschema complète dans `minipock_bringup.config`, avec message d'erreur lisible.
+- Config : toute la configuration d'un usage tient dans un seul YAML, passé en argument `config:=` des launches d'entrée, qui le lisent une seule fois. `config:=` accepte un chemin ou le nom d'un fichier installé du paquet `minipock` ; on peut passer un autre fichier sans recompiler. Fichiers livrés : `minipock/minipocks.yaml` (défaut, sim en salle vide) et `minipock/minipocks_real.yaml` (réel, carte `catie`, poses de départ à renseigner). Pas de surcharge champ par champ en argument : un autre usage, c'est un autre fichier. Champs gardés : `namespace`, `world` (sim), `map`, `rviz`, `fleet.<id>.mode`, `fleet.<id>.position` (`[x, y]` ou `[x, y, yaw]` dans le repère `map`, `null` en sim pour le placement en spirale). Champs retirés : `bringup` et `use_sim_time`, que le launch d'entrée fixe selon le mode. Valeurs par défaut cohérentes pour la sim (`empty_room_world` et `empty_room_map`, au lieu de `catie` avec la salle vide aujourd'hui). Validation jsonschema complète dans `minipock_bringup.config`, avec message d'erreur lisible.
 - `robot_description` vient de `Command(xacro)` dans `description.launch.py`. Le spawn Gazebo lit ce topic (`ros_gz_sim create -topic`), Gazebo convertit lui-même l'URDF : plus de `gz sdf -p`, plus d'écriture dans `install/share`, plus d'erreur avalée en réel.
 - `world.launch.py` ajoute lui-même les dossiers des paquets à `GZ_SIM_RESOURCE_PATH` : le lancement ne dépend plus du `.bashrc` de l'image ni de `--merge-install`.
 - Le bug `bool("False")` disparaît par construction : `use_sim_time` circule comme argument de launch booléen, sim à `true`, réel à `false`. Un test le vérifie.
@@ -122,7 +122,7 @@ Exécution par sous-agents, un par lot, sur la même branche et dans l'ordre (le
 ## Décisions
 
 - A. TF : frames préfixées sur `/tf` global (recommandé) ou TF par namespace. En attente.
-- B. Config : `minipock/minipocks.yaml` gardé, lu une fois par le launch d'entrée (validé le 25/11).
+- B. Config : un YAML par usage passé en `config:=`, `minipock/minipocks.yaml` par défaut (validé le 25/11).
 - C. Doc : reste dans `minipock_documentation`, mise à jour de `latest` (validé le 25/11).
 - D. ruff à la place de black et flake8. En attente.
 - E. CI : évolution compatible de `ros_workflows` (validé le 25/11).
