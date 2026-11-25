@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+
 from minipock_bringup.config import (
     ConfigError,
     default_config_path,

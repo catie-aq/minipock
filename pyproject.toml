@@ -16,3 +16,12 @@ ignore = ["T20", "S101", "D104", "COM812", "CPY001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = [
+  "minipock_bringup",
+  "minipock_description",
+  "minipock_gz",
+  "minipock_teleop",
+  "minipock_firmware_updater",
+]
