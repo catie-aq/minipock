@@ -25,11 +25,22 @@ def merge_params(base: dict, overlay: dict) -> dict:
 
     Returns:
         A new dictionary; the inputs are not modified.
+
+    Raises:
+        ValueError: If a value of `overlay` is empty (`None`), which ROS cannot load.
     """
+    return _merge(base, overlay, ())
+
+
+def _merge(base: dict, overlay: dict, path: tuple[str, ...]) -> dict:
     merged = dict(base)
     for key, value in overlay.items():
+        where = (*path, str(key))
+        if value is None:
+            msg = f"Parameter {'.'.join(where)} has no value: give one or remove the key"
+            raise ValueError(msg)
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = merge_params(merged[key], value)
+            merged[key] = _merge(merged[key], value, where)
         else:
             merged[key] = value
     return merged
@@ -71,7 +82,7 @@ def _substitute(value: object, replacements: dict[str, object]) -> object:
     return value
 
 
-def render_params_file(  # noqa: PLR0913 - interface fixed by the plan, used by task 6
+def render_params_file(  # noqa: PLR0913 - kinematics, namespace, x, y, yaw and override are independent inputs
     mode: str,
     namespace: str,
     x: float,

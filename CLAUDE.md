@@ -45,13 +45,13 @@ ros2 launch minipock_gz spawn.launch.py
 Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
 
 ```bash
-ros2 launch minipock_navigation2 robot.launch.py namespace:=minipock_0 params_file:=<fichier rendu>
+ros2 launch minipock_navigation2 robot.launch.py namespace:=minipock_0 params_file:=<fichier rendu> use_sim_time:=true
 ```
 
 Cartographer pour un robot (carte sur `/minipock_0/map`) :
 
 ```bash
-ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0
+ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 use_sim_time:=true
 ```
 
 ## Conventions ROS
@@ -70,12 +70,13 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0
 ## Navigation
 
 - Une seule carte pour la flotte : un `map_server` global publie `/map` (frame
-  `map`) ; chaque robot a son AMCL (`/<ns>/amcl`, `map_topic: /map`) ; un seul
-  `lifecycle_manager_localization` gère `map_server` et tous les AMCL. Ces
+  `map`) ; chaque robot a son AMCL (`/<ns>/amcl`, `map_topic: /map`). Ces
   actions viennent de `minipock_bringup.localization.localization_actions`.
-  Ce gestionnaire tourne sans bond (`bond_timeout: 0.0`) : un serveur crée son
-  bond dans son namespace sous son nom court (`amcl`), le gestionnaire l'attend
-  sur `/bond` sous `minipock_0/amcl`, ils ne se trouvent jamais.
+- Un gestionnaire de cycle de vie par namespace, bond actif :
+  `lifecycle_manager_map` (racine) pour `map_server`,
+  `<ns>/lifecycle_manager_localization` pour l'AMCL du robot. Un gestionnaire
+  ne crée de bond qu'avec les serveurs de son namespace (le serveur publie sur
+  `<ns>/bond` sous son nom court).
 - Le reste de Nav2 vient de `nav2_bringup/launch/navigation_launch.py`, inclus
   par `minipock_navigation2/launch/robot.launch.py` sous le namespace du robot.
   `SetRemap('/tf', '/tf')` et `SetRemap('/tf_static', '/tf_static')` avant
@@ -98,6 +99,8 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0
   partagent les mêmes limites.
 - `docking_server` (géré par `navigation_launch.py`) a un plugin
   `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
+- `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`
+  (un groupe d'affichages par robot) : à compléter pour une flotte plus grande.
 - Cartographer : `cartographer.launch.py namespace:=<ns>` génère le lua (et la
   config RViz) avec le namespace à la place de `__NS__` ; il ne publie que
   `map → <ns>/odom`.

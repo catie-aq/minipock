@@ -8,10 +8,6 @@ from nav2_common.launch import RewrittenYaml
 
 MAP_TOPIC = "/map"
 MAP_FRAME = "map"
-# Bond disabled: a server creates its bond on `<its namespace>/bond` with its bare name
-# (`amcl`), the root-namespace manager waits on `/bond` for `minipock_0/amcl`. They never
-# connect, so the manager would abort the bringup.
-BOND_TIMEOUT = 0.0
 
 
 def localization_actions(
@@ -19,10 +15,14 @@ def localization_actions(
 ) -> list[Action]:
     """Return the localization actions of the fleet.
 
-    One `map_server` publishes the map on `/map` in the `map` frame; each robot runs `amcl` in
-    its namespace on the global `/tf`; one `lifecycle_manager_localization` manages them all.
-    The map server and the lifecycle manager are in the root namespace, even when the actions
-    are included under a pushed namespace.
+    One `map_server` publishes the map on `/map` in the `map` frame, managed by
+    `lifecycle_manager_map`; both are in the root namespace, even when the actions are included
+    under a pushed namespace. Each robot runs `amcl` in its namespace on the global `/tf`,
+    managed by its own `<namespace>/lifecycle_manager_localization`.
+
+    A lifecycle manager only bonds with servers of its own namespace (the server publishes its
+    bond on `<namespace>/bond` under its short name), hence one manager per namespace, as
+    nav2_bringup does for navigation. Bonds stay active: a crashed server is detected.
 
     Args:
         robots: `(namespace, params_file)` of each robot, the parameter file being rendered by
@@ -48,8 +48,9 @@ def localization_actions(
             }
         ],
     )
-    amcls = [
-        Node(
+    amcls = []
+    for namespace, params_file in robots:
+        amcl = Node(
             package="nav2_amcl",
             executable="amcl",
             name="amcl",
@@ -68,28 +69,35 @@ def localization_actions(
                 {"use_sim_time": use_sim_time},
             ],
         )
-        for namespace, params_file in robots
-    ]
-    lifecycle_manager = Node(
-        package="nav2_lifecycle_manager",
-        executable="lifecycle_manager",
-        name="lifecycle_manager_localization",
-        namespace="/",
-        output="screen",
-        parameters=[
-            {
-                "autostart": True,
-                "bond_timeout": BOND_TIMEOUT,
-                "node_names": ["map_server", *(f"{namespace}/amcl" for namespace, _ in robots)],
-                "use_sim_time": use_sim_time,
-            }
-        ],
-    )
+        amcls += [
+            amcl,
+            _lifecycle_manager(
+                "lifecycle_manager_localization", namespace, ["amcl"], use_sim_time=use_sim_time
+            ),
+        ]
     return [
         map_server,
+        _lifecycle_manager(
+            "lifecycle_manager_map", "/", ["map_server"], use_sim_time=use_sim_time
+        ),
         GroupAction(
             [SetRemap("/tf", "/tf"), SetRemap("/tf_static", "/tf_static"), *amcls],
             scoped=True,
         ),
-        lifecycle_manager,
     ]
+
+
+def _lifecycle_manager(
+    name: str, namespace: str, node_names: list[str], *, use_sim_time: bool
+) -> Node:
+    """Return a Nav2 lifecycle manager that brings up `node_names` of its namespace."""
+    return Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name=name,
+        namespace=namespace,
+        output="screen",
+        parameters=[
+            {"autostart": True, "node_names": node_names, "use_sim_time": use_sim_time},
+        ],
+    )

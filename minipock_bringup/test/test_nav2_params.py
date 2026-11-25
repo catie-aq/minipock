@@ -61,6 +61,11 @@ def test_merge_does_not_modify_inputs() -> None:
     assert overlay == {"a": {"c": 2}}
 
 
+def test_merge_rejects_none() -> None:
+    with pytest.raises(ValueError, match=r"a\.b"):
+        merge_params({"a": {"b": 1}}, {"a": {"b": None}})
+
+
 @pytest.mark.parametrize("mode", MODES)
 def test_frames_are_prefixed(mode: str) -> None:
     params = _render(mode)
@@ -70,7 +75,10 @@ def test_frames_are_prefixed(mode: str) -> None:
     assert amcl["map_topic"] == "/map"
     assert _params(params, "local_costmap", "local_costmap")["global_frame"] == "minipock_0/odom"
     assert _params(params, "global_costmap", "global_costmap")["global_frame"] == "map"
-    assert "<robot_namespace>" not in yaml.safe_dump(params)
+    assert _params(params, "smoother_server")["robot_base_frame"] == "minipock_0/base_footprint"
+    dump = yaml.safe_dump(params)
+    for marker in ("<robot_namespace>", "<x>", "<y>", "<yaw>"):
+        assert marker not in dump
 
 
 @pytest.mark.parametrize(
@@ -197,26 +205,35 @@ _LaunchParamsLoader.add_constructor(
 )
 
 
-def _dict_parameters(node: Node, context: LaunchContext) -> dict:
-    """Return the parameters a node receives through generated parameter files."""
+def _param_files(node: Node, context: LaunchContext) -> list[dict]:
+    """Return the content of every parameter file passed to a node."""
     context.extend_locals({"ros_specific_arguments": {"name": "", "ns": ""}})
     args = [perform_substitutions(context, part) for part in node.cmd]
-    params: dict = {}
+    contents = []
     for flag, value in itertools.pairwise(args):
         if flag == "--params-file":
             loader = _LaunchParamsLoader(Path(value).read_text())
             try:
-                content = loader.get_single_data()
+                contents.append(loader.get_single_data())
             finally:
                 loader.dispose()
-            for rules in content.values():
-                params.update(rules.get("ros__parameters", {}))
+    return contents
+
+
+def _dict_parameters(node: Node, context: LaunchContext) -> dict:
+    """Return the parameters a node receives through generated parameter files."""
+    params: dict = {}
+    for content in _param_files(node, context):
+        for rules in content.values():
+            params.update(rules.get("ros__parameters", {}))
     return params
 
 
 def test_localization_actions(tmp_path: Path) -> None:
-    params_file = render_params_file("differential", "minipock_0", 0.0, 0.0, 0.0)
-    robots = [("minipock_0", params_file), ("minipock_1", params_file)]
+    robots = [
+        (namespace, render_params_file("differential", namespace, 0.0, 0.0, 0.0))
+        for namespace in ("minipock_0", "minipock_1")
+    ]
     map_yaml = str(tmp_path / "map.yaml")
     context = LaunchContext()
     nodes = _expand(localization_actions(robots, map_yaml, use_sim_time=True), context)
@@ -231,14 +248,33 @@ def test_localization_actions(tmp_path: Path) -> None:
     amcls = [node for node in nodes if node.node_executable == "amcl"]
     assert [node.node_name for node in amcls] == ["/minipock_0/amcl", "/minipock_1/amcl"]
     assert [node.expanded_node_namespace for node in amcls] == ["/minipock_0", "/minipock_1"]
-    for amcl in amcls:
+    for amcl, namespace in zip(amcls, ("minipock_0", "minipock_1"), strict=True):
         assert ("/tf", "/tf") in amcl.expanded_remapping_rules
         assert ("/tf_static", "/tf_static") in amcl.expanded_remapping_rules
+        nested = [
+            content[namespace]["amcl"]["ros__parameters"]
+            for content in _param_files(amcl, context)
+            if namespace in content
+        ]
+        assert len(nested) == 1
+        assert nested[0]["map_topic"] == "/map"
+        assert nested[0]["base_frame_id"] == f"{namespace}/base_footprint"
+        assert nested[0]["odom_frame_id"] == f"{namespace}/odom"
 
-    managers = [node for node in nodes if node.node_executable == "lifecycle_manager"]
-    assert [node.node_name for node in managers] == ["/lifecycle_manager_localization"]
-    manager_params = _dict_parameters(managers[0], context)
-    assert manager_params["node_names"] == ["map_server", "minipock_0/amcl", "minipock_1/amcl"]
-    assert manager_params["autostart"] is True
-    assert manager_params["bond_timeout"] == 0.0
+    managers = {
+        node.node_name: _dict_parameters(node, context)
+        for node in nodes
+        if node.node_executable == "lifecycle_manager"
+    }
+    assert sorted(managers) == [
+        "/lifecycle_manager_map",
+        "/minipock_0/lifecycle_manager_localization",
+        "/minipock_1/lifecycle_manager_localization",
+    ]
+    assert managers["/lifecycle_manager_map"]["node_names"] == ["map_server"]
+    assert managers["/minipock_0/lifecycle_manager_localization"]["node_names"] == ["amcl"]
+    assert managers["/minipock_1/lifecycle_manager_localization"]["node_names"] == ["amcl"]
+    for params in managers.values():
+        assert params["autostart"] is True
+        assert "bond_timeout" not in params
     assert all(_dict_parameters(node, context)["use_sim_time"] is True for node in nodes)
