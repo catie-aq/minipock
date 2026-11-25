@@ -14,7 +14,7 @@ dans le sous-module `minipock_msgs`.
 | `minipock` | Métapaquet pur (aucun fichier installé) |
 | `minipock_description` | URDF/xacro des deux cinématiques |
 | `minipock_gz` | Mondes Gazebo, lancement de la sim, ponts ROS-Gazebo |
-| `minipock_bringup` | Fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel, passé avec `config:=` à partir de la tâche 6), chargement et validation de la config, rendu des paramètres Nav2 et localisation de la flotte ; robot réel : agent micro-ROS, mise en forme odométrie et scan |
+| `minipock_bringup` | Launchs d'entrée `sim.launch.py` et `real.launch.py`, fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel), chargement et validation de la config, rendu des paramètres Nav2 et localisation de la flotte ; robot réel : agent micro-ROS, mise en forme odométrie et scan (`raw_data_transformer`) |
 | `minipock_navigation/*` | Nav2 (`minipock_navigation2`), Cartographer, téléopération |
 | `minipock_fleet_adapter` | Adaptateur Open-RMF (chantier séparé, ne pas toucher hors de ce chantier) |
 | `minipock_firmware_updater` | Mise à jour du firmware par ROS |
@@ -38,9 +38,30 @@ cibles `base`, `simulation`, `real`), publiées sur
 colcon build --symlink-install --merge-install
 ```
 
+Simulation de la flotte (monde, robots, localisation, Nav2, RViz) :
+
 ```bash
-ros2 launch minipock_gz spawn.launch.py
+ros2 launch minipock_bringup sim.launch.py [config:=<fichier>] [headless:=true] [rviz:=false]
 ```
+
+Flotte réelle (agent micro-ROS, mise en forme des données, localisation, Nav2) :
+
+```bash
+ros2 launch minipock_bringup real.launch.py [config:=<fichier>] [rviz:=true]
+```
+
+- `config:=` : chemin, ou nom d'un fichier de `minipock_bringup/config`
+  (défaut `minipocks.yaml` en sim, `minipocks_real.yaml` en réel). Le fichier
+  est lu une fois par le launch d'entrée, qui inclut pour chaque robot
+  `minipock_description/launch/description.launch.py`, puis
+  `minipock_gz/launch/robot.launch.py` (sim) ou
+  `minipock_bringup/launch/robot.launch.py` (réel), puis
+  `minipock_navigation2/launch/robot.launch.py`.
+- `use_sim_time` n'est pas dans le fichier de flotte : le launch d'entrée le
+  fixe (`true` en sim, `false` en réel) par `SetParameter` pour tous les nœuds,
+  et le passe aussi aux launchs par robot.
+- RViz : `minipock_navigation2/rviz/<rviz>.rviz`, `<rviz>` étant le champ du
+  fichier de flotte (`fleet` dans les deux fichiers livrés).
 
 Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
 
@@ -131,9 +152,17 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
 
 ## Robot réel
 
-- Le firmware publie `odom_raw` et `scan_raw` en micro-ROS (agent UDP, port
-  8888, lancé par `minipock_bringup`) ; `minipock_bringup` les remet en forme
-  vers `odom`, `scan` et le TF.
+- Le firmware publie `odom_raw` (`PoseStamped`) et `scan_raw` (`LaserScan`) en
+  micro-ROS (un seul agent UDP, port 8888, lancé par `real.launch.py`).
+  `raw_data_transformer` (`minipock_bringup/launch/robot.launch.py`, un par
+  namespace) les remet en forme : `odom` (`Odometry`, vitesse calculée dans le
+  repère du robot à partir de deux poses successives, nulle si les horodatages
+  sont égaux ou à rebours), `scan` (horodatage du firmware gardé, frame
+  remplacée par le paramètre `scan_frame_id`, défaut `<ns>/lidar_link`, car le
+  firmware envoie encore `lds_01_link`, Jira RD-711) et le seul TF
+  `<ns>/odom → <ns>/base_footprint`. `odom` et `scan` sont publiés en QoS
+  capteur (`qos_profile_sensor_data`, best effort). Le même launch lance
+  `joint_state_publisher` : le firmware ne publie pas l'état des roues.
 - Topics, frames et types échangés avec le firmware forment un contrat :
   un changement ici qui le touche demande la modification correspondante dans
   le dépôt firmware, sinon le robot réel casse sans que la CI le voie.
