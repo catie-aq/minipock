@@ -6,7 +6,7 @@ package_name = "minipock_teleop"
 
 setup(
     name=package_name,
-    version="1.0.0",
+    version="2.2.1",
     packages=find_packages(exclude=["test"]),
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
@@ -14,10 +14,10 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="sedelpeuch",
+    maintainer="Sébastien Delpeuch",
     maintainer_email="s.delpeuch@catie.fr",
     description="Teleoperation for MiniPock bot",
-    license="Apache License 2.0",
+    license="Apache-2.0",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
