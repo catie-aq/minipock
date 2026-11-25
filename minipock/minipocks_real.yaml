@@ -1,0 +1,11 @@
+namespace: minipock_
+map: "catie" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
+world: "empty_room_world" # unused on the real robots, kept for the schema
+rviz: "navigation2_rmf" # for visualization, must be stored in minipock_navigation/minipock_navigation2/rviz
+fleet:
+  "0":
+    mode: holonomic
+    position: [0.0, 0.0, 0.0] # start pose of the robot in the map
+  "1":
+    mode: differential
+    position: [0.0, 0.0, 0.0] # start pose of the robot in the map
