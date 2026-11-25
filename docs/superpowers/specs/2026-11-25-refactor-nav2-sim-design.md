@@ -22,20 +22,22 @@ Aujourd'hui chaque launch relit `minipocks.yaml` dans le dossier d'installation.
 ```
 minipock_bringup/launch/sim.launch.py   config:=<yaml> rviz:=true headless:=false
 ├── minipock_gz/launch/world.launch.py                    world, headless
+├── localisation de la flotte (minipock_bringup.localization) : map_server global, un AMCL par robot, lifecycle_manager
 └── pour chaque robot de la flotte :
     ├── minipock_description/launch/description.launch.py namespace, mode, use_sim_time
-    ├── minipock_gz/launch/robot.launch.py                namespace, mode, x, y, yaw
-    └── minipock_navigation2/launch/robot.launch.py       namespace, mode, map, x, y, yaw, use_sim_time
+    ├── minipock_gz/launch/robot.launch.py                namespace, x, y, yaw
+    └── minipock_navigation2/launch/robot.launch.py       namespace, params_file (rendu), use_sim_time
 
 minipock_bringup/launch/real.launch.py  config:=<yaml> rviz:=false
 ├── agent micro-ROS (une fois, UDP 8888)
+├── localisation de la flotte
 └── pour chaque robot :
     ├── description.launch.py (use_sim_time:=false)
     ├── minipock_bringup/launch/robot.launch.py           namespace (raw_data_transformer)
     └── minipock_navigation2/launch/robot.launch.py
 ```
 
-- Config : toute la configuration d'un usage tient dans un seul YAML, passé en argument `config:=` des launches d'entrée, qui le lisent une seule fois. `config:=` accepte un chemin ou le nom d'un fichier installé du paquet `minipock` ; on peut passer un autre fichier sans recompiler. Fichiers livrés : `minipock/minipocks.yaml` (défaut, sim en salle vide) et `minipock/minipocks_real.yaml` (réel, carte `catie`, poses de départ à renseigner). Pas de surcharge champ par champ en argument : un autre usage, c'est un autre fichier. Champs gardés : `namespace`, `world` (sim), `map`, `rviz`, `fleet.<id>.mode`, `fleet.<id>.position` (`[x, y]` ou `[x, y, yaw]` dans le repère `map`, `null` en sim pour le placement en spirale). Champs retirés : `bringup` et `use_sim_time`, que le launch d'entrée fixe selon le mode. Valeurs par défaut cohérentes pour la sim (`empty_room_world` et `empty_room_map`, au lieu de `catie` avec la salle vide aujourd'hui). Validation jsonschema complète dans `minipock_bringup.config`, avec message d'erreur lisible.
+- Config : toute la configuration d'un usage tient dans un seul YAML, passé en argument `config:=` des launches d'entrée, qui le lisent une seule fois. `config:=` accepte un chemin ou le nom d'un fichier installé de `minipock_bringup/config/` ; on peut passer un autre fichier sans recompiler. Fichiers livrés : `minipock_bringup/config/minipocks.yaml` (défaut, sim) et `minipock_bringup/config/minipocks_real.yaml` (réel, carte `catie`, poses de départ à renseigner). Le paquet `minipock` est un pur métapaquet. Pas de surcharge champ par champ en argument : un autre usage, c'est un autre fichier. Champs : `namespace`, `world` (sim), `map`, `rviz`, `fleet.<id>.mode`, `fleet.<id>.position` (`[x, y]` ou `[x, y, yaw]` dans le repère `map`, `null` en sim pour le placement en spirale), `fleet.<id>.nav2_params` (optionnel). `bringup` et `use_sim_time` ne sont plus dans le fichier : le launch d'entrée les fixe selon le mode. Validation jsonschema complète dans `minipock_bringup.config`, avec message d'erreur lisible.
 - `robot_description` vient de `Command(xacro)` dans `description.launch.py`. Le spawn Gazebo lit ce topic (`ros_gz_sim create -topic`), Gazebo convertit lui-même l'URDF : plus de `gz sdf -p`, plus d'écriture dans `install/share`, plus d'erreur avalée en réel.
 - `world.launch.py` ajoute lui-même les dossiers des paquets à `GZ_SIM_RESOURCE_PATH` : le lancement ne dépend plus du `.bashrc` de l'image ni de `--merge-install`.
 - Le bug `bool("False")` disparaît par construction : `use_sim_time` circule comme argument de launch booléen, sim à `true`, réel à `false`. Un test le vérifie.
@@ -60,7 +62,7 @@ Nav2 Jazzy se lance sous namespace via `nav2_bringup`, mais `navigation_launch.p
 - Paramétrage calé sur le robot réel (firmware `minipock_mbed-rbdc` : 2 m/s et 0,7 m/s² en linéaire, 3π rad/s et π rad/s² en angulaire, entraxe 0,328 m, roues de 0,0355 m) : aucun paramètre Nav2 ne dépasse ces limites, et la géométrie différentielle de la simulation est alignée dessus (la sim utilise aujourd'hui 0,335 m et 0,036 m). Valeurs de départ prudentes (0,5 m/s), puis réglage en simulation avec un banc de buts (ligne droite, demi-tour, but derrière, près d'un mur, latéral en holonome) mesurant succès, durée, distance aux obstacles et oscillations ; tableau avant/après consigné.
 - Surcharge par robot : champ optionnel `nav2_params` d'un robot dans le YAML de flotte (chemin ou nom d'un fichier de `minipock_navigation2/param`), sinon le fichier de sa cinématique.
 - Chaîne de vitesse de `nav2_bringup` : contrôleur → `cmd_vel_nav` → velocity smoother → `cmd_vel_smoothed` → collision monitor → `cmd_vel`. Le velocity smoother passe en boucle fermée (`CLOSED_LOOP`) puisque l'odométrie porte désormais la vitesse.
-- Un `map_server` par robot (`/minipock_<id>/map`, frame `map` commune), ce que fait `localization_launch.py`. Une seule carte chargée plusieurs fois, sans conséquence en sim.
+- Localisation : un seul `map_server` global sur `/map` (frame `map` commune), un AMCL par robot dans son namespace, un `lifecycle_manager` de localisation qui gère l'ensemble ; lancés par `minipock_bringup.localization`, et non par `localization_launch.py` de Nav2, qui imposerait une carte par robot. `navigation_launch.py` de Nav2 reste utilisé pour le reste de la pile.
 - `docking_server` fait partie des nœuds gérés par `navigation_launch.py` en Jazzy : configuration minimale pour qu'il s'active, sans dock déclaré.
 - Cartographer : `cartographer.launch.py namespace:=minipock_<id>`, fichier lua généré au lancement avec les frames du robot, topics `scan` et `odom` relatifs. Pas de slam_toolbox.
 - RViz : une config qui montre toute la flotte (arbre TF unique), lancée par `rviz:=true`.
@@ -144,8 +146,8 @@ Exécution par sous-agents, un par lot, sur la même branche et dans l'ordre (le
 
 ## Décisions
 
-- A. TF : frames préfixées sur `/tf` global (recommandé) ou TF par namespace. En attente.
-- B. Config : un YAML par usage passé en `config:=`, `minipock/minipocks.yaml` par défaut (validé le 25/11).
+- A. TF : frames préfixées sur `/tf` global (A1), avec `SetRemap('/tf', '/tf')` devant `nav2_bringup` (validé le 25/11, appliqué).
+- B. Config : un YAML par usage passé en `config:=`, `minipock_bringup/config/minipocks.yaml` par défaut (validé le 25/11, appliqué).
 - C. Doc : reste dans `minipock_documentation`, mise à jour de `latest` (validé le 25/11).
-- D. ruff à la place de black et flake8. En attente.
+- D. ruff à la place de black et flake8, standard Python CATIE (validé le 25/11, appliqué).
 - E. CI : évolution compatible de `ros_workflows` (validé le 25/11).
