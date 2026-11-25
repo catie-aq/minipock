@@ -87,6 +87,7 @@
     <plugin
       filename="gz-sim-joint-state-publisher-system"
       name="gz::sim::systems::JointStatePublisher">
+      <topic>${namespace}joint_states</topic>
     </plugin>
 
 
