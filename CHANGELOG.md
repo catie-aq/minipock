@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.2.1](https://github.com/catie-aq/minipock/releases/tag/2.2.1)
+
+Version qui fige l'état du dépôt avant le refactor de la base jusqu'à Nav2 en simulation.
+
+### Changed
+
+- Renommage de la frame du LiDAR `lds_01_link` en `lidar_link` dans l'URDF et les configurations RViz
+- Génération du modèle au bringup selon la cinématique de chaque robot (`mode` de `minipocks.yaml`)
+- Ajout dans `raw_data_transformer` d'une fusion des odométries roue et optique (`odom_optc`, filtre de Kalman `filterpy`)
+- Carte par défaut `catie` dans `minipocks.yaml`
+- Ajout de `pynput` dans l'image Docker, `jsonschema` épinglé en 4.10.3
+
+### Known issues
+
+- `filterpy` n'est pas installé dans l'image Docker : `raw_data_transformer` ne démarre pas tel quel
+- `use_sim_time` reste vrai en réel (`bool("False")` dans les launches de spawn)
+
 ## [2.2.0](https://github.com/catie-aq/minipock/releases/tag/2.2.0)
 
 ### Added
