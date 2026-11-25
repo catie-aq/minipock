@@ -29,6 +29,7 @@ def _fleet(**robot: object) -> dict:
 
 
 def test_load_default_file() -> None:
+    assert Path(default_config_path()).parent.parts[-2:] == ("minipock_bringup", "config")
     config = load_config(default_config_path())
     assert len(config.robots) == 2
     assert config.robots[0].name == "minipock_0"
@@ -75,6 +76,7 @@ def test_removed_fields_rejected(tmp_path: Path, field: str) -> None:
 def test_resolve_installed_name() -> None:
     path = resolve_config_path("minipocks_real.yaml")
     assert Path(path).exists()
+    assert "minipock_bringup" in Path(path).resolve().parts
     assert load_config(path).map == "catie"
 
 
@@ -84,8 +86,14 @@ def test_resolve_existing_path_unchanged() -> None:
 
 
 def test_resolve_unknown_name() -> None:
-    with pytest.raises(ConfigError, match=r"minipocks\.yaml"):
+    with pytest.raises(ConfigError, match=r"minipocks\.yaml") as error:
         resolve_config_path("nope.yaml")
+    assert "minipock_bringup" in str(error.value)
+
+
+def test_minipock_is_pure_metapackage() -> None:
+    cmake = (Path(__file__).parents[2] / "minipock" / "CMakeLists.txt").read_text()
+    assert ".yaml" not in cmake
 
 
 def test_spiral_for_null_positions(tmp_path: Path) -> None:

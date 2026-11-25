@@ -91,16 +91,20 @@ class FleetConfig:
     robots: tuple[Robot, ...]
 
 
+def _config_dir() -> Path:
+    return Path(get_package_share_directory("minipock_bringup")) / "config"
+
+
 def default_config_path() -> str:
-    """Return the path of the default fleet file installed by `minipock`."""
-    return str(Path(get_package_share_directory("minipock")) / "minipocks.yaml")
+    """Return the path of the default fleet file installed by `minipock_bringup`."""
+    return str(_config_dir() / "minipocks.yaml")
 
 
 def resolve_config_path(value: str) -> str:
     """Resolve a fleet file given as a path or as an installed file name.
 
     Args:
-        value: An existing file path, or a file name installed in the `minipock` share.
+        value: An existing file path, or a file name installed in `minipock_bringup`.
 
     Returns:
         The path to load.
@@ -110,12 +114,12 @@ def resolve_config_path(value: str) -> str:
     """
     if Path(value).is_file():
         return value
-    share = Path(get_package_share_directory("minipock"))
+    share = _config_dir()
     candidate = share / value
     if "/" not in value and candidate.is_file():
         return str(candidate)
     installed = ", ".join(sorted(path.name for path in share.glob("*.yaml")))
-    msg = f"Fleet file '{value}' not found. Installed files: {installed}"
+    msg = f"Fleet file '{value}' not found. Installed files in {share}: {installed}"
     raise ConfigError(msg)
 
 
