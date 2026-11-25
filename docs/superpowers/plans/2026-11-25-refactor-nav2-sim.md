@@ -22,6 +22,8 @@
 - LiDAR simulé : 132 points, 0,02 à 12 m, 10 Hz, bruit gaussien σ = 0,01 m.
 - Limites réelles du robot (firmware `minipock_mbed-rbdc/src/robot_sixtron.cpp` et `robot_sixtron.h`) : vitesse linéaire max 2,0 m/s, accélération 0,7 m/s², décélération 3,4 m/s² ; vitesse angulaire max 3π rad/s, accélération angulaire π rad/s² ; entraxe différentiel 0,328 m ; rayon de roue 0,0355 m ; holonome : roues à 0,172 m du centre. Aucun paramètre Nav2 ni de simulation ne dépasse ces limites.
 - Standard Python CATIE : ruff seul (remplace black, isort, flake8), `line-length = 99`, `target-version = "py312"`, `[tool.ruff.lint] select = ["ALL"]`, `ignore = ["T20", "S101", "D104", "COM812", "CPY001"]` (`COM812` : conflit documenté avec `ruff format` ; `CPY001` : en-tête de licence, incluse dans `ALL` depuis ruff 0.17, pas de politique d'en-tête dans le dépôt), `pydocstyle.convention = "google"`. Ignores par fichier seulement là où ROS l'impose : `INP001` pour `**/launch/*.py`, `**/setup.py`, `**/test/**` ; `PLR2004` et `D` dans `**/test/**`. Tests pytest avec couverture (`--cov`, paquet `python3-pytest-cov`). Outils lancés par `uvx` (`uvx ruff`, `uvx pre-commit`). Les paquets ROS gardent setuptools/colcon et rosdep pour les dépendances (pas de `uv` ni de `uv.lock` par paquet).
+- CLAUDE.md tenu à jour au fil de l'eau : toute tâche qui change une commande, un launch, un argument, un emplacement de fichier ou une convention met à jour `CLAUDE.md` dans le même commit (consigne de Seb du 25/11).
+- Licence : Apache-2.0 partout (identifiant SPDX `Apache-2.0`), validé par Seb le 25/11.
 - Push et merge sur `minipock` autorisés sans Seb, CI verte avant merge. Push sur `catie-aq/ros_workflows` : demander à Seb.
 
 ## Review Focus
@@ -133,9 +135,9 @@
 - Modify: tous les `package.xml` et `setup.py` sauf `minipock_fleet_adapter`, `CMakeLists.txt` des paquets ament_cmake
 
 **Interfaces:**
-- Produces: version unique pour tous les paquets du dépôt (celle de `minipock/package.xml`, 2.2.1), mainteneur `s.delpeuch@catie.fr`, licence en identifiant SPDX selon la décision de Seb (en attente : le fichier `LICENSE` est Apache-2.0, `minipock_description` et `minipock_gz` déclarent GPL-3.0-only dans `package.xml` et Apache dans `setup.py`), `setup.py` qui lisent version et licence de façon cohérente avec le `package.xml`.
+- Produces: version unique pour tous les paquets du dépôt (celle de `minipock/package.xml`, 2.2.1), mainteneur `s.delpeuch@catie.fr`, licence `Apache-2.0` partout (décision de Seb du 25/11 ; `minipock_description` et `minipock_gz` déclaraient GPL-3.0-only dans `package.xml`), `setup.py` qui lisent version et licence de façon cohérente avec le `package.xml`.
 
-- [ ] **Step 1: test qui échoue** `minipock_bringup/test/test_package_metadata.py` : pour chaque `package.xml` du dépôt hors `minipock_fleet_adapter` (lus depuis le source), même `<version>` que `minipock/package.xml`, `<license>` identique partout et identifiant SPDX valide, e-mail mainteneur `s.delpeuch@catie.fr`. Lancer, attendu : échec.
+- [ ] **Step 1: test qui échoue** `minipock_bringup/test/test_package_metadata.py` : pour chaque `package.xml` du dépôt hors `minipock_fleet_adapter` (lus depuis le source), même `<version>` que `minipock/package.xml`, `<license>` égal à `Apache-2.0` partout, `license="Apache-2.0"` dans chaque `setup.py`, e-mail mainteneur `s.delpeuch@catie.fr`. Lancer, attendu : échec.
 - [ ] **Step 2:** aligner les métadonnées ; ajouter `ament_lint_auto` avec `ament_xmllint` en `test_depend` des paquets ament_cmake.
 - [ ] **Step 3:** tests au vert, `colcon test` des paquets ament_cmake vert (xmllint).
 - [ ] **Step 4:** commit `chore: align package metadata across the repository`.
@@ -273,16 +275,45 @@
 - [ ] **Step 4:** dans `minipock`, `ros2-build-test.yaml` avec deux jobs appelant `ros_workflows/.github/workflows/ros2.yml@<branche ou main>` : `unit` (`distributions: '["jazzy"]'`, `rosdep-install: true`, `run-tests: true`, `packages: "minipock minipock_bringup minipock_description minipock_gz minipock_navigation2 minipock_cartographer"`, `pytest-args: '-m "not integration"'`) et `integration` (`docker-image: osrf/ros:jazzy-desktop-full`, même paquets, `pytest-args: '-m integration'`, `timeout-minutes: 45`, variable `LIBGL_ALWAYS_SOFTWARE=1` via l'environnement du job si l'action le permet, sinon entrée `env` supplémentaire dans `ros2.yml`).
 - [ ] **Step 5:** commit `ci: run unit and simulation tests through ros_workflows`.
 
-### Task 9: Doc et CLAUDE.md
+### Task 9: Doc utilisateur complète et CLAUDE.md
 
 **Files:**
-- Modify: `CLAUDE.md`, `CHANGELOG.md` (section `Unreleased`)
-- Dans `~/CATIE/RD/minipock/minipock_documentation` (branche `docs/refactor-nav2-sim`) : `latest/3-Démarrage-rapide.md`, `latest/4-Bringup.md`, `latest/5-Simulation.md`, `latest/6-Navigation.md` (dont les paramètres Nav2, leur surcharge par robot avec `nav2_params`, et le tableau de réglage de la tâche 7b), `latest/7-SLAM.md`, nouvelle page `latest/` multi-robot (reprise de `2.1.0/10-Multiple-robots.md`, numérotation à décaler), image du schéma d'archi dans `img/`
+- Modify: `CLAUDE.md` (relecture finale, il a été tenu à jour par chaque tâche), `CHANGELOG.md` (section `Unreleased`)
+- Dans `~/CATIE/RD/minipock/minipock_documentation`, dossier `latest/` seulement (les dossiers de version publiés ne bougent pas ; la 2.2.1 est figée) : toutes les pages existantes réécrites ou complétées, structure et numérotation gardées, plus une page « Conventions ROS » et la page multi-robot de la 2.1.0 reprise et mise à jour (numérotation décalée en conséquence) ; images dans `img/`.
 
-- [ ] **Step 1:** CLAUDE.md : commandes (`sim.launch.py`, `real.launch.py`, `config:=`), tests (unitaires et `-m integration`), image `minipock:dev-simulation`, `--merge-install` plus obligatoire, liste des paquets à jour.
-- [ ] **Step 2:** schéma d'archi global (skill `stack-diagram`, PNG) : PC hôte (launches d'entrée, nœuds par robot, Nav2, Gazebo ou agent micro-ROS), robot (firmware), arbre TF multi-robot.
-- [ ] **Step 3:** pages `latest` réécrites pour les nouveaux launches, en français, passées au skill `humanizer`, `uvx pre-commit run --files` sur les fichiers touchés.
-- [ ] **Step 4:** commits `docs: update CLAUDE.md and changelog for the new launches` (minipock) et `docs: document the refactored launches in latest` (doc, poussé sur `main` du dépôt de doc, modification autorisée).
+Constat de départ (Seb, 25/11) : la structure est bonne, le contenu manque (4 850 mots en tout, `10-Mécanique.md` vide, `1-Vue-d'ensemble.md` à 131 mots).
+
+- [ ] **Step 1:** inventaire page par page de `latest/` : ce qui est faux après le refactor, ce qui manque. Écrit dans le rapport de tâche avant toute rédaction.
+- [ ] **Step 2:** schéma d'archi global (skill `stack-diagram`, PNG) : PC hôte (launch d'entrée, nœuds par robot, Nav2, localisation partagée, Gazebo ou agent micro-ROS), robot (firmware), arbre TF multi-robot.
+- [ ] **Step 3:** rédaction en français, dans le format Docusaurus existant (front matter, `DocCardList`), chaque commande vérifiée dans l'image `minipock:dev-simulation` avant d'être écrite :
+  - Vue d'ensemble : ce qu'est MiniPock, les deux cinématiques, l'architecture (schéma), les dépôts.
+  - Installation : image Docker, build colcon, devcontainer.
+  - Démarrage rapide : sim deux robots en trois commandes, envoi d'un but.
+  - Bringup : `real.launch.py`, agent micro-ROS, YAML réel, poses de départ.
+  - Simulation : `sim.launch.py`, mondes, sans écran, ajout d'un robot.
+  - Navigation : architecture Nav2 par robot, carte partagée, paramètres (commun, surcouches, `nav2_params` par robot), limites du robot réel, tableau de réglage de la tâche 7b, envoi de buts.
+  - SLAM : Cartographer par robot, sauvegarde de carte.
+  - Multi-robot : namespaces, YAML de flotte, carte unique, TF.
+  - Conventions ROS (nouvelle page) : namespaces, frames REP-105 et arbre TF, topics et types, QoS, `use_sim_time`, YAML de flotte (schéma champ par champ), launches et leurs arguments, contrat avec le firmware.
+  - Système embarqué, Endpoints, Mise à jour, Logiciel de mission : relus et corrigés là où le refactor les touche ; Mécanique : contenu minimal (dimensions, entraxe, rayon de roue, limites, lien Dropbox), à partir des valeurs du firmware.
+  - Changelog dans `index.md` : entrée de la prochaine version.
+- [ ] **Step 4:** passage au skill `humanizer`, `uvx pre-commit run --files` sur les fichiers touchés (corriger aussi les erreurs markdownlint préexistantes de `latest/`).
+- [ ] **Step 5:** commits `docs: update CLAUDE.md and changelog` (minipock) et `docs: rewrite latest documentation for the refactored stack` (doc, poussé sur `main` du dépôt de doc, modification autorisée par Seb).
+
+### Task 9b: Skills de projet pour les gestes répétitifs
+
+**Files:**
+- Create: `scripts/docker-run.sh` (remplace `~/CATIE/RD/minipock/ws/run.sh`, hors dépôt aujourd'hui : workspace configurable par variable, image par défaut `ghcr.io/catie-aq/minipock:<version>-simulation`, `minipock:dev-simulation` en local), `.claude/skills/minipock-test/SKILL.md`, `.claude/skills/minipock-sim/SKILL.md`, `.claude/skills/minipock-release/SKILL.md`
+- Modify: `CLAUDE.md` (section qui liste les skills)
+
+**Interfaces:**
+- `minipock-test` : build et tests dans le conteneur (unitaires, ou `-m integration`), lecture des résultats `colcon test-result`, pièges connus (liens symboliques obsolètes après suppression de launch, `--merge-install`).
+- `minipock-sim` : lancer la sim sans écran (N robots, YAML au choix), sonder topics, TF et Nav2, envoyer un but, arrêter proprement le groupe de processus.
+- `minipock-release` : figer une version (bump de `minipock/package.xml` et des autres paquets, CHANGELOG, PR rebase, tag posé par `ros-tag`, dossier de version et tag dans `minipock_documentation`), comme fait pour la 2.2.1.
+
+- [ ] **Step 1:** écrire les skills avec le skill `skill-creator` (description qui déclenche, étapes, commandes exactes, pièges) ; chaque commande citée est exécutée une fois pour vérification.
+- [ ] **Step 2:** `CLAUDE.md` liste les skills et quand les utiliser.
+- [ ] **Step 3:** commit `docs: add project skills for tests, simulation and releases`.
 
 ## Après les tâches
 
