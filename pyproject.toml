@@ -12,7 +12,8 @@ ignore = ["T20", "S101", "D104", "COM812", "CPY001"]
 [tool.ruff.lint.per-file-ignores]
 "**/launch/*.py" = ["INP001"]
 "**/setup.py" = ["INP001"]
-"**/test/**" = ["INP001", "PLR2004", "D"]
+# SLF001: launch_ros actions expose no public accessor before execution.
+"**/test/**" = ["INP001", "PLR2004", "D", "SLF001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

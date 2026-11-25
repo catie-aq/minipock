@@ -14,95 +14,91 @@
 #
 # Author: Darby Lim
 
-"""Launch file for Cartographer SLAM."""
+"""Map with Cartographer from the LiDAR and odometry of one robot."""
 
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+import tempfile
+from pathlib import Path
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchContext, LaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node, PushROSNamespace, SetRemap
+from launch_ros.parameter_descriptions import ParameterValue
 
-from minipock_description import config
+NAMESPACE_MARKER = "__NS__"
+LUA_BASENAME = "minipock_2d.lua"
+
+
+def _render(source: Path, namespace: str, directory: Path) -> Path:
+    """Write `source` into `directory` with the namespace marker replaced."""
+    target = directory / source.name
+    target.write_text(source.read_text().replace(NAMESPACE_MARKER, namespace))
+    return target
+
+
+def _cartographer(context: LaunchContext) -> list[GroupAction]:
+    """Return the Cartographer nodes of the robot named by the `namespace` argument."""
+    share = Path(get_package_share_directory("minipock_cartographer"))
+    namespace = LaunchConfiguration("namespace").perform(context)
+    directory = Path(tempfile.mkdtemp(prefix=f"cartographer_{namespace}_"))
+    lua = _render(share / "config" / LUA_BASENAME, namespace, directory)
+    rviz = _render(share / "rviz" / "cartographer.rviz", namespace, directory)
+    use_sim_time = ParameterValue(LaunchConfiguration("use_sim_time"), value_type=bool)
+    return [
+        GroupAction(
+            [
+                PushROSNamespace(namespace),
+                SetRemap("/tf", "/tf"),
+                SetRemap("/tf_static", "/tf_static"),
+                Node(
+                    package="cartographer_ros",
+                    executable="cartographer_node",
+                    output="screen",
+                    parameters=[{"use_sim_time": use_sim_time}],
+                    arguments=[
+                        "-configuration_directory",
+                        str(directory),
+                        "-configuration_basename",
+                        lua.name,
+                    ],
+                ),
+                Node(
+                    package="cartographer_ros",
+                    executable="cartographer_occupancy_grid_node",
+                    output="screen",
+                    parameters=[{"use_sim_time": use_sim_time}],
+                    arguments=["-resolution", LaunchConfiguration("resolution")],
+                ),
+                Node(
+                    package="rviz2",
+                    executable="rviz2",
+                    arguments=["-d", str(rviz)],
+                    output="screen",
+                    parameters=[{"use_sim_time": use_sim_time}],
+                    condition=IfCondition(LaunchConfiguration("start_rviz")),
+                ),
+            ],
+            scoped=True,
+        )
+    ]
 
 
 def generate_launch_description() -> LaunchDescription:
-    """Launch Cartographer SLAM, its occupancy grid, RViz and the relays."""
-    start_rviz = LaunchConfiguration("start_rviz")
-    config_dict = config.config()
-    use_sim_time = config_dict["use_sim_time"]
+    """Generate the launch description of Cartographer SLAM for one robot.
 
-    cartographer_config_dir = PathJoinSubstitution(
-        [
-            FindPackageShare("minipock_cartographer"),
-            "config",
-        ]
-    )
-    configuration_basename = LaunchConfiguration("configuration_basename")
-
-    resolution = LaunchConfiguration("resolution")
-
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("minipock_cartographer"), "rviz", "cartographer.rviz"]
-    )
-
+    Returns:
+        The launch description. Arguments: `namespace` (without trailing slash),
+        `use_sim_time`, `resolution` (occupancy grid cell size, in meters) and `start_rviz`.
+        The map is published on `/<namespace>/map`, in the `map` frame.
+    """
     return LaunchDescription(
         [
-            DeclareLaunchArgument(
-                "start_rviz", default_value="true", description="Whether execute rviz2"
-            ),
-            DeclareLaunchArgument(
-                "cartographer_config_dir",
-                default_value=cartographer_config_dir,
-                description="Full direction of config file",
-            ),
-            DeclareLaunchArgument(
-                "configuration_basename",
-                default_value="minipock_2d.lua",
-                description="Name of lua file for cartographer",
-            ),
-            DeclareLaunchArgument(
-                "resolution",
-                default_value="0.05",
-                description="Resolution of a grid cell of occupancy grid",
-            ),
-            Node(
-                package="cartographer_ros",
-                executable="cartographer_node",
-                output="screen",
-                parameters=[{"use_sim_time": use_sim_time}],
-                arguments=[
-                    "-configuration_directory",
-                    cartographer_config_dir,
-                    "-configuration_basename",
-                    configuration_basename,
-                ],
-            ),
-            Node(
-                package="cartographer_ros",
-                executable="cartographer_occupancy_grid_node",
-                output="screen",
-                parameters=[{"use_sim_time": use_sim_time}],
-                arguments=["-resolution", resolution],
-            ),
-            Node(
-                package="rviz2",
-                executable="rviz2",
-                arguments=["-d", rviz_config_file],
-                output="screen",
-                condition=IfCondition(start_rviz),
-            ),
-            Node(
-                package="topic_tools",
-                executable="relay",
-                name="odom_relay",
-                arguments=["minipock_0/odom", "odom"],
-            ),
-            Node(
-                package="topic_tools",
-                executable="relay",
-                name="scan_relay",
-                arguments=["minipock_0/scan", "scan"],
-            ),
+            DeclareLaunchArgument("namespace", default_value="minipock_0"),
+            DeclareLaunchArgument("use_sim_time", default_value="false"),
+            DeclareLaunchArgument("resolution", default_value="0.05"),
+            DeclareLaunchArgument("start_rviz", default_value="true"),
+            OpaqueFunction(function=_cartographer),
         ]
     )

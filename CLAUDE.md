@@ -14,7 +14,7 @@ dans le sous-module `minipock_msgs`.
 | `minipock` | Métapaquet pur (aucun fichier installé) |
 | `minipock_description` | URDF/xacro des deux cinématiques |
 | `minipock_gz` | Mondes Gazebo, lancement de la sim, ponts ROS-Gazebo |
-| `minipock_bringup` | Fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel, passé avec `config:=` à partir de la tâche 6), chargement et validation de la config ; robot réel : agent micro-ROS, mise en forme odométrie et scan |
+| `minipock_bringup` | Fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel, passé avec `config:=` à partir de la tâche 6), chargement et validation de la config, rendu des paramètres Nav2 et localisation de la flotte ; robot réel : agent micro-ROS, mise en forme odométrie et scan |
 | `minipock_navigation/*` | Nav2 (`minipock_navigation2`), Cartographer, téléopération |
 | `minipock_fleet_adapter` | Adaptateur Open-RMF (chantier séparé, ne pas toucher hors de ce chantier) |
 | `minipock_firmware_updater` | Mise à jour du firmware par ROS |
@@ -42,8 +42,16 @@ colcon build --symlink-install --merge-install
 ros2 launch minipock_gz spawn.launch.py
 ```
 
+Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
+
 ```bash
-ros2 launch minipock_navigation2 navigation2.launch.py
+ros2 launch minipock_navigation2 robot.launch.py namespace:=minipock_0 params_file:=<fichier rendu>
+```
+
+Cartographer pour un robot (carte sur `/minipock_0/map`) :
+
+```bash
+ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0
 ```
 
 ## Conventions ROS
@@ -58,6 +66,41 @@ ros2 launch minipock_navigation2 navigation2.launch.py
 - Topics relatifs au namespace : `cmd_vel`, `odom`, `scan`, `joint_states`.
 - Sim et réel exposent les mêmes topics et frames : un nœud ne doit pas savoir
   s'il tourne en simulation, hors `use_sim_time`.
+
+## Navigation
+
+- Une seule carte pour la flotte : un `map_server` global publie `/map` (frame
+  `map`) ; chaque robot a son AMCL (`/<ns>/amcl`, `map_topic: /map`) ; un seul
+  `lifecycle_manager_localization` gère `map_server` et tous les AMCL. Ces
+  actions viennent de `minipock_bringup.localization.localization_actions`.
+  Ce gestionnaire tourne sans bond (`bond_timeout: 0.0`) : un serveur crée son
+  bond dans son namespace sous son nom court (`amcl`), le gestionnaire l'attend
+  sur `/bond` sous `minipock_0/amcl`, ils ne se trouvent jamais.
+- Le reste de Nav2 vient de `nav2_bringup/launch/navigation_launch.py`, inclus
+  par `minipock_navigation2/launch/robot.launch.py` sous le namespace du robot.
+  `SetRemap('/tf', '/tf')` et `SetRemap('/tf_static', '/tf_static')` avant
+  l'include annulent ses remaps vers `tf` : tout reste sur le `/tf` global.
+  Même chose pour AMCL et Cartographer.
+- Paramètres Nav2 en couches, fusionnés au lancement par
+  `minipock_bringup.nav2_params.render_params_file` :
+  `minipock_navigation2/param/common.yaml`, puis la surcouche de la cinématique
+  (`differential.yaml` ou `holonomic.yaml`), puis le champ optionnel
+  `nav2_params` du robot dans le fichier de flotte (chemin, ou nom d'un fichier
+  de `minipock_navigation2/param`). Les dictionnaires sont fusionnés, une liste
+  de la surcouche remplace celle du dessous. Marqueurs remplacés :
+  `<robot_namespace>`, `<x>`, `<y>`, `<yaw>` (pose initiale AMCL).
+- Clés racine sans namespace (`amcl:`, `controller_server:`…) : le launch les
+  range sous le namespace du robot. Topics relatifs (`scan`, `odom`), sauf ceux
+  des costmaps, absolus (`/<robot_namespace>/scan`), et la carte `/map`.
+- Aucune vitesse ni accélération de Nav2 ne dépasse les limites du firmware
+  (2 m/s, 0,7 m/s², décélération 3,4 m/s², 3π rad/s, π rad/s²) ; les tests de
+  `minipock_bringup` le vérifient. MPPI, velocity smoother et behavior server
+  partagent les mêmes limites.
+- `docking_server` (géré par `navigation_launch.py`) a un plugin
+  `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
+- Cartographer : `cartographer.launch.py namespace:=<ns>` génère le lua (et la
+  config RViz) avec le namespace à la place de `__NS__` ; il ne publie que
+  `map → <ns>/odom`.
 
 ## Robot réel
 

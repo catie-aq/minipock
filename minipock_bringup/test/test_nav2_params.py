@@ -1,0 +1,244 @@
+"""Tests for the Nav2 parameter rendering and the shared localization actions."""
+
+import itertools
+import math
+from collections.abc import Iterable
+from pathlib import Path
+
+import pytest
+import yaml
+from launch import LaunchContext, LaunchDescriptionEntity
+from launch.utilities import perform_substitutions
+from launch_ros.actions import Node
+
+from minipock_bringup.localization import localization_actions
+from minipock_bringup.nav2_params import merge_params, render_params_file
+
+MODES = ("differential", "holonomic")
+
+# Real robot limits, from the firmware (minipock_mbed-rbdc).
+MAX_LINEAR_VELOCITY = 2.0
+MAX_LINEAR_ACCEL = 0.7
+MAX_LINEAR_DECEL = 3.4
+MAX_ANGULAR_VELOCITY = 3 * math.pi
+MAX_ANGULAR_ACCEL = math.pi
+
+
+def _render(mode: str, override: str = "", **pose: float) -> dict:
+    """Render the parameters of `minipock_0` and read them back as a dictionary."""
+    position = {"x": 1.5, "y": -2.0, "yaw": 0.5} | pose
+    path = render_params_file(mode, "minipock_0", override=override, **position)
+    return yaml.safe_load(Path(path).read_text())
+
+
+def _params(params: dict, *keys: str) -> dict:
+    """Return the `ros__parameters` of the node at `keys`."""
+    node = params
+    for key in keys:
+        node = node[key]
+    return node["ros__parameters"]
+
+
+def test_merge_overlay_wins() -> None:
+    assert merge_params({"a": {"b": 1, "c": 2}}, {"a": {"b": 3}}) == {"a": {"b": 3, "c": 2}}
+
+
+def test_merge_keeps_common_keys() -> None:
+    merged = merge_params({"a": 1, "b": {"c": 2}}, {"d": 4})
+    assert merged == {"a": 1, "b": {"c": 2}, "d": 4}
+
+
+def test_merge_replaces_lists() -> None:
+    merged = merge_params({"a": {"l": [1, 2, 3]}}, {"a": {"l": [4]}})
+    assert merged == {"a": {"l": [4]}}
+
+
+def test_merge_does_not_modify_inputs() -> None:
+    base = {"a": {"b": 1}}
+    overlay = {"a": {"c": 2}}
+    merge_params(base, overlay)
+    assert base == {"a": {"b": 1}}
+    assert overlay == {"a": {"c": 2}}
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_frames_are_prefixed(mode: str) -> None:
+    params = _render(mode)
+    amcl = _params(params, "amcl")
+    assert amcl["base_frame_id"] == "minipock_0/base_footprint"
+    assert amcl["odom_frame_id"] == "minipock_0/odom"
+    assert amcl["map_topic"] == "/map"
+    assert _params(params, "local_costmap", "local_costmap")["global_frame"] == "minipock_0/odom"
+    assert _params(params, "global_costmap", "global_costmap")["global_frame"] == "map"
+    assert "<robot_namespace>" not in yaml.safe_dump(params)
+
+
+@pytest.mark.parametrize(
+    ("mode", "amcl_model", "mppi_model"),
+    [
+        ("differential", "nav2_amcl::DifferentialMotionModel", "DiffDrive"),
+        ("holonomic", "nav2_amcl::OmniMotionModel", "Omni"),
+    ],
+)
+def test_motion_models(mode: str, amcl_model: str, mppi_model: str) -> None:
+    params = _render(mode)
+    assert _params(params, "amcl")["robot_model_type"] == amcl_model
+    assert _params(params, "controller_server")["FollowPath"]["motion_model"] == mppi_model
+
+
+def test_holonomic_allows_lateral_velocity() -> None:
+    holonomic = _render("holonomic")
+    smoother = _params(holonomic, "velocity_smoother")
+    controller = _params(holonomic, "controller_server")
+    assert smoother["max_velocity"][1] > 0
+    assert smoother["max_accel"][1] > 0
+    assert controller["FollowPath"]["vy_max"] > 0
+    assert controller["min_y_velocity_threshold"] < controller["FollowPath"]["vy_max"]
+
+    differential = _render("differential")
+    smoother = _params(differential, "velocity_smoother")
+    assert smoother["max_velocity"][1] == 0
+    assert _params(differential, "controller_server")["FollowPath"]["vy_max"] == 0
+
+
+def test_initial_pose_rendered() -> None:
+    amcl = _params(_render("differential", x=3.25, y=-1.5, yaw=1.2), "amcl")
+    assert amcl["set_initial_pose"] is True
+    assert amcl["initial_pose"]["x"] == pytest.approx(3.25)
+    assert amcl["initial_pose"]["y"] == pytest.approx(-1.5)
+    assert amcl["initial_pose"]["yaw"] == pytest.approx(1.2)
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_limits_within_robot_capabilities(mode: str) -> None:
+    params = _render(mode)
+    smoother = _params(params, "velocity_smoother")
+    linear_max = [*smoother["max_velocity"][:2], *(-v for v in smoother["min_velocity"][:2])]
+    assert all(v <= MAX_LINEAR_VELOCITY for v in linear_max)
+    assert abs(smoother["max_velocity"][2]) <= MAX_ANGULAR_VELOCITY
+    assert abs(smoother["min_velocity"][2]) <= MAX_ANGULAR_VELOCITY
+    assert all(a <= MAX_LINEAR_ACCEL for a in smoother["max_accel"][:2])
+    assert smoother["max_accel"][2] <= MAX_ANGULAR_ACCEL
+    assert all(-d <= MAX_LINEAR_DECEL for d in smoother["max_decel"][:2])
+    assert -smoother["max_decel"][2] <= MAX_ANGULAR_ACCEL
+
+    mppi = _params(params, "controller_server")["FollowPath"]
+    assert mppi["vx_max"] <= MAX_LINEAR_VELOCITY
+    assert -mppi["vx_min"] <= MAX_LINEAR_VELOCITY
+    assert mppi["vy_max"] <= MAX_LINEAR_VELOCITY
+    assert mppi["wz_max"] <= MAX_ANGULAR_VELOCITY
+    assert mppi["ax_max"] <= MAX_LINEAR_ACCEL
+    assert mppi["ay_max"] <= MAX_LINEAR_ACCEL
+    assert -mppi["ax_min"] <= MAX_LINEAR_DECEL
+    assert -mppi["ay_min"] <= MAX_LINEAR_DECEL
+    assert mppi["az_max"] <= MAX_ANGULAR_ACCEL
+
+    behavior = _params(params, "behavior_server")
+    assert behavior["max_rotational_vel"] <= MAX_ANGULAR_VELOCITY
+    assert behavior["rotational_acc_lim"] <= MAX_ANGULAR_ACCEL
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_controller_and_smoother_agree(mode: str) -> None:
+    params = _render(mode)
+    mppi = _params(params, "controller_server")["FollowPath"]
+    smoother = _params(params, "velocity_smoother")
+    assert [mppi["vx_max"], mppi["vy_max"], mppi["wz_max"]] == smoother["max_velocity"]
+    assert mppi["vx_min"] == smoother["min_velocity"][0]
+    assert mppi["wz_max"] == _params(params, "behavior_server")["max_rotational_vel"]
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_override_applied(mode: str, tmp_path: Path) -> None:
+    override = tmp_path / "slow.yaml"
+    override.write_text(
+        yaml.safe_dump({"controller_server": {"ros__parameters": {"FollowPath": {"vx_max": 0.3}}}})
+    )
+    params = _render(mode, override=str(override))
+    mppi = _params(params, "controller_server")["FollowPath"]
+    assert mppi["vx_max"] == pytest.approx(0.3)
+    assert "motion_model" in mppi
+
+
+def test_override_by_installed_name() -> None:
+    params = _render("differential", override="holonomic.yaml")
+    assert _params(params, "amcl")["robot_model_type"] == "nav2_amcl::OmniMotionModel"
+
+
+def test_override_unknown_rejected() -> None:
+    with pytest.raises(ValueError, match=r"does_not_exist\.yaml"):
+        _render("differential", override="does_not_exist.yaml")
+
+
+def test_unknown_mode_rejected() -> None:
+    with pytest.raises(ValueError, match="ackermann"):
+        _render("ackermann")
+
+
+def _expand(entities: Iterable[LaunchDescriptionEntity], context: LaunchContext) -> list[Node]:
+    """Visit launch entities like `ros2 launch` would, without starting any process."""
+    nodes = []
+    for entity in entities:
+        if isinstance(entity, Node):
+            entity._perform_substitutions(context)
+            nodes.append(entity)
+        else:
+            nodes.extend(_expand(entity.visit(context) or [], context))
+    return nodes
+
+
+class _LaunchParamsLoader(yaml.SafeLoader):
+    """Safe loader that also reads the tuples launch_ros writes in parameter files."""
+
+
+_LaunchParamsLoader.add_constructor(
+    "tag:yaml.org,2002:python/tuple",
+    lambda loader, node: loader.construct_sequence(node),
+)
+
+
+def _dict_parameters(node: Node, context: LaunchContext) -> dict:
+    """Return the parameters a node receives through generated parameter files."""
+    context.extend_locals({"ros_specific_arguments": {"name": "", "ns": ""}})
+    args = [perform_substitutions(context, part) for part in node.cmd]
+    params: dict = {}
+    for flag, value in itertools.pairwise(args):
+        if flag == "--params-file":
+            loader = _LaunchParamsLoader(Path(value).read_text())
+            try:
+                content = loader.get_single_data()
+            finally:
+                loader.dispose()
+            for rules in content.values():
+                params.update(rules.get("ros__parameters", {}))
+    return params
+
+
+def test_localization_actions(tmp_path: Path) -> None:
+    params_file = render_params_file("differential", "minipock_0", 0.0, 0.0, 0.0)
+    robots = [("minipock_0", params_file), ("minipock_1", params_file)]
+    map_yaml = str(tmp_path / "map.yaml")
+    context = LaunchContext()
+    nodes = _expand(localization_actions(robots, map_yaml, use_sim_time=True), context)
+
+    map_servers = [node for node in nodes if node.node_executable == "map_server"]
+    assert [node.node_name for node in map_servers] == ["/map_server"]
+    map_params = _dict_parameters(map_servers[0], context)
+    assert map_params["yaml_filename"] == map_yaml
+    assert map_params["topic_name"] == "/map"
+    assert map_params["frame_id"] == "map"
+
+    amcls = [node for node in nodes if node.node_executable == "amcl"]
+    assert [node.node_name for node in amcls] == ["/minipock_0/amcl", "/minipock_1/amcl"]
+    assert [node.expanded_node_namespace for node in amcls] == ["/minipock_0", "/minipock_1"]
+    for amcl in amcls:
+        assert ("/tf", "/tf") in amcl.expanded_remapping_rules
+        assert ("/tf_static", "/tf_static") in amcl.expanded_remapping_rules
+
+    managers = [node for node in nodes if node.node_executable == "lifecycle_manager"]
+    assert [node.node_name for node in managers] == ["/lifecycle_manager_localization"]
+    manager_params = _dict_parameters(managers[0], context)
+    assert manager_params["node_names"] == ["map_server", "minipock_0/amcl", "minipock_1/amcl"]
+    assert manager_params["autostart"] is True
+    assert manager_params["bond_timeout"] == 0.0
+    assert all(_dict_parameters(node, context)["use_sim_time"] is True for node in nodes)
