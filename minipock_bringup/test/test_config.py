@@ -110,3 +110,13 @@ def test_spiral_avoids_explicit_positions(tmp_path: Path) -> None:
     config = load_config(_write(tmp_path, fleet=fleet))
     first, second = config.robots
     assert math.hypot(second.x - first.x, second.y - first.y) >= 0.5
+
+
+def test_unquoted_fleet_key_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "fleet.yaml"
+    path.write_text(
+        "namespace: minipock_\nmap: m\nworld: w\nrviz: r\n"
+        "fleet:\n  0:\n    mode: differential\n    position: null\n"
+    )
+    with pytest.raises(ConfigError, match=r"quote"):
+        load_config(str(path))

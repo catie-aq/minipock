@@ -149,6 +149,12 @@ def _validate(data: object) -> None:
     if removed:
         msg = f"Field(s) {', '.join(removed)} are removed: they are set by the entry launch"
         raise ConfigError(msg)
+    fleet = data.get("fleet")
+    if isinstance(fleet, dict):
+        for key in fleet:
+            if not isinstance(key, str):
+                msg = f'Fleet id {key!r} is not a string: quote it in the YAML (e.g. "{key}":)'
+                raise ConfigError(msg)
     validator = jsonschema.Draft202012Validator(_SCHEMA)
     errors = sorted(validator.iter_errors(data), key=lambda error: list(error.path))
     if errors:
