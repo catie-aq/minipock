@@ -11,10 +11,10 @@ dans le sous-module `minipock_msgs`.
 
 | Paquet | Rôle |
 |--------|------|
-| `minipock` | Métapaquet, fichier de flotte `minipocks.yaml` |
-| `minipock_description` | URDF/xacro des deux cinématiques, lecture et validation de la config |
+| `minipock` | Métapaquet pur (aucun fichier installé) |
+| `minipock_description` | URDF/xacro des deux cinématiques |
 | `minipock_gz` | Mondes Gazebo, lancement de la sim, ponts ROS-Gazebo |
-| `minipock_bringup` | Robot réel : agent micro-ROS, mise en forme odométrie et scan |
+| `minipock_bringup` | Fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel, passé avec `config:=` à partir de la tâche 6), chargement et validation de la config ; robot réel : agent micro-ROS, mise en forme odométrie et scan |
 | `minipock_navigation/*` | Nav2 (`minipock_navigation2`), Cartographer, téléopération |
 | `minipock_fleet_adapter` | Adaptateur Open-RMF (chantier séparé, ne pas toucher hors de ce chantier) |
 | `minipock_firmware_updater` | Mise à jour du firmware par ROS |
