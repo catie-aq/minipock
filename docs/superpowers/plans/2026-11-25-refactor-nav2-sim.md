@@ -20,6 +20,7 @@
 - Sans écran ni GPU : `DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1"`, `gz sim -s --headless-rendering`.
 - Namespace par robot `<namespace><id>` (défaut `minipock_<id>`) ; frames `<ns>/odom`, `<ns>/base_footprint`, `<ns>/base_link`, `<ns>/lidar_link` ; frame `map` commune ; topics relatifs `cmd_vel`, `odom`, `scan`, `joint_states`, `robot_description`.
 - LiDAR simulé : 132 points, 0,02 à 12 m, 10 Hz, bruit gaussien σ = 0,01 m.
+- Limites réelles du robot (firmware `minipock_mbed-rbdc/src/robot_sixtron.cpp` et `robot_sixtron.h`) : vitesse linéaire max 2,0 m/s, accélération 0,7 m/s², décélération 3,4 m/s² ; vitesse angulaire max 3π rad/s, accélération angulaire π rad/s² ; entraxe différentiel 0,328 m ; rayon de roue 0,0355 m ; holonome : roues à 0,172 m du centre. Aucun paramètre Nav2 ni de simulation ne dépasse ces limites.
 - Standard Python CATIE : ruff seul (remplace black, isort, flake8), `line-length = 99`, `target-version = "py312"`, `[tool.ruff.lint] select = ["ALL"]`, `ignore = ["T20", "S101", "D104", "COM812"]` (`COM812` : conflit documenté avec `ruff format`), `pydocstyle.convention = "google"`. Ignores par fichier seulement là où ROS l'impose : `INP001` pour `**/launch/*.py`, `**/setup.py`, `**/test/**` ; `PLR2004` et `D` dans `**/test/**`. Tests pytest avec couverture (`--cov`, paquet `python3-pytest-cov`). Outils lancés par `uvx` (`uvx ruff`, `uvx pre-commit`). Les paquets ROS gardent setuptools/colcon et rosdep pour les dépendances (pas de `uv` ni de `uv.lock` par paquet).
 - Push et merge sur `minipock` autorisés sans Seb, CI verte avant merge. Push sur `catie-aq/ros_workflows` : demander à Seb.
 
@@ -63,7 +64,7 @@
 **Interfaces:**
 - Produces (dans `minipock_bringup.config`) :
   - `class ConfigError(ValueError)`
-  - `@dataclass(frozen=True) class Robot: name: str; mode: str; x: float; y: float; yaw: float` (`name` = `<namespace><id>`, `mode` ∈ `{"differential", "holonomic"}`)
+  - `@dataclass(frozen=True) class Robot: name: str; mode: str; x: float; y: float; yaw: float; nav2_params: str` (`name` = `<namespace><id>`, `mode` ∈ `{"differential", "holonomic"}`, `nav2_params` = champ optionnel `fleet.<id>.nav2_params` du YAML, chaîne vide si absent : chemin ou nom de fichier de `minipock_navigation2/param`, résolu par la tâche 5)
   - `@dataclass(frozen=True) class FleetConfig: namespace: str; world: str; map: str; rviz: str; robots: tuple[Robot, ...]`
   - `def load_config(path: str) -> FleetConfig`
   - `def resolve_config_path(value: str) -> str` : chemin existant → tel quel ; sinon nom de fichier cherché dans le share de `minipock` (`minipocks.yaml`, `minipocks_real.yaml`) ; sinon `ConfigError` qui liste les fichiers installés
@@ -78,6 +79,7 @@
   - `test_resolve_installed_name` : `resolve_config_path("minipocks_real.yaml")` → chemin existant ; `load_config` dessus → `map == "catie"`.
   - `test_resolve_unknown_name` : `resolve_config_path("nope.yaml")` → `ConfigError` qui cite `minipocks.yaml`.
   - `test_spiral_for_null_positions` : 3 robots `position: null` → positions distinctes, premier à `(0, 0)`.
+  - `test_nav2_params_optional` : sans le champ → `nav2_params == ""` ; `nav2_params: holonomic_slow.yaml` → valeur gardée telle quelle.
   - `test_spiral_avoids_explicit_positions` : un robot explicite en `(0, 0)` et un `null` → le second n'est pas à moins de 0,5 m du premier.
 - [ ] **Step 2:** lancer, attendu : échec à l'import.
 - [ ] **Step 3:** implémenter. Schéma jsonschema complet (`additionalProperties: false` au niveau racine et robot ; `world`, `map`, `rviz` requis ; `fleet` non vide). Spirale reprise de `minipock_gz/launch/spawn.launch.py::generate_spiral_positions`, en sautant les positions à moins de 0,5 m d'une position explicite. `minipocks.yaml` : retirer `bringup` et `use_sim_time`, `map: "empty_room_map"`, commentaires en anglais. Créer `minipock/minipocks_real.yaml` (même flotte, `map: "catie"`, `world` gardé pour le schéma, positions `[0.0, 0.0, 0.0]` avec un commentaire « start pose of the robot in the map ») et l'installer dans `minipock/CMakeLists.txt`. `setup.py` : installer `minipock_bringup/test/data` n'est pas nécessaire (tests lisent depuis le source).
@@ -88,7 +90,7 @@
 
 **Files:**
 - Create: `minipock_description/launch/description.launch.py`, `minipock_description/test/test_urdf.py`
-- Modify: `minipock_description/urdf/sensors.xacro`, `minipock_description/setup.py`
+- Modify: `minipock_description/urdf/sensors.xacro`, `minipock_description/urdf/minipock.urdf.xacro`, `minipock_description/urdf/motor.xacro`, `minipock_description/setup.py`
 - Delete: `minipock_description/launch/spawn.launch.py`, `minipock_description/minipock_description/model.py`
 
 **Interfaces:**
@@ -100,7 +102,8 @@
   - `test_lidar_matches_firmware` : `samples == 132`, `min == 0.02`, `max == 12.0`, `update_rate == 10`, bruit `gaussian` avec `stddev == 0.01`.
   - `test_lidar_frame_id` : `gz_frame_id == "minipock_0/lidar_link"`, topic `minipock_0/scan`.
 - [ ] **Step 2:** lancer, attendu : échecs sur le joint et le capteur.
-- [ ] **Step 3:** modifier `sensors.xacro` (joint `fixed` sans `limit` ni `axis`, capteur selon les contraintes, `<gz_frame_id>${namespace}${name}_link</gz_frame_id>`, topic `${namespace}scan`) ; écrire `description.launch.py` ; nettoyer `setup.py` (entry points `minipock_generate` et `minipock_config` retirés, dépendance `jsonschema` retirée).
+- [ ] **Step 2b: test qui échoue** `test_diff_drive_matches_firmware` (mode differential) : plugin `DiffDrive` `wheel_separation == 0.328`, `wheel_radius == 0.0355`, et distance en y entre les axes des deux roues (origines des joints `*_wheel_joint` composées avec celles des `motor_*_joint`) égale à 0,328 m à 1 mm près ; rayon des cylindres de collision des roues 0,0355.
+- [ ] **Step 3:** aligner la géométrie différentielle sur le firmware dans `minipock.urdf.xacro` et `motor.xacro` (position des moteurs, rayon des roues, paramètres `DiffDrive`) ; modifier `sensors.xacro` (joint `fixed` sans `limit` ni `axis`, capteur selon les contraintes, `<gz_frame_id>${namespace}${name}_link</gz_frame_id>`, topic `${namespace}scan`) ; écrire `description.launch.py` ; nettoyer `setup.py` (entry points `minipock_generate` et `minipock_config` retirés, dépendance `jsonschema` retirée).
 - [ ] **Step 4:** tests au vert ; `ws/run.sh "ros2 launch minipock_description description.launch.py namespace:=minipock_0 mode:=holonomic use_sim_time:=false & sleep 5; ros2 param get /minipock_0/robot_state_publisher use_sim_time"` → `False`.
 - [ ] **Step 5:** commit `refactor(description): build robot_description with xacro at launch`.
 
@@ -132,8 +135,8 @@
 - Delete: `minipock_navigation2/launch/navigation2.launch.py`
 
 **Interfaces:**
-- Produces: `robot.launch.py` avec arguments `namespace`, `mode`, `map` (nom sans `.yaml`, cherché dans `minipock_navigation2/map`), `x`, `y`, `yaw`, `use_sim_time`, `autostart` (`true`), `use_composition` (`true`). Dans un `GroupAction` : `SetRemap('/tf', '/tf')`, `SetRemap('/tf_static', '/tf_static')`, puis include de `nav2_bringup` `localization_launch.py` et `navigation_launch.py` avec `namespace:=<ns>` et `params_file` = `ReplaceString` du fichier de la cinématique (`<robot_namespace>` → `<ns>`, `<x>`, `<y>`, `<yaw>`).
-- Params : clés racine sans namespace (`amcl:`, `controller_server:`…), frames `<robot_namespace>/base_footprint`, `<robot_namespace>/odom`, `global_frame: map`, `scan_topic: scan`, `odom_topic: odom` relatifs. Base : `/opt/ros/jazzy/share/nav2_bringup/params/nav2_params.yaml` (1.3.4), `robot_radius: 0.17`, vitesses max 0,5 m/s et 1,0 rad/s, `laser_min_range: 0.02`, `docking_server` sans dock (`dock_plugins: []` ou valeur minimale qui configure, à vérifier), `velocity_smoother.feedback: CLOSED_LOOP`.
+- Produces: `robot.launch.py` avec arguments `namespace`, `mode`, `map` (nom sans `.yaml`, cherché dans `minipock_navigation2/map`), `x`, `y`, `yaw`, `use_sim_time`, `params_file` (vide → `param/<mode>.yaml` ; sinon chemin existant ou nom de fichier de `minipock_navigation2/param`), `autostart` (`true`), `use_composition` (`true`). Dans un `GroupAction` : `SetRemap('/tf', '/tf')`, `SetRemap('/tf_static', '/tf_static')`, puis include de `nav2_bringup` `localization_launch.py` et `navigation_launch.py` avec `namespace:=<ns>` et `params_file` = `ReplaceString` du fichier de la cinématique (`<robot_namespace>` → `<ns>`, `<x>`, `<y>`, `<yaw>`).
+- Params : clés racine sans namespace (`amcl:`, `controller_server:`…), frames `<robot_namespace>/base_footprint`, `<robot_namespace>/odom`, `global_frame: map`, `scan_topic: scan`, `odom_topic: odom` relatifs. Base : `/opt/ros/jazzy/share/nav2_bringup/params/nav2_params.yaml` (1.3.4), contrôleur MPPI (défaut Jazzy) avec `motion_model: DiffDrive` ou `Omni`, planificateur NavFn, `robot_radius: 0.17`, `laser_min_range: 0.02`, AMCL `max_beams: 66` (moitié des 132 points), `docking_server` sans dock (valeur minimale qui configure, à vérifier), `velocity_smoother.feedback: CLOSED_LOOP`. Valeurs de départ, cohérentes entre MPPI, velocity smoother et behavior server : vx max 0,5 m/s (marche arrière 0,25), vy max 0,5 m/s en holonome et 0 en différentiel, wz max 1,5 rad/s, accélérations 0,7 m/s² et 3,0 rad/s², décélérations 1,5 m/s² et 3,0 rad/s², tolérance de but 0,10 m et 0,15 rad, inflation 0,45 m. La tâche 7b les règle en simulation.
 - Cartographer : argument `namespace` ; lua avec `__NS__` remplacé dans un `OpaqueFunction` qui écrit le fichier dans un dossier temporaire ; nœuds dans le namespace, mêmes `SetRemap` TF ; relais supprimés.
 
 - [ ] **Step 1: tests qui échouent** (`test_nav2_params.py`, fichiers lus dans le share de `minipock_navigation2` après `ReplaceString` simulé par `str.replace`) :
@@ -141,6 +144,9 @@
   - `test_motion_models` : différentiel `nav2_amcl::DifferentialMotionModel`, holonome `nav2_amcl::OmniMotionModel`.
   - `test_holonomic_allows_lateral_velocity` : holonome `velocity_smoother.max_velocity[1] > 0` et DWB `max_vel_y > 0`, `vy_samples > 0` ; différentiel `max_velocity[1] == 0`.
   - `test_initial_pose_placeholders` : `amcl.initial_pose` a `x`, `y`, `yaw` remplacés.
+  - `test_limits_within_robot_capabilities` : pour les deux fichiers, vitesses et accélérations du velocity smoother, de MPPI (`vx_max`, `vy_max`, `wz_max`, `ax_max`, `az_max`) et du behavior server ≤ limites réelles (contraintes globales).
+  - `test_controller_and_smoother_agree` : `vx_max`, `vy_max`, `wz_max` de MPPI égaux à `velocity_smoother.max_velocity`.
+  - `test_params_file_override` (via une fonction `resolve_params_file(value: str, mode: str) -> str` placée dans `minipock_bringup.launch_args`, utilisée par la tâche 6 pour remplir l'argument) : vide → share `param/<mode>.yaml` ; nom connu → share `param/<nom>` ; chemin absolu existant → inchangé ; inconnu → `ValueError`.
 - [ ] **Step 2:** lancer, attendu : échecs.
 - [ ] **Step 3:** réécrire les deux fichiers de paramètres et les launches.
 - [ ] **Step 4:** tests au vert ; contrôle manuel : sim tâche 4 + `robot.launch.py` pour les deux robots, `ros2 lifecycle get /minipock_1/bt_navigator` → `active`, `ros2 topic info -v /tf` ne montre aucun abonné sous `/minipock_*/tf`, `ros2 topic list | grep -c "/minipock_0/minipock_0"` → 0.
@@ -157,7 +163,7 @@
 - Consumes: `load_config`, `FleetConfig`, `Robot` (tâche 2) ; launches des tâches 3, 4, 5.
 - Produces:
   - `odometry.py` : `@dataclass(frozen=True) class Pose2D: x: float; y: float; yaw: float` ; `yaw_from_quaternion(x: float, y: float, z: float, w: float) -> float` ; `body_twist(prev: Pose2D, curr: Pose2D, dt: float) -> tuple[float, float, float]` (vx, vy dans le repère du robot à `prev.yaw`, wz ; `(0, 0, 0)` si `dt <= 0`).
-  - `launch_args.py` : `robot_launch_arguments(robot: Robot, cfg: FleetConfig, use_sim_time: bool) -> dict[str, str]` (clés `namespace`, `mode`, `map`, `x`, `y`, `yaw`, `use_sim_time` en `"true"`/`"false"`).
+  - `launch_args.py` : `robot_launch_arguments(robot: Robot, cfg: FleetConfig, use_sim_time: bool) -> dict[str, str]` (clés `namespace`, `mode`, `map`, `x`, `y`, `yaw`, `params_file` = `resolve_params_file(robot.nav2_params, robot.mode)` (tâche 5), `use_sim_time` en `"true"`/`"false"`).
   - `sim.launch.py` : arguments `config` (défaut `minipocks.yaml`, résolu par `resolve_config_path`), `rviz` (`true`), `headless` (`false`) ; world + pour chaque robot description, gz robot, nav2 robot, avec `use_sim_time:=true` ; RViz `fleet.rviz` si `rviz`.
   - `real.launch.py` : `config` (défaut `minipocks_real.yaml`), `rviz` (`false`) ; agent micro-ROS `udp4 --port 8888` une fois ; par robot description, `robot.launch.py`, nav2, `use_sim_time:=false`.
   - Nœud `raw_data_transformer` : paramètres `scan_frame_id` (défaut `<namespace>/lidar_link`) ; entrées `odom_raw` (`PoseStamped`), `scan_raw` ; sorties `odom` (`Odometry` avec twist), `scan`, TF `<ns>/odom → <ns>/base_footprint`.
@@ -188,6 +194,23 @@
 - [ ] **Step 3:** lancer (`DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1"`, `colcon test --packages-select minipock_bringup --pytest-args -m integration`) jusqu'au vert, trois passages de suite. Échec : `superpowers:systematic-debugging`, pas d'augmentation de timeout sans cause trouvée.
 - [ ] **Step 4:** commit `test(bringup): navigate two robots in headless simulation`.
 
+### Task 7b: Réglage de Nav2 en simulation
+
+**Files:**
+- Create: `minipock_bringup/minipock_bringup/nav_benchmark.py` (nœud), `minipock_bringup/test/data/benchmark_goals.yaml`
+- Modify: `minipock_navigation2/param/differential.yaml`, `minipock_navigation2/param/holonomic.yaml`, `minipock_bringup/setup.py` (entry point `nav_benchmark`)
+
+**Interfaces:**
+- Consumes: `sim.launch.py` et le test d'intégration (tâche 7).
+- Produces: `ros2 run minipock_bringup nav_benchmark --ros-args -p robots:="[minipock_0, minipock_1]" -p goals_file:=<yaml> -p repeat:=3` : envoie les buts du fichier à chaque robot, mesure pour chaque but succès, durée (temps simulé), rapport longueur du chemin / ligne droite, distance minimale aux obstacles (depuis `scan`), oscillations (changements de signe de `wz` par mètre), et écrit un tableau Markdown sur la sortie standard.
+
+- [ ] **Step 1:** `benchmark_goals.yaml` pour `empty_room_map`, par robot : ligne droite 3 m, demi-tour sur place (même position, yaw + π), but derrière le robot, but à 0,3 m d'un mur, et pour l'holonome un déplacement latéral de 1 m sans rotation (yaw constant).
+- [ ] **Step 2:** écrire `nav_benchmark`, le lancer sur les paramètres de la tâche 5, garder le tableau de référence.
+- [ ] **Step 3:** régler les paramètres (MPPI : critics et poids, `time_steps`, `model_dt`, `batch_size` réduit si le facteur temps réel de la sim logicielle tombe sous 0,5 ; costmaps ; AMCL ; goal checker) jusqu'à : 100 % de succès sur 3 répétitions, aucun contact (distance min > 0,05 m), holonome qui fait le déplacement latéral sans tourner de plus de 0,2 rad, pas d'oscillation en fin de but. Ne jamais dépasser les limites réelles (contraintes globales) ; les tests de `test_nav2_params.py` restent verts.
+- [ ] **Step 4:** consigner le tableau avant/après et les paramètres changés avec leur raison dans `docs/superpowers/specs/2026-11-25-nav2-tuning.md` (repris dans la doc utilisateur à la tâche 9).
+- [ ] **Step 5:** le test d'intégration de la tâche 7 passe encore trois fois de suite.
+- [ ] **Step 6:** commit `perf(navigation): tune Nav2 parameters against the real robot limits`.
+
 ### Task 8: CI (ros_workflows puis minipock)
 
 **Files:**
@@ -207,7 +230,7 @@
 
 **Files:**
 - Modify: `CLAUDE.md`, `CHANGELOG.md` (section `Unreleased`)
-- Dans `~/CATIE/RD/minipock/minipock_documentation` (branche `docs/refactor-nav2-sim`) : `latest/3-Démarrage-rapide.md`, `latest/4-Bringup.md`, `latest/5-Simulation.md`, `latest/6-Navigation.md`, `latest/7-SLAM.md`, nouvelle page `latest/` multi-robot (reprise de `2.1.0/10-Multiple-robots.md`, numérotation à décaler), image du schéma d'archi dans `img/`
+- Dans `~/CATIE/RD/minipock/minipock_documentation` (branche `docs/refactor-nav2-sim`) : `latest/3-Démarrage-rapide.md`, `latest/4-Bringup.md`, `latest/5-Simulation.md`, `latest/6-Navigation.md` (dont les paramètres Nav2, leur surcharge par robot avec `nav2_params`, et le tableau de réglage de la tâche 7b), `latest/7-SLAM.md`, nouvelle page `latest/` multi-robot (reprise de `2.1.0/10-Multiple-robots.md`, numérotation à décaler), image du schéma d'archi dans `img/`
 
 - [ ] **Step 1:** CLAUDE.md : commandes (`sim.launch.py`, `real.launch.py`, `config:=`), tests (unitaires et `-m integration`), image `minipock:dev-simulation`, `--merge-install` plus obligatoire, liste des paquets à jour.
 - [ ] **Step 2:** schéma d'archi global (skill `stack-diagram`, PNG) : PC hôte (launches d'entrée, nœuds par robot, Nav2, Gazebo ou agent micro-ROS), robot (firmware), arbre TF multi-robot.

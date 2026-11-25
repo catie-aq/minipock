@@ -1,7 +1,10 @@
-from ament_index_python.packages import get_package_share_directory
-import yaml
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN201, D100, D103, EM101, PERF403, PTH118, PTH123, TRY003, TRY201
 import os
+
 import jsonschema
+import yaml
+from ament_index_python.packages import get_package_share_directory
 
 
 def validate_config(config_to_check):
@@ -44,7 +47,7 @@ def validate_config(config_to_check):
 def config():
     minipock_package_path = get_package_share_directory("minipock")
     minipocks_yaml_path = os.path.join(minipock_package_path, "minipocks.yaml")
-    with open(minipocks_yaml_path, "r") as file:
+    with open(minipocks_yaml_path) as file:
         yaml_data = yaml.safe_load(file)
     config_dict = {}
     for key, value in yaml_data.items():

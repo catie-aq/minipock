@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+"""Keyboard teleoperation for MiniPock (z/s linear, q/d angular, x stop)."""
 
 import os
 import select
@@ -8,7 +8,6 @@ import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
-import time
 
 if os.name == "nt":
     import msvcrt
@@ -17,43 +16,48 @@ else:
     import tty
 
 
-def constrain(input_vel, low_bound, high_bound):
-    """
-    Constrains a given input velocity value within specified lower and upper bounds.
+def constrain(input_vel: float, low_bound: float, high_bound: float) -> float:
+    """Constrain a velocity value within lower and upper bounds.
 
-    :param input_vel: The input velocity value has to be constrained.
-    :param low_bound: The lower bound for the velocity value.
-    :param high_bound: The upper bound for the velocity value.
-    :return: The constrained velocity value within the specified bounds.
+    Args:
+        input_vel: The velocity value to constrain.
+        low_bound: The lower bound for the velocity value.
+        high_bound: The upper bound for the velocity value.
+
+    Returns:
+        The velocity value constrained within the bounds.
     """
     return max(min(input_vel, high_bound), low_bound)
 
 
-def get_key(settings):
-    """
-    :param settings: the termios settings to restore after reading the key
-    :return: the pressed key as a string or an empty string if no key was pressed
+def get_key(settings: list | None) -> str:
+    """Read one key from the terminal without echo.
+
+    Args:
+        settings: The termios settings to restore after reading the key.
+
+    Returns:
+        The pressed key, or an empty string if no key was pressed.
     """
     if os.name == "nt":
         return msvcrt.getch().decode("utf-8")
     tty.setraw(sys.stdin.fileno())
     rlist, _, _ = select.select([sys.stdin], [], [], 0.1)
-    if rlist:
-        key = sys.stdin.read(1)
-    else:
-        key = ""
+    key = sys.stdin.read(1) if rlist else ""
 
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
 
 
-def make_twist(linear, angular):
-    """
-    Creates a Twist message object with the given linear and angular values.
+def make_twist(linear: float, angular: float) -> Twist:
+    """Create a Twist message with the given linear and angular values.
 
-    :param linear: The linear value of the Twist (float).
-    :param angular: The angular value of the Twist (float).
-    :return: A Twist message object with the specified linear and angular values.
+    Args:
+        linear: The linear velocity along x.
+        angular: The angular velocity around z.
+
+    Returns:
+        A Twist message with the specified velocities.
     """
     twist = Twist()
     twist.linear.x = linear
@@ -66,7 +70,10 @@ def make_twist(linear, angular):
 
 
 class TeleopController(Node):
-    def __init__(self):
+    """Node publishing velocity commands from keyboard input."""
+
+    def __init__(self) -> None:
+        """Resolve the namespace, check the cmd_vel topic and create the publisher."""
         super().__init__("teleop_keyboard")
         self.declare_parameter("namespace", "")
         namespace = self.get_parameter("namespace").value
@@ -115,12 +122,14 @@ class TeleopController(Node):
         CTRL-C to quit
         """
 
-    def clean_namespace(self, namespace):
-        """
-        Clean the namespace by removing the leading and trailing slashes.
+    def clean_namespace(self, namespace: str) -> str:
+        """Clean the namespace by removing the leading and trailing slashes.
 
-        :param namespace: The namespace to clean.
-        :return: The cleaned namespace.
+        Args:
+            namespace: The namespace to clean.
+
+        Returns:
+            The cleaned namespace.
         """
         try:
             if namespace[0] == "/":
@@ -131,11 +140,11 @@ class TeleopController(Node):
             return ""
         return namespace
 
-    def retrieve_all_namespaces(self):
-        """
-        Retrieve all namespaces in the ROS2 environment.
+    def retrieve_all_namespaces(self) -> list[str]:
+        """Retrieve all namespaces in the ROS 2 environment.
 
-        :return: A list of all namespaces in the ROS2 environment.
+        Returns:
+            The non-empty namespaces of the running nodes.
         """
         node_names_and_namespaces = self.get_node_names_and_namespaces()
         namespaces = []
@@ -145,30 +154,35 @@ class TeleopController(Node):
                 namespaces.append(raw_ns)
         return namespaces
 
-    def check_ns_exists(self, namespace):
-        """
-        Check if a given namespace exists in the ROS2 environment.
-        Exit the program if the namespace does not exist, and print the existing namespaces.
+    def check_ns_exists(self, namespace: str) -> str:
+        """Check if a given namespace exists in the ROS 2 environment.
 
-        :param namespace: The namespace to check.
-        :return: None
+        Falls back to the first existing namespace if it does not exist.
+
+        Args:
+            namespace: The namespace to check.
+
+        Returns:
+            The cleaned namespace, or the first existing one.
         """
         global_namespaces = self.retrieve_all_namespaces()
         namespace = self.clean_namespace(namespace)
         if namespace not in global_namespaces:
             self.get_logger().info(
-                f"Namespace '{namespace}' not in global namespaces. Existing namespaces are: {global_namespaces}. Selecting the first namespace in the list"
+                f"Namespace '{namespace}' not in global namespaces. "
+                f"Existing namespaces are: {global_namespaces}. "
+                "Selecting the first namespace in the list"
             )
             return global_namespaces[0]
         return namespace
 
-    def check_topic_exists(self, topic):
-        """
-        Check if a given topic exists in the ROS2 environment.
-        Exit the program if the topic does not exist, and print the existing topics.
+    def check_topic_exists(self, topic: str) -> None:
+        """Check if a given topic exists in the ROS 2 environment.
 
-        :param topic: The topic to check.
-        :return: None
+        Exits the program if the topic does not exist, and prints the existing topics.
+
+        Args:
+            topic: The topic to check.
         """
         found = False
         topic_list = []
@@ -183,62 +197,50 @@ class TeleopController(Node):
             self.get_logger().error(
                 f"Topic '{topic}' not found. \n \t Existing topics are: {topic_list}"
             )
-            exit(1)
+            sys.exit(1)
 
-    def print_velocities(self):
-        """
-        Prints the current linear and angular velocities.
-
-        :return: None
-        """
+    def print_velocities(self) -> None:
+        """Print the current linear and angular velocities."""
         self.get_logger().info(
-            "currently:\tlinear velocity {0}\t angular velocity {1} ".format(
-                self.target_linear_velocity, self.target_angular_velocity
-            )
+            f"currently:\tlinear velocity {self.target_linear_velocity}\t "
+            f"angular velocity {self.target_angular_velocity} "
         )
 
-    def check_linear_limit_velocity(self, velocity):
-        """
-        Check if the given linear velocity is within the acceptable range.
+    def check_linear_limit_velocity(self, velocity: float) -> float:
+        """Check if the given linear velocity is within the acceptable range.
 
-        :param velocity: The linear velocity to check.
-        :return: The constrained linear velocity.
+        Args:
+            velocity: The linear velocity to check.
+
+        Returns:
+            The constrained linear velocity.
         """
         return constrain(velocity, -self.MINIPOCK_MAX_LIN_VEL, self.MINIPOCK_MAX_LIN_VEL)
 
-    def check_angular_limit_velocity(self, velocity):
-        """
-        Check the angular limit velocity.
+    def check_angular_limit_velocity(self, velocity: float) -> float:
+        """Check the angular limit velocity.
 
-        :param velocity: The input velocity value.
-        :return: The constrained velocity value.
+        Args:
+            velocity: The input velocity value.
 
+        Returns:
+            The constrained velocity value.
         """
         return constrain(velocity, -self.MINIPOCK_MAX_ANG_VEL, self.MINIPOCK_MAX_ANG_VEL)
 
-    def set_terminal_settings(self):
-        """
-        Sets the terminal settings needed for raw input mode.
-
-        :returns: None
-        """
+    def set_terminal_settings(self) -> None:
+        """Save the terminal settings needed to restore the terminal after raw input mode."""
         self.settings = None
         if os.name != "nt":
             self.settings = termios.tcgetattr(sys.stdin)
 
-    def reset_terminal_settings(self):
-        """
-        Resets the terminal settings to their original state.
-
-        :returns: None
-        """
+    def reset_terminal_settings(self) -> None:
+        """Reset the terminal settings to their original state."""
         if os.name != "nt":
             termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.settings)
 
-    def make_simple_profile_linear(self):
-        """
-        :return: The updated output value.
-        """
+    def make_simple_profile_linear(self) -> None:
+        """Ramp the control linear velocity towards the target."""
         if self.target_linear_velocity > self.control_linear_velocity:
             self.control_linear_velocity = min(
                 self.target_linear_velocity,
@@ -250,12 +252,8 @@ class TeleopController(Node):
                 self.control_linear_velocity - self.LIN_VEL_STEP_SIZE / 2.0,
             )
 
-    def make_simple_profile_angular(self):
-        """
-        Calculate the angular velocity profile based on the target and current angular velocities.
-
-        :return: The calculated angular velocity profile.
-        """
+    def make_simple_profile_angular(self) -> None:
+        """Ramp the control angular velocity towards the target."""
         if self.target_angular_velocity > self.control_angular_velocity:
             self.control_angular_velocity = min(
                 self.target_angular_velocity,
@@ -267,13 +265,11 @@ class TeleopController(Node):
                 self.control_angular_velocity - self.ANG_VEL_STEP_SIZE / 2.0,
             )
 
-    def process_key(self, key):
-        """
-        Process a key press event and update the target linear and angular velocity.
+    def process_key(self, key: str) -> None:
+        """Process a key press and update the target linear and angular velocity.
 
-        :param key: str representing the key pressed.
-
-        :return: Tuple of two floats representing the updated target linear and angular velocity.
+        Args:
+            key: The pressed key.
         """
         if key in ["z", "q"]:
             step_size = self.LIN_VEL_STEP_SIZE if key == "z" else self.ANG_VEL_STEP_SIZE
@@ -296,16 +292,12 @@ class TeleopController(Node):
                 self.target_linear_velocity = self.check_linear_limit_velocity(
                     self.target_linear_velocity - step_size
                 )
-        if key in ["x"]:
+        if key == "x":
             self.target_linear_velocity = 0.0
             self.target_angular_velocity = 0.0
 
-    def main(self):
-        """
-        Main method for controlling a robot with teleoperation.
-
-        :return: None
-        """
+    def main(self) -> None:
+        """Control the robot with the keyboard until CTRL-C is pressed."""
         self.set_terminal_settings()
         try:
             self.get_logger().info(self.help_msg)
@@ -332,18 +324,15 @@ class TeleopController(Node):
                     )
                     self.previous_x_linear = self.control_linear_velocity
                     self.previous_z_angular = self.control_angular_velocity
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - the terminal must always be restored
             self.get_logger().error("Error: " + str(e))
         finally:
             self.publisher.publish(make_twist(0.0, 0.0))
             self.reset_terminal_settings()
 
 
-def main():
-    """
-    Entry point of the program.
-    Initializes ROS, creates a TeleopController node, and executes the main loop.
-    """
+def main() -> None:
+    """Initialize ROS, create the TeleopController node and run its main loop."""
     rclpy.init()
     node = TeleopController()
     node.main()

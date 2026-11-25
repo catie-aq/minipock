@@ -1,5 +1,6 @@
-"""
-This script manages the launching process of the Gazebo simulator for the Minipock robot.
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN002, ANN003, ANN201, ARG001, D205, EXE002, PERF401, PTH118, RET504
+"""This script manages the launching process of the Gazebo simulator for the Minipock robot.
 
 It sets the initial position parameters for the robot in the Gazebo world,
 runs the simulation, and spawns the robot-related processes.
@@ -21,14 +22,12 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
-from minipock_description import model
-from minipock_description import config
+from minipock_description import config, model
 from minipock_gz import bridges
 
 
 def parse_config(context, *args, **kwargs):
-    """
-    Parse the launch arguments and spawn the robot in the Gazebo world.
+    """Parse the launch arguments and spawn the robot in the Gazebo world.
 
     :param context: LaunchContext with arguments&
     :return: list of launch processes
@@ -62,8 +61,7 @@ def parse_config(context, *args, **kwargs):
 
 
 def generate_spiral_positions(num_entities, spacing=1):
-    """
-    Generate a list of positions in a spiral pattern.
+    """Generate a list of positions in a spiral pattern.
 
     :param num_entities: number of entities
     :param spacing: spacing between entities
@@ -84,8 +82,7 @@ def generate_spiral_positions(num_entities, spacing=1):
 
 
 def make_robots(namespace, fleet):
-    """
-    Create a list of robots with their names, positions, and mode.
+    """Create a list of robots with their names, positions, and mode.
 
     :param namespace: the namespace for the robots
     :param fleet: a dictionary containing information about the robots
@@ -109,8 +106,7 @@ def make_robots(namespace, fleet):
 
 
 def lidar_process(use_sim_time, robots):
-    """
-    This function returns a lidar process wrapped within a LaunchDescription object.
+    """This function returns a lidar process wrapped within a LaunchDescription object.
 
     :param use_sim_time: boolean flag to enable simulation time
     :param robots: list of robots containing their names and positions
@@ -132,8 +128,7 @@ def lidar_process(use_sim_time, robots):
 
 
 def simulation(world_name, paused, extra_gz_args, use_sim_time):
-    """
-    This method takes in the name of a world file, a boolean indicating whether the simulation
+    """This method takes in the name of a world file, a boolean indicating whether the simulation
     should start in a paused state, and any additional command line arguments to pass to the
     Gazebo simulator.
     It returns a LaunchDescription object that can be used to start the simulation.
@@ -162,8 +157,7 @@ def simulation(world_name, paused, extra_gz_args, use_sim_time):
 
 
 def spawn(use_sim_time, robots):
-    """
-    Spawn the robot in the current Gazebo world.
+    """Spawn the robot in the current Gazebo world.
 
     :param use_sim_time: boolean flag to enable simulation time
     :param robots: list of robots containing their names and positions
@@ -200,8 +194,7 @@ def spawn(use_sim_time, robots):
 
 
 def bridge(world_name, robots, use_sim_time):
-    """
-    This function manages the bridge between ROS messages and Gazebo simulator.
+    """This function manages the bridge between ROS messages and Gazebo simulator.
 
     :param world_name: the name of the Gazebo world file
     :param robots: list of robots containing their names and positions
@@ -245,8 +238,7 @@ def bridge(world_name, robots, use_sim_time):
 
 
 def generate_launch_description():
-    """
-    Generate the launch description for spawning an object in a simulation.
+    """Generate the launch description for spawning an object in a simulation.
 
     :return: LaunchDescription object.
     """
@@ -255,12 +247,12 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "paused",
                 default_value="False",
-                description="True to start the simulation " "paused. ",
+                description="True to start the simulation paused. ",
             ),
             DeclareLaunchArgument(
                 "extra_gz_args",
                 default_value="",
-                description="Additional arguments to be " "passed to gz sim. ",
+                description="Additional arguments to be passed to gz sim. ",
             ),
             OpaqueFunction(function=parse_config),
         ]

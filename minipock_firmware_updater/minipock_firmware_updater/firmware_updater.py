@@ -1,22 +1,22 @@
+"""ROS 2 node serving firmware updates for the MiniPock micro-ROS board."""
+
 from enum import Enum
-from typing import Union
+from http import HTTPStatus
 
 import jsonschema
 import rclpy
 import requests
+from crc import Calculator, Crc8
 from jsonschema.exceptions import ValidationError
 from rclpy.node import Node
-from crc import Calculator, Crc8
 
+from minipock_msgs.msg import Version
 from minipock_msgs.srv import (
     GetChunk,
     GetChunk_Response,
     TrigUpdate,
     TrigUpdate_Response,
 )
-
-from minipock_msgs.msg import Version
-from std_msgs.msg import ByteMultiArray
 
 STORED_VERSION_SCHEMA = {
     "type": "object",
@@ -35,10 +35,7 @@ STORED_VERSION_SCHEMA = {
 
 
 class TrigUpdateErrorCode(Enum):
-    """
-    ErrorCode is an enumeration that represents various error codes that can be encountered
-    in the firmware updater process.
-    """
+    """Error codes returned by the firmware update service."""
 
     SUCCESS = 0
     PARAMETER_NOT_DECLARED = 1
@@ -50,10 +47,7 @@ class TrigUpdateErrorCode(Enum):
 
 
 class GetChunkErrorCode(Enum):
-    """
-    ErrorCode is an enumeration that represents various error codes that can be encountered
-    in the firmware updater process.
-    """
+    """Error codes returned by the firmware chunk service."""
 
     SUCCESS = 0
     VERSION_NOT_FOUND = 1
@@ -61,11 +55,10 @@ class GetChunkErrorCode(Enum):
 
 
 class FirmwareUpdater(Node):
-    """
-    A ROS2 node that handles firmware updates for the minipock device.
-    """
+    """A ROS2 node that handles firmware updates for the minipock device."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Declare the parameters, fetch the release tags and create the services."""
         super().__init__("firmware_updater")
         self.declare_parameter("namespace", "minipock_0")
         self.declare_parameter("method", "latest")
@@ -73,7 +66,7 @@ class FirmwareUpdater(Node):
         self.stored_version = {}
 
         self.github_tags: list = self.__get_github_tags()
-        self.allowed_methods: list = ["latest"] + self.github_tags
+        self.allowed_methods: list = ["latest", *self.github_tags]
         self.get_logger().info(f"Allowed methods: {self.allowed_methods}")
 
         self.firmware_update_service = self.create_service(
@@ -88,13 +81,11 @@ class FirmwareUpdater(Node):
     def __get_github_tags(self) -> list:
         url = "https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases"
         response = requests.get(url, timeout=10)
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             releases = response.json()
-            tags = [release["tag_name"] for release in releases]
-            return tags
-        else:
-            self.get_logger().error(f"Failed to fetch tags from GitHub: {response.status_code}")
-            return []
+            return [release["tag_name"] for release in releases]
+        self.get_logger().error(f"Failed to fetch tags from GitHub: {response.status_code}")
+        return []
 
     def __return_no_update(self, error_code: TrigUpdateErrorCode) -> TrigUpdate_Response:
         version = Version()
@@ -108,7 +99,7 @@ class FirmwareUpdater(Node):
         response.size = 0
         return response
 
-    def __get_method(self) -> Union[str, TrigUpdate_Response]:
+    def __get_method(self) -> str | TrigUpdate_Response:
         if self.has_parameter("method"):
             method = self.get_parameter("method").get_parameter_value().string_value
         else:
@@ -121,9 +112,10 @@ class FirmwareUpdater(Node):
     def __download_and_store_firmware(self, version: str) -> TrigUpdateErrorCode:
         url = f"https://api.github.com/repos/catie-aq/minipock_zephyr-demo/releases/tags/{version}"
         download_response = requests.get(url, timeout=10)
-        if download_response.status_code != 200:
+        if download_response.status_code != HTTPStatus.OK:
             self.get_logger().error(
-                f"Failed to fetch release {version} details from GitHub: {download_response.status_code}"
+                f"Failed to fetch release {version} details from GitHub: "
+                f"{download_response.status_code}"
             )
             return TrigUpdateErrorCode.GITHUB_FETCH_ERROR
         release = download_response.json()
@@ -136,7 +128,7 @@ class FirmwareUpdater(Node):
             return TrigUpdateErrorCode.NO_BIN_FILE
         bin_url = bin_file["browser_download_url"]
         bin_response = requests.get(bin_url, timeout=10, stream=True)
-        if bin_response.status_code != 200:
+        if bin_response.status_code != HTTPStatus.OK:
             self.get_logger().error(f"Failed to download .bin file: {bin_response.status_code}")
             return TrigUpdateErrorCode.BIN_DOWNLOAD_ERROR
         content = bytearray()
@@ -155,17 +147,10 @@ class FirmwareUpdater(Node):
             return TrigUpdateErrorCode.SCHEMA_VALIDATION_FAILED
         return TrigUpdateErrorCode.SUCCESS
 
-    def firmware_update_callback(self, request, response) -> TrigUpdate_Response:
-        """
-        Callback function to handle firmware update requests.
-
-        Args:
-            request: The request object containing the actual firmware version.
-            response: The response object to be populated with the update information.
-
-        Returns:
-            TrigUpdate_Response: The response object indicating whether a new firmware version
-                                is available, along with the new version details if applicable.
+    def firmware_update_callback(
+        self, request: TrigUpdate.Request, response: TrigUpdate.Response
+    ) -> TrigUpdate_Response:
+        """Handle firmware update requests.
 
         The function performs the following steps:
         1. Retrieves the update method.
@@ -174,6 +159,14 @@ class FirmwareUpdater(Node):
         4. Compares the actual firmware version with the target version.
         5. Downloads and stores the new firmware if an update is available.
         6. Populates the response object with the update information.
+
+        Args:
+            request: The request object containing the actual firmware version.
+            response: The response object to be populated with the update information.
+
+        Returns:
+            The response object indicating whether a new firmware version is available,
+            along with the new version details if applicable.
         """
         self.get_logger().info(f"{request}")
 
@@ -229,8 +222,7 @@ class FirmwareUpdater(Node):
     def firmware_chunk_callback(
         self, request: GetChunk.Request, response: GetChunk.Response
     ) -> GetChunk_Response:
-        """
-        Callback function to handle firmware chunk requests.
+        """Handle firmware chunk requests.
 
         Args:
             request (GetChunk.Request): The request object containing the chunk details.
@@ -267,12 +259,13 @@ class FirmwareUpdater(Node):
         response.chunk_byte = bytes.fromhex(firmware_data_segment)
         response.chunk_checksum = checksum
         self.get_logger().info(
-            f"{response.chunk_id} / {target_version['size']/request.chunk_size} - {checksum}"
+            f"{response.chunk_id} / {target_version['size'] / request.chunk_size} - {checksum}"
         )
         return response
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
+    """Run the firmware updater node."""
     rclpy.init(args=args)
     node = FirmwareUpdater()
     rclpy.spin(node)

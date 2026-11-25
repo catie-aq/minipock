@@ -1,0 +1,18 @@
+# Ruff configuration only: ROS packages keep setuptools/colcon and rosdep.
+[tool.ruff]
+line-length = 99
+target-version = "py312"
+extend-exclude = ["minipock_fleet_adapter"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+# COM812 conflicts with `ruff format`; CPY001 would require a license header in every file.
+ignore = ["T20", "S101", "D104", "COM812", "CPY001"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/launch/*.py" = ["INP001"]
+"**/setup.py" = ["INP001"]
+"**/test/**" = ["INP001", "PLR2004", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
