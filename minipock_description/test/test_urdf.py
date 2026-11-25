@@ -128,3 +128,41 @@ def test_diff_drive_matches_firmware(differential: ET.Element) -> None:
         )
         assert radius is not None
         assert float(radius.get("radius")) == pytest.approx(WHEEL_RADIUS)
+
+
+@pytest.fixture(scope="module")
+def holonomic() -> ET.Element:
+    """Parsed robot in holonomic mode."""
+    return _robot("holonomic")
+
+
+def test_holonomic_has_no_roller_joints(holonomic: ET.Element) -> None:
+    joints = holonomic.findall("joint")
+    assert not [j.get("name") for j in joints if "roller" in j.get("name")]
+    links = holonomic.findall("link")
+    assert not [link.get("name") for link in links if "roller" in link.get("name")]
+    continuous = [j.get("name") for j in joints if j.get("type") == "continuous"]
+    assert sorted(continuous) == sorted(
+        f"{NAMESPACE}/motor_{m}_wheel_joint" for m in ("left", "right", "middle")
+    )
+
+
+def test_holonomic_keeps_roller_visuals(holonomic: ET.Element) -> None:
+    for motor in ("left", "right", "middle"):
+        link = holonomic.find(f"link[@name='{NAMESPACE}/motor_{motor}_wheel_link']")
+        assert link is not None
+        visuals = link.findall("visual")
+        assert len(visuals) == 1 + 9
+        meshes = [v.find("geometry/mesh").get("filename") for v in visuals]
+        assert sum(m.endswith("roller.stl") for m in meshes) == 9
+
+
+def test_holonomic_wheel_collision(holonomic: ET.Element) -> None:
+    for motor in ("left", "right", "middle"):
+        link = holonomic.find(f"link[@name='{NAMESPACE}/motor_{motor}_wheel_link']")
+        assert link is not None
+        collisions = link.findall("collision")
+        assert len(collisions) == 1
+        cylinder = collisions[0].find("geometry/cylinder")
+        assert cylinder is not None
+        assert float(cylinder.get("radius")) == pytest.approx(WHEEL_RADIUS)
