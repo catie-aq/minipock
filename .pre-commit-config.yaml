@@ -7,8 +7,12 @@ repos:
       - id: check-toml
       - id: check-yaml
         args: [ --unsafe ]
+      # PGM maps are binary (written by world_to_map.py); a byte added at the end would differ
+      # from the generated file on every regeneration.
       - id: end-of-file-fixer
+        exclude: \.pgm$
       - id: trailing-whitespace
+        exclude: \.pgm$
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.6
