@@ -14,10 +14,11 @@ ref=${1:-HEAD}
 repo=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 gate=$(realpath -m "${MINIPOCK_GATE_DIR:-$repo/../ws-gate}")
 log=$(mktemp "${TMPDIR:-/tmp}/minipock-gate-precommit.XXXXXX")
-checkout=$gate/pc-worktree
+checkout=$gate-pc  # outside the workspace: colcon would see its packages twice
 
 cleanup() {
   git -C "$repo" worktree remove --force "$checkout" 2>/dev/null || true
+  rm -rf "$checkout"
   git -C "$repo" worktree prune
   rm -f "$log"
 }
@@ -35,7 +36,7 @@ if ! git -C "$repo/minipock_msgs" cat-file -e "$msgs_sha^{commit}" 2>/dev/null; 
 fi
 
 # Stale registrations from an interrupted run are cleared once their directory is gone.
-rm -rf "$gate"
+rm -rf "$gate" "$checkout"
 git -C "$repo" worktree prune
 mkdir -p "$gate/src/minipock/minipock_msgs"
 git -C "$repo" archive "$commit" | tar -x -C "$gate/src/minipock"
