@@ -341,4 +341,4 @@ Structure de `latest/` (validée par Seb le 25/11, deux publics) :
 
 ## Après les tâches
 
-Revue de code de toute la branche (`code-review`), « À relire », contrôle du code avec Seb, rebase sur `main`, push, PR, CI verte, merge. Jira : sous-tâche par PR sous RD-895. Notion : carte En revue puis Terminé.
+Revue de code de toute la branche (`code-review`), « À relire », contrôle du code avec Seb, rebase sur `main`, push, PR, CI verte, merge.

@@ -43,7 +43,7 @@ class RawDataTransformer(Node):
         self._base_frame = self._declare_frame(
             "base_frame_id", f"{prefix}base_footprint", "Robot frame moved by the odometry"
         )
-        # The firmware still stamps its scans `lds_01_link` (Jira RD-711): the frame is replaced.
+        # The firmware still stamps its scans `lds_01_link`: the frame is replaced.
         self._scan_frame = self._declare_frame(
             "scan_frame_id", f"{prefix}lidar_link", "Frame written in the republished scans"
         )

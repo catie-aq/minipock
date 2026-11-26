@@ -214,7 +214,7 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   repère du robot à partir de deux poses successives, nulle si les horodatages
   sont égaux ou à rebours), `scan` (horodatage du firmware gardé, frame
   remplacée par le paramètre `scan_frame_id`, défaut `<ns>/lidar_link`, car le
-  firmware envoie encore `lds_01_link`, Jira RD-711) et le seul TF
+  firmware envoie encore `lds_01_link`) et le seul TF
   `<ns>/odom → <ns>/base_footprint`. `odom` et `scan` sont publiés en QoS
   capteur (`qos_profile_sensor_data`, best effort). Le même launch lance
   `joint_state_publisher` : le firmware ne publie pas l'état des roues.
@@ -289,36 +289,3 @@ Les gestes répétitifs ont un skill de projet dans `.claude/skills/` :
   `minipock_mbed-rbdc`) suivent une autre règle : toute modification passe par
   une PR relue par un collègue avant merge.
 - Les versions suivent `minipock/package.xml` ; un push sur `main` crée le tag.
-
-## Suivi Jira (géré par l'agent, sans demande)
-
-L'espace Jira `RD` (« RD SONU », catie-aq.atlassian.net) suit les travaux de
-R&D de l'équipe. L'epic `RD-10` est celui de MiniPock. Ce suivi couvre ce dépôt
-et les travaux MiniPock menés depuis lui (CI partagée, documentation, firmware).
-
-- Structure : une tâche sous `RD-10` est un lot de travail, par exemple une
-  étape de la reprise (`RD-895` refactor jusqu'à Nav2 en simulation, puis
-  `RD-907` Open-RMF, `RD-908` passage au réel, `RD-910` compétences, `RD-909`
-  cartographie collective). Une sous-tâche est une unité de travail, en général
-  une PR. Son titre décrit le travail (« Monde de bureaux pour la
-  simulation »), jamais « PR 12 : … », et le lien vers la PR va dans sa
-  description.
-- Le suivi est entièrement tenu par l'agent, pour chaque membre de l'équipe qui
-  travaille ici avec Claude Code. Personne n'a à le faire à la main :
-  - un travail qui commence sans ticket reçoit une tâche ou une sous-tâche,
-    assignée à la personne qui mène la session (compte Jira connecté) ;
-  - travail commencé : En cours ;
-  - PR ouverte : commentaire avec le lien ;
-  - PR mergée : Terminé ;
-  - une tâche parente passe En cours dès qu'une de ses sous-tâches l'est, et
-    Terminé quand toutes le sont ;
-  - un ticket devenu sans objet passe Annulé, avec un commentaire qui dit
-    pourquoi.
-- Une automatisation de l'espace passe la tâche parente en Terminé dès que
-  toutes ses sous-tâches le sont : une tâche dont le lot continue est rouverte
-  (En cours) quand on lui ajoute une sous-tâche.
-- Chaque changement s'accompagne d'un commentaire court et factuel, sans code
-  ni logs.
-- Sur un ticket assigné à un autre membre de l'équipe : ni changement de
-  statut, ni changement d'assignation, ni mention @. Seulement un commentaire
-  factuel quand du travail mergé le concerne.

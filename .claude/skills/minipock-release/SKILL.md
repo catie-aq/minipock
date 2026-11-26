@@ -78,4 +78,3 @@ The site is published from the default branch a few minutes after the push. Neve
 
 - Frozen docs: edits go to `latest/` only.
 - The Zephyr firmware has its own release (`vX.Y.Z` tag, draft release to publish, signed `.bin`); do not mix it with this one.
-- Jira (`RD-10` epic): a release is a sub-task of the relevant task, linked to the PR.

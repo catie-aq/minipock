@@ -1,6 +1,6 @@
 # MiniPock : refactor de la base jusqu'à Nav2 en simulation multi-robot (design)
 
-Chantier 1 de la reprise, taille L. Jira RD-895 (epic RD-10). Source : `revue-base-minipock.md`, sections 1 à 5 et 7. Branche locale `refactor/nav2-sim-base`, worktree `~/CATIE/RD/minipock/minipock-refactor`.
+Chantier 1 de la reprise, taille L. Source : `revue-base-minipock.md`, sections 1 à 5 et 7. Branche locale `refactor/nav2-sim-base`, worktree `~/CATIE/RD/minipock/minipock-refactor`.
 
 ## Point de départ (vérifié le 25/11/2026)
 
@@ -73,7 +73,7 @@ Nav2 Jazzy se lance sous namespace via `nav2_bringup`, mais `navigation_launch.p
   - entrée `odom_raw` (pose du firmware) ; sortie `odom` (`nav_msgs/Odometry`, pose et vitesse) et le TF `odom → base_footprint`, seul publieur de cette transformation ;
   - vitesse calculée par différence finie entre deux poses, exprimée dans `base_footprint`, nulle si l'intervalle de temps est nul ou négatif ;
   - retrait de `odom_optc`, de la fusion et de `filterpy` ;
-  - scan : republié sans changer l'horodatage, `frame_id` réécrit en `<namespace>/lidar_link` tant que le firmware envoie `lds_01_link` (ticket existant RD-711) ;
+  - scan : republié sans changer l'horodatage, `frame_id` réécrit en `<namespace>/lidar_link` tant que le firmware envoie `lds_01_link` ;
   - calculs en fonctions pures, testées sans ROS.
 - `lidar_process` supprimé, remplacé par `<gz_frame_id>` dans le capteur.
 - Joint du LiDAR en `fixed`.
