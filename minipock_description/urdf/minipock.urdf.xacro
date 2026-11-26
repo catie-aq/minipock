@@ -23,6 +23,8 @@
       R="0.0" P="0.0" Y="0.0" side="1" mode="${mode}" />
     <xacro:motor namespace="${namespace}" name="motor_right" x="0.0" y="-0.132" z="-0.086"
       R="0.0" P="0.0" Y="${-pi}" side="-1" mode="${mode}" />
+    <xacro:caster namespace="${namespace}" name="caster_front" x="0.125" />
+    <xacro:caster namespace="${namespace}" name="caster_rear" x="-0.125" />
   </xacro:if>
 
   <xacro:if value="${mode == 'holonomic'}">

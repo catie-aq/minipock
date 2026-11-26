@@ -55,6 +55,15 @@ cibles `base`, `simulation`, `real`), publiées sur
   ne coupe le plan du LiDAR (`test_scan_plane_clear_of_robot_body`) : l'absence
   de filtre d'empreinte repose sur la hauteur de l'URDF, à confirmer sur le
   robot réel.
+- Garde au sol (`minipock_description/test/test_urdf.py`) : bas des roues à
+  0,0975 m sous `base_link` (plan de contact), collision du châssis 1 cm
+  au-dessus. Le différentiel a deux patins sans frottement, avant et arrière,
+  1,5 mm au-dessus du plan comme les patins PLA du robot réel : il penche de
+  0,7° au plus et le châssis ne frotte jamais le sol. `minipock_gz` pose le
+  robot 2,5 mm au-dessus du sol (`SPAWN_HEIGHT`, `test_spawn_height.py`) : plus
+  bas, roues et châssis démarrent dans le maillage du sol et y restent
+  enfoncés, et le frottement du châssis absorbe les petites consignes de
+  `VelocityControl` (holonome à l'arrêt).
 - Écart connu de la sim : l'odométrie holonome (`OdometryPublisher` de gz-sim)
   part de l'origine du monde, alors que le firmware part de zéro (les options de
   décalage n'existent qu'après gz-sim 8.11.0). Sans effet sur Nav2, qui corrige
@@ -237,11 +246,9 @@ colcon test --merge-install --packages-select minipock_bringup \
 colcon test-result --verbose
 ```
 
-- État connu : le but de `minipock_0` (holonome) échoue souvent. La
-  collision du châssis frotte sur le sol (frottement par défaut) et absorbe les
-  petites consignes de `VelocityControl` ; MPPI, qui part de la vitesse mesurée,
-  reste alors à l'arrêt, et l'AMCL dérive pendant les rotations rapides qui
-  suivent. Correctifs à faire hors de ce test (description, réglage Nav2).
+- État connu : le but de `minipock_0` (holonome) échoue encore souvent :
+  rotations très rapides près du but et dérive de l'AMCL qui les suit
+  (correctifs en cours).
 
 ## Skills
 

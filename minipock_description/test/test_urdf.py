@@ -351,3 +351,79 @@ def test_stl_bounds_match_files(name: str) -> None:
     lower, upper = _stl_bounds(MODELS / name)
     assert lower == pytest.approx(MESH_BOUNDS[name][0], abs=1e-4)
     assert upper == pytest.approx(MESH_BOUNDS[name][1], abs=1e-4)
+
+
+# Wheel contact plane, below base_link: wheel centre 0.062 m below base_link, radius 0.0355 m.
+# minipock_gz spawns the model just above it (SPAWN_HEIGHT in minipock_gz/launch/robot.launch.py).
+WHEEL_CONTACT_DEPTH = 0.0975
+# Chassis clearance: about one centimetre, so that the chassis collision never rubs the floor.
+MIN_CHASSIS_CLEARANCE = 0.009
+# Differential skids: 1.5 mm above the contact plane, like the PLA skids of the real robot.
+SKID_CLEARANCE = 0.0015
+
+
+def _collision_z_range(
+    robot: ET.Element, link: ET.Element, collision: ET.Element
+) -> tuple[float, float] | None:
+    """Return the z range in base_link of a cylinder or sphere collision (None for a mesh)."""
+    rot, pos = _compose(_link_in_base(robot, link.get("name")), _origin(collision.find("origin")))
+    cylinder = collision.find("geometry/cylinder")
+    sphere = collision.find("geometry/sphere")
+    if cylinder is not None:
+        radius, half = float(cylinder.get("radius")), float(cylinder.get("length")) / 2.0
+        axis_z = abs(rot[2][2])
+        extent = half * axis_z + radius * math.sqrt(max(0.0, 1.0 - axis_z**2))
+    elif sphere is not None:
+        extent = float(sphere.get("radius"))
+    else:
+        return None
+    return pos[2] - extent, pos[2] + extent
+
+
+def _lowest_collisions(robot: ET.Element) -> dict[str, float]:
+    """Return the lowest point of the primitive collisions of each link, in base_link."""
+    lowest = {}
+    for link in robot.findall("link"):
+        for collision in link.findall("collision"):
+            z_range = _collision_z_range(robot, link, collision)
+            if z_range is None:
+                # Mesh collisions: only the LiDAR housing, far above the floor.
+                assert link.get("name") == LIDAR_LINK
+                continue
+            name = link.get("name")
+            lowest[name] = min(lowest.get(name, math.inf), z_range[0])
+    return lowest
+
+
+def test_wheels_define_contact_plane(robot: ET.Element) -> None:
+    lowest = _lowest_collisions(robot)
+    wheels = [z for name, z in lowest.items() if name.endswith("_wheel_link")]
+    differential = robot.find(".//plugin[@name='gz::sim::systems::DiffDrive']") is not None
+    assert len(wheels) == (2 if differential else 3)
+    for z in wheels:
+        assert z == pytest.approx(-WHEEL_CONTACT_DEPTH, abs=1e-6)
+    assert min(lowest.values()) == pytest.approx(-WHEEL_CONTACT_DEPTH, abs=1e-6)
+
+
+def test_chassis_ground_clearance(robot: ET.Element) -> None:
+    # The chassis collision stays about 1 cm above the wheel contact plane: lower, its friction
+    # on the floor absorbs the small commands of VelocityControl and stalls the holonomic robot.
+    lowest = _lowest_collisions(robot)
+    clearance = lowest[f"{NAMESPACE}/base_link"] + WHEEL_CONTACT_DEPTH
+    assert clearance >= MIN_CHASSIS_CLEARANCE
+
+
+def test_skids_only_on_differential(robot: ET.Element) -> None:
+    lowest = _lowest_collisions(robot)
+    skids = {name: z for name, z in lowest.items() if "caster" in name}
+    if robot.find(".//plugin[@name='gz::sim::systems::DiffDrive']") is None:
+        # Three wheels hold the holonomic base: no skid.
+        assert not skids
+        return
+    assert sorted(skids) == [f"{NAMESPACE}/caster_front_link", f"{NAMESPACE}/caster_rear_link"]
+    for name, z in skids.items():
+        assert z + WHEEL_CONTACT_DEPTH == pytest.approx(SKID_CLEARANCE, abs=1e-6)
+        gazebo = robot.find(f"gazebo[@reference='{name}']")
+        assert gazebo is not None
+        assert float(gazebo.findtext("mu1")) == 0.0
+        assert float(gazebo.findtext("mu2")) == 0.0

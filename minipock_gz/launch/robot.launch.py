@@ -7,7 +7,10 @@ from launch_ros.actions import Node
 
 from minipock_gz import bridges
 
-SPAWN_HEIGHT = "0.05"
+# Height of the model origin (base_footprint, at base_link height) at spawn. The wheel contact
+# plane is 0.0975 m below base_link: spawning lower puts the wheels and the chassis inside the
+# floor mesh, where the physics leaves them sunk (chassis rubbing the floor). 2.5 mm drop.
+SPAWN_HEIGHT = "0.1"
 
 
 def _robot(context: LaunchContext) -> list[Node]:
