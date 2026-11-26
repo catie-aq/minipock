@@ -15,7 +15,9 @@ def generate_launch_description() -> LaunchDescription:
 
     Returns:
         The launch description. Arguments: `namespace` (without trailing slash), `mode`
-        (`differential` or `holonomic`) and `use_sim_time` (`true` or `false`).
+        (`differential` or `holonomic`), `use_sim_time` (`true` or `false`), and for the
+        simulation only `sim_index` (position of the robot in the fleet, unique per robot, 0 to
+        17: hides each robot's LD19 mesh from its own LiDAR only).
     """
     share = Path(get_package_share_directory("minipock_description"))
     namespace = LaunchConfiguration("namespace")
@@ -28,6 +30,8 @@ def generate_launch_description() -> LaunchDescription:
                 namespace,
                 "/ mode:=",
                 LaunchConfiguration("mode"),
+                " sim_index:=",
+                LaunchConfiguration("sim_index"),
             ]
         ),
         value_type=str,
@@ -37,6 +41,7 @@ def generate_launch_description() -> LaunchDescription:
             DeclareLaunchArgument("namespace", default_value="minipock_0"),
             DeclareLaunchArgument("mode", default_value="differential"),
             DeclareLaunchArgument("use_sim_time", default_value="false"),
+            DeclareLaunchArgument("sim_index", default_value="0"),
             Node(
                 package="robot_state_publisher",
                 executable="robot_state_publisher",

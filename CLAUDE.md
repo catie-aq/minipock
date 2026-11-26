@@ -30,6 +30,16 @@ cibles `base`, `simulation`, `real`), publiées sur
 - Sans écran ni GPU (CI, conteneur sans `/dev/dri`) : `LIBGL_ALWAYS_SOFTWARE=1`
   et `gz sim -s --headless-rendering`. Le LiDAR simulé (`gpu_lidar`) tourne
   alors en rendu logiciel, plus lentement que le temps réel.
+- `minipock_description/launch/description.launch.py` prend, en plus de
+  `namespace`, `mode` et `use_sim_time`, l'argument propre à la sim
+  `sim_index` (rang du robot dans la flotte, 0 à 17, unique par simulation).
+  L'origine du `gpu_lidar` est dans le maillage du
+  LD19 : son visuel porte le bit de visibilité Gazebo `1 << (2 + sim_index)`,
+  que le masque du LiDAR du même robot exclut. Chaque LiDAR ignore ainsi son
+  propre boîtier mais voit celui des autres robots ; deux robots au même
+  `sim_index` ne voient pas leurs LD19 respectifs. Aucune pièce du châssis ne
+  coupe le plan du LiDAR (`test_scan_plane_clear_of_robot_body`) : pas de
+  filtre d'empreinte, ni en sim ni en réel.
 - `ROS_DOMAIN_ID` : 10 sur le réseau du robot. Pour un test local, prendre un
   autre domaine et `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST` pour ne pas
   parler aux robots réels.

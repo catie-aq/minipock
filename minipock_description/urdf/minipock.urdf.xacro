@@ -5,6 +5,8 @@
   <xacro:arg name="y" default="0.0"/>
   <xacro:arg name="z" default="0.0"/>
   <xacro:arg name="mode" default="differential"/>
+  <!-- Position of the robot in the simulated fleet, unique per robot (0 to 17). -->
+  <xacro:arg name="sim_index" default="0"/>
   <xacro:property name="namespace" value="$(arg namespace)"/>
   <xacro:property name="x" value="$(arg x)"/>
   <xacro:property name="y" value="$(arg y)"/>
@@ -35,7 +37,7 @@
   <!-- sensors -->
   <xacro:include filename="$(find minipock_description)/urdf/sensors.xacro" />
   <xacro:lidar namespace="${namespace}" name="lidar" x="0.0" y="0.0" z="0.050" R="${pi}" P="0.0"
-    Y="0.0" />
+    Y="0.0" sim_index="$(arg sim_index)" />
 
   <gazebo>
     <xacro:if value="${mode == 'differential'}">
