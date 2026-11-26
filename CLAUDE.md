@@ -126,6 +126,12 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 u
   doit y figurer. Pas d'URI `https://fuel...` dans un monde.
 - Positions de départ de `minipocks.yaml` : dans l'open space, cellules libres
   dans un rayon de 0,25 m (testé sur la carte).
+- `world_to_map.py` : la cellule i de la carte couvre
+  `[origin + i·res, origin + (i+1)·res)` et une cellule est occupée dès qu'un
+  obstacle la touche (les vitres de 1 cm restent dans la carte). Pas de
+  décalage d'une demi-cellule (`test_world_to_map.py`) : avec, chaque obstacle
+  glissait vers -x et -y et l'AMCL se recalait à plusieurs centimètres de la
+  position réelle.
 - Après toute modification du monde, régénérer la carte (sur l'hôte, depuis la
   racine du dépôt) ; `--z-max` = hauteur du LiDAR au-dessus du sol (0,1475 m :
   `lidar_link` à 0,05 m au-dessus de `base_link`, bas des roues à 0,0975 m en

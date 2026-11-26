@@ -312,7 +312,7 @@ class Grid:
             triangles: (n, 3, 3) triangles in world coordinates.
         """
         draw = ImageDraw.Draw(image)
-        cells = (triangles[:, :, :2] - self.origin) / self.resolution - 0.5
+        cells = self._to_pixels(triangles[:, :, :2])
         for triangle in cells:
             points = [tuple(point) for point in triangle]
             draw.polygon(points, fill=1, outline=1)
@@ -332,8 +332,18 @@ class Grid:
         image.paste(1, mask=mask)
 
     def _cells(self, coords: Iterable[tuple[float, ...]]) -> list[tuple[float, float]]:
-        points = (np.asarray(list(coords))[:, :2] - self.origin) / self.resolution - 0.5
+        points = self._to_pixels(np.asarray(list(coords))[:, :2])
         return [tuple(point) for point in points]
+
+    def _to_pixels(self, points: np.ndarray) -> np.ndarray:
+        """Convert world x, y into PIL pixel coordinates.
+
+        PIL fills pixel i of a polygon spanning [a, b] for floor(a) <= i <= floor(b): pixel i
+        covers [i, i + 1), which is cell i of the map, [origin + i * res, origin + (i + 1) * res).
+        No half-cell shift: with one, every obstacle moved half a cell towards -x and -y and grew
+        by one cell on that side, and AMCL localized the robots several centimetres off.
+        """
+        return (points - self.origin) / self.resolution
 
     def pixels(self) -> np.ndarray:
         """Return the trinary PGM pixels, first row at the highest y.
