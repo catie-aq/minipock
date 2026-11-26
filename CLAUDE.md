@@ -197,6 +197,13 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   8.11 (holonome) publie environ 62 rad/s pendant 0,1 s chaque fois que le cap
   passe -2π/3 (changement de signe du quaternion de la physique) : en boucle
   fermée le robot recevait jusqu'à 50 rad/s.
+- AMCL (`test_amcl_localization_settings`) : `alpha4` (bruit de translation
+  par radian de rotation, appliqué en long et en travers par le modèle omni) à
+  0,02 au lieu de 0,2, et les 132 points du scan (`max_beams`). Avec 0,2, quelques
+  tours sur place laissaient l'estimation à 0,15 à 0,25 m de la position réelle
+  en simulation (odométrie exacte) ; après réglage, 0,09 m au plus. Tolérance de
+  but `xy_goal_tolerance` 0,15 m, au-dessus de cette erreur. Valeurs à vérifier
+  sur le robot réel (glissement des roues en rotation).
 - `docking_server` (géré par `navigation_launch.py`) a un plugin
   `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
 - `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`
@@ -258,9 +265,6 @@ colcon test --merge-install --packages-select minipock_bringup \
 colcon test-result --verbose
 ```
 
-- État connu : l'estimation AMCL s'écarte de 0,1 m environ de la position
-  réelle pendant un déplacement, de l'ordre de la tolérance de but (correctif
-  en cours).
 
 ## Skills
 

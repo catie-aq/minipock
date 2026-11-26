@@ -156,6 +156,24 @@ def test_mppi_acceleration_symmetric(mode: str) -> None:
     assert mppi["ay_min"] == -mppi["ay_max"]
 
 
+# Simulated LD19 points per scan, and AMCL position error measured in simulation after fast turns
+# in place with the tuned parameters (task 7b report).
+LIDAR_SAMPLES = 132
+AMCL_POSITION_ERROR = 0.09
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_amcl_localization_settings(mode: str) -> None:
+    params = _render(mode)
+    amcl = _params(params, "amcl")
+    assert amcl["max_beams"] == LIDAR_SAMPLES
+    # Translation noise per radian of rotation: 0.2 spread the particles beyond what the laser
+    # pulls back during turns in place.
+    assert amcl["alpha4"] <= 0.05
+    checker = _params(params, "controller_server")["general_goal_checker"]
+    assert checker["xy_goal_tolerance"] > AMCL_POSITION_ERROR
+
+
 @pytest.mark.parametrize("mode", MODES)
 def test_velocity_smoother_open_loop(mode: str) -> None:
     # In closed loop the smoother output is the measured velocity plus a bounded change, never

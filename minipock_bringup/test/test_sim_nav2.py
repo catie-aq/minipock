@@ -58,7 +58,7 @@ GOALS = {
     "minipock_1": (8.5, -5.1, 1.21),
 }
 # Distance between the localized pose and the goal once Nav2 reports success: goal checker
-# tolerance (0.10 m) plus margin for the AMCL estimate moving after the last control cycle.
+# tolerance (0.15 m) plus margin for the AMCL estimate moving after the last control cycle.
 GOAL_REACHED_TOLERANCE = 0.25
 
 # Simulated-time limits.

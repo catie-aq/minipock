@@ -15,12 +15,18 @@
 # decel 1.5 m/s2 and 3.0 rad/s2 (MPPI keeps its linear decel equal to its accel,
 # see FollowPath).
 
+# AMCL: alpha4 is the translation noise per radian of rotation, in both the differential and the
+# omni model (the omni model applies it along and across the heading). The default 0.2 spreads
+# the particles by 0.45 m per radian of rotation, more than the laser can pull back: after a few
+# turns in place the estimate sat 0.15 to 0.25 m from the true pose (simulation, odometry
+# exact). 0.02 (0.14 m per radian) brought it under 0.1 m. Every scan point is used (max_beams =
+# the 132 points of the LD19). To check on the real robot, whose wheels slip when turning.
 amcl:
   ros__parameters:
     alpha1: 0.2
     alpha2: 0.2
     alpha3: 0.2
-    alpha4: 0.2
+    alpha4: 0.02
     alpha5: 0.2
     base_frame_id: "<robot_namespace>/base_footprint"
     beam_skip_distance: 0.5
@@ -33,7 +39,7 @@ amcl:
     laser_max_range: 12.0
     laser_min_range: 0.02
     laser_model_type: "likelihood_field"
-    max_beams: 66
+    max_beams: 132
     max_particles: 2000
     min_particles: 500
     odom_frame_id: "<robot_namespace>/odom"
@@ -100,7 +106,9 @@ controller_server:
     general_goal_checker:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.10
+      # Above the AMCL error measured in simulation after fast turns (up to 0.09 m, 0.04 rad):
+      # with 0.10 the robot chased the localization noise near the goal.
+      xy_goal_tolerance: 0.15
       yaw_goal_tolerance: 0.15
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
