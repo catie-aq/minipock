@@ -248,8 +248,10 @@ colcon test --merge-install --pytest-args -m "not integration" && colcon test-re
   attentes comptent en temps simulé (`/clock`), avec un garde-fou en temps
   réel de 20 fois l'attente. Le marqueur est posé sur
   `generate_test_description` : le plugin pytest de `launch_testing` recopie
-  les marqueurs de cette fonction, pas un `pytestmark` de module. Sans `-m`,
-  `colcon test` lance aussi ce test.
+  les marqueurs de cette fonction, pas un `pytestmark` de module. Le test est
+  opt-in (`minipock_bringup/test/conftest.py`) : un `colcon test` ou un
+  `pytest` sans `-m` le saute ; il tourne avec `-m integration` ou avec la
+  variable `MINIPOCK_INTEGRATION=1` (à poser par une CI d'intégration).
 - Lancer le test d'intégration en local, dans le conteneur de simulation
   (workspace compilé). Avec GPU, le conteneur reçoit `--gpus all
   -e NVIDIA_DRIVER_CAPABILITIES=all --device /dev/dri` (rendu matériel, temps
@@ -264,7 +266,6 @@ colcon test --merge-install --packages-select minipock_bringup \
   --pytest-args -m integration --event-handlers console_direct+
 colcon test-result --verbose
 ```
-
 
 ## Skills
 
