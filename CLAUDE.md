@@ -308,6 +308,13 @@ Les gestes répétitifs ont un skill de projet dans `.claude/skills/` :
 - Commits Conventional Commits en anglais (`type(scope): subject`), branches
   `type/short-description`.
 - `pre-commit run --all-files` avant de pousser.
+- CI (`.github/workflows/ros2-build-test.yaml`, workflow partagé
+  `catie-aq/ros_workflows` `ros2-ci.yml@v2.0.0`) : pre-commit, compilation et
+  tests unitaires sur Jazzy, puis le test d'intégration `minipock_bringup`
+  (`-m integration`, variable `MINIPOCK_INTEGRATION=1`) sur le runner GPU
+  `sonu-github-arc-gpu`. Rolling tourne chaque semaine dans
+  `ros2-rolling.yaml` (alerte précoce, ne bloque aucune PR). Le sous-module privé `minipock_msgs` passe par le secret `PAT`. Passer à une
+  nouvelle version du workflow : changer `@vX.Y.Z` et `toolkit-ref` ensemble.
 - Livraison : branche, PR vers `main`, merge en rebase (seule méthode permise
   par le ruleset, historique linéaire) dès que la CI est verte, sans relecture
   obligatoire. Les dépôts firmware (`minipock_zephyr-demo`,
