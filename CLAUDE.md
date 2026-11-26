@@ -191,6 +191,47 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   le dépôt firmware, sinon le robot réel casse sans que la CI le voie.
 - Rien ne se teste sur le robot réel sans sonde de programmation à portée.
 
+## Tests
+
+- Tests unitaires de tous les paquets, sans la simulation :
+
+```bash
+colcon test --merge-install --pytest-args -m "not integration" && colcon test-result --verbose
+```
+
+- Test d'intégration `minipock_bringup/test/test_sim_nav2.py` (marqueur pytest
+  `integration`, `launch_testing`) : lance `sim.launch.py` sans interface avec
+  `minipock_bringup/test/data/two_robots.yaml` (monde `office`, `minipock_0`
+  holonome, `minipock_1` différentiel), vérifie `scan` et `odom`, l'arbre TF
+  (`map -> <ns>/odom` publié par chaque AMCL), le `map_server` unique, puis
+  envoie en parallèle un but `NavigateToPose` par robot (constantes `GOALS`,
+  choisies sur `office.pgm`), attendu `SUCCEEDED` sous 300 s simulées. Les
+  attentes comptent en temps simulé (`/clock`), avec un garde-fou en temps
+  réel de 20 fois l'attente. Le marqueur est posé sur
+  `generate_test_description` : le plugin pytest de `launch_testing` recopie
+  les marqueurs de cette fonction, pas un `pytestmark` de module. Sans `-m`,
+  `colcon test` lance aussi ce test.
+- Lancer le test d'intégration en local, dans le conteneur de simulation
+  (workspace compilé). Avec GPU, le conteneur reçoit `--gpus all
+  -e NVIDIA_DRIVER_CAPABILITIES=all --device /dev/dri` (rendu matériel, temps
+  réel, 1 à 3 min) ; sans GPU, `-e LIBGL_ALWAYS_SOFTWARE=1` (rendu logiciel du
+  LiDAR, simulation bien plus lente que le temps réel, attentes inchangées en
+  temps simulé). La commande est la même dans les deux cas ; `-s` dans
+  `--pytest-args` affiche les logs de la simulation et le temps mis par chaque
+  robot pour atteindre son but :
+
+```bash
+colcon test --merge-install --packages-select minipock_bringup \
+  --pytest-args -m integration --event-handlers console_direct+
+colcon test-result --verbose
+```
+
+- État connu : le but de `minipock_0` (holonome) échoue souvent. La
+  collision du châssis frotte sur le sol (frottement par défaut) et absorbe les
+  petites consignes de `VelocityControl` ; MPPI, qui part de la vitesse mesurée,
+  reste alors à l'arrêt, et l'AMCL dérive pendant les rotations rapides qui
+  suivent. Correctifs à faire hors de ce test (description, réglage Nav2).
+
 ## Qualité et livraison
 
 - Code, commentaires et docstrings en anglais ; doc utilisateur en français.
