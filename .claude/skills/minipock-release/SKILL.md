@@ -11,10 +11,11 @@ Reference: version 2.2.1 (`chore(release): bump version to 2.2.1`, then `docs: f
 
 ```bash
 git switch -c chore/release-X.Y.Z origin/main
-grep -rn "2.2.1" --include=package.xml --include=setup.py . | grep -v "minipock_msgs\|minipock_fleet_adapter"
+cur=$(sed -n 's|.*<version>\(.*\)</version>.*|\1|p' minipock/package.xml | head -1)
+grep -rn "$cur" --include=package.xml --include=setup.py . | grep -v "minipock_msgs\|minipock_fleet_adapter\|minipock_firmware"
 ```
 
-All packages carry the same version, enforced by `minipock_bringup/test/test_package_metadata.py`. Edit `<version>` in every `package.xml` and `version=` in every `setup.py` (`minipock_fleet_adapter` and `minipock_msgs` stay `0.0.0`, excluded by the test). Check:
+All packages carry the same version, enforced by `minipock_bringup/test/test_package_metadata.py`. Edit `<version>` in every `package.xml` and `version=` in every `setup.py` (`minipock_fleet_adapter`, `minipock_msgs` and `minipock_firmware` are excluded by the test and keep their own version). Check:
 
 ```bash
 grep -rhn "<version>\|version=" --include=package.xml --include=setup.py . | sort | uniq -c
@@ -48,7 +49,7 @@ gh release list --limit 3
 gh release view X.Y.Z
 ```
 
-Review the draft and publish it (`gh release edit X.Y.Z --draft=false`; the 2.2.1 release is still a draft at the time of writing) once the Docker workflow (`docker.yaml`, triggered by the tag and by `package.xml` changes) has pushed `ghcr.io/catie-aq/minipock:X.Y.Z-{base,simulation,real}`:
+Review the draft and publish it (`gh release edit X.Y.Z --draft=false`) once the Docker workflow (`docker.yaml`, triggered by the tag and by `package.xml` changes) has pushed `ghcr.io/catie-aq/minipock:X.Y.Z-{base,simulation,real}`:
 
 ```bash
 gh run list --workflow docker.yaml --limit 3

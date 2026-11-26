@@ -48,7 +48,11 @@ src=$(realpath "${MINIPOCK_SRC:-$repo}")
 ws=$(realpath -m "${MINIPOCK_WS:-$repo/../ws}")
 
 if [ -z "${IMAGE:-}" ]; then
-  version=$(sed -n 's|.*<version>\(.*\)</version>.*|\1|p' "$src/minipock/package.xml" | head -n1)
+  version=$(sed -n 's|.*<version>\(.*\)</version>.*|\1|p' "$src/minipock/package.xml" 2>/dev/null | head -n1)
+  if [ -z "$version" ]; then
+    echo "cannot read the version from $src/minipock/package.xml: set IMAGE" >&2
+    exit 2
+  fi
   IMAGE=ghcr.io/catie-aq/minipock:${version}-simulation
 fi
 if [ -z "${ROS_DOMAIN_ID:-}" ]; then

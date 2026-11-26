@@ -67,7 +67,7 @@ PYTHONUNBUFFERED=1 timeout 100 ros2 action send_goal /minipock_0/navigate_to_pos
   "{pose: {header: {frame_id: map}, pose: {position: {x: 6.95, y: -5.5}, orientation: {w: 1.0}}}}" --feedback
 ```
 
-`Goal accepted with ID: ...` appears at once, then feedback (`distance_remaining`, `number_of_recoveries`, `navigation_time`), then `Result` with `status: 4` (SUCCEEDED; 5 canceled, 6 aborted). Piping the output through `grep`/`tail` hides everything until the command ends unless `PYTHONUNBUFFERED=1` is set. On the GPU run of 26/11 the robot moved toward the goal but did not arrive within 95 s (9 recoveries, 0.85 m left): a goal that is accepted is not a goal that succeeds, and tuning is a separate topic. With software rendering the clock barely advances: the goal takes minutes or times out; that does not mean Nav2 is broken.
+`Goal accepted with ID: ...` appears at once, then feedback (`distance_remaining`, `number_of_recoveries`, `navigation_time`), then `Result` with `status: 4` (SUCCEEDED; 5 canceled, 6 aborted). Piping the output through `grep`/`tail` hides everything until the command ends unless `PYTHONUNBUFFERED=1` is set. An accepted goal is not a succeeded goal: check `status` and `number_of_recoveries` before concluding. With software rendering the clock barely advances: the goal takes minutes or times out; that does not mean Nav2 is broken.
 
 ## Pitfalls
 

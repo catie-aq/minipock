@@ -30,14 +30,14 @@ Drop `--packages-select` to test every package. `-m 'not integration'` keeps the
 
 ## Integration test (starts Gazebo and Nav2)
 
-Tests marked `integration` (package `minipock_bringup`) start the simulation. Without a GPU, force software rendering; the LiDAR then runs far below real time (see `minipock-sim`), so allow minutes:
+Tests marked `integration` (`@pytest.mark.integration`, `minipock_bringup/test/test_sim_nav2.py`) start the simulation and check that Nav2 comes up. The marker is registered in `minipock_bringup/setup.cfg`; unit runs exclude it with `-m 'not integration'`. Without a GPU force software rendering; the LiDAR then runs far below real time (see `minipock-sim`), so allow minutes:
 
 ```bash
 scripts/docker-run.sh --gpu "colcon test --merge-install --packages-select minipock_bringup --pytest-args -m integration --event-handlers console_direct+ && colcon test-result --verbose"
 DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1" scripts/docker-run.sh "<same command>"
 ```
 
-If the marker selects nothing, `colcon test-result` reports `0 tests`: that is not a pass, the test is not in this branch.
+`colcon test-result` must report at least one test. `0 tests` means the check did not run (marker missing, wrong package, test file absent): that is a failure of the check, not a pass.
 
 ## Read the results
 
@@ -52,7 +52,7 @@ If the marker selects nothing, `colcon test-result` reports `0 tests`: that is n
 scripts/gate.sh [<git-ref>]
 ```
 
-Exports the commit to `../ws-gate`, runs `pre-commit` on a clean checkout without the `minipock_msgs` submodule (as CI does), then builds and runs the unit tests in the image. It tests the committed state, not the working tree: commit first. Needs `minipock_msgs` checked out (`git submodule update --init`).
+Exports the commit to `../ws-gate` (with the `minipock_msgs` revision the commit pins), runs `pre-commit` on a clean checkout without the submodule (as CI does), then builds and runs the unit tests in the image (`IMAGE` defaults to `minipock:dev-simulation`; set `IMAGE=ghcr.io/catie-aq/minipock:<version>-simulation` to use the published image). Exit status is non-zero on a pre-commit failure, a build failure, a failed test or zero tests run. It tests the committed state, not the working tree: commit first. The pinned submodule revision must exist locally (`git submodule update --init`).
 
 Lint without Docker: `uvx ruff check . && uvx ruff format --check .` and `uvx pre-commit run --all-files`.
 
