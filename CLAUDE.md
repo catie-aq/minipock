@@ -206,13 +206,15 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   sur le robot réel (glissement des roues en rotation).
 - Holonome (`holonomic.yaml`, `test_holonomic_critics_without_heading_preference`) :
   MPPI sans `PreferForwardCritic` ni `PathAngleCritic`, avec `TwirlingCritic` ;
-  il se déplace de côté ou en arrière sans tourner (dérive de cap 0,06 rad sur
-  1 m latéral, 0,69 rad avant).
+  il se déplace de côté ou en arrière sans tourner (dérive de cap 0,08 rad sur
+  1 m latéral, 0,65 rad avant).
 - Banc de réglage `nav_benchmark` (`minipock_bringup`) : lance une suite de
   buts par robot et écrit un tableau Markdown (succès, durée simulée, chemin
-  rapporté à la ligne droite, dégagement minimal tiré du scan, changements de
-  signe de `wz` par mètre, dérive de cap, erreur finale). Buts et flotte dans
-  `minipock_bringup/test/data/benchmark_goals.yaml` et `benchmark_fleet.yaml`
+  parcouru rapporté à la distance couverte, dégagement minimal tiré du scan,
+  changements de signe de `wz` à moins de 0,5 m du but, dérive de cap des
+  buts `keep_yaw`, erreur finale). Il sort en erreur si `/clock` n'arrive pas
+  en 30 s, si un serveur d'action manque ou si une ligne manque. Buts et flotte
+  dans `minipock_bringup/test/data/benchmark_goals.yaml` et `benchmark_fleet.yaml`
   (monde `empty_room_world`) ; mesures et raisons des réglages dans
   `docs/superpowers/specs/2026-11-25-nav2-tuning.md`.
 

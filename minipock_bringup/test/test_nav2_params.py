@@ -167,7 +167,7 @@ def test_mppi_acceleration_symmetric(mode: str) -> None:
 
 
 # Simulated LD19 points per scan, and AMCL position error measured in simulation after fast turns
-# in place with the tuned parameters (task 7b report).
+# in place with the tuned parameters (docs/superpowers/specs/2026-11-25-nav2-tuning.md).
 LIDAR_SAMPLES = 132
 AMCL_POSITION_ERROR = 0.09
 

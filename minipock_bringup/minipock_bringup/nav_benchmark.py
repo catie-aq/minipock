@@ -8,16 +8,21 @@ Usage (simulation running, Nav2 active)::
 The goals file maps each robot namespace to a `start` pose and a list of `goals`, each with a
 `name` and a `pose` `[x, y, yaw]` in the `map` frame; `keep_yaw: true` marks a goal where the
 robot must keep its heading (holonomic lateral move). The robots run their goals in parallel,
-one after the other, and go back to `start` between repetitions (not measured).
+one after the other, and go back to `start` between repetitions (logged, not measured).
 
-Per goal: result, duration (simulated time), ratio of the travelled path to the straight line,
-smallest distance between the robot body and an obstacle (scan range minus the robot radius),
-sign changes of the commanded angular velocity per metre, largest heading drift from the start
-of the goal, and the final position and heading errors of the localized pose.
+Per goal: result, duration (simulated time), travelled path over the distance actually covered
+(start to final pose), smallest distance between the robot body and an obstacle (scan range
+minus the robot radius), sign changes of the commanded angular velocity while the robot is
+within 0.5 m of the goal, largest heading drift from the start pose (`keep_yaw` goals only), and
+the final position and heading errors of the localized pose.
+
+The process exits with status 1 if `/clock` does not arrive, an action server is missing or a
+goal has no row.
 """
 
 import itertools
 import math
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -43,8 +48,16 @@ OSCILLATION_DEADBAND = 0.05
 # Below this straight-line distance the path ratio is meaningless (turn in place, where the
 # robot starts up to the goal tolerance away from the goal).
 MIN_STRAIGHT_LINE = 0.3
+# Angular commands sent closer than this to the goal count as end-of-goal oscillations.
+NEAR_GOAL_DISTANCE = 0.5
 GOAL_TIMEOUT = 120.0
 SAMPLE_PERIOD = 0.1
+# Wall-clock guards: `/clock` must arrive within CLOCK_WALL_TIMEOUT, and a simulated wait may
+# last at most WALL_FACTOR times its simulated limit (software rendering is slower than real
+# time, not twenty times slower).
+CLOCK_WALL_TIMEOUT = 30.0
+WALL_FACTOR = 20.0
+SERVER_TIMEOUT = 60.0
 
 
 def angle_diff(a: float, b: float) -> float:
@@ -110,9 +123,11 @@ def load_goals(path: Path) -> dict[str, RobotPlan]:
 class Measure:
     """What is recorded while a robot drives to one goal."""
 
+    goal_xy: tuple[float, float]
     points: list[tuple[float, float]] = field(default_factory=list)
     yaws: list[float] = field(default_factory=list)
-    angular_commands: list[float] = field(default_factory=list)
+    # Angular velocity commands sent within NEAR_GOAL_DISTANCE of the goal.
+    near_goal_commands: list[float] = field(default_factory=list)
     min_range: float = math.inf
 
 
@@ -127,8 +142,8 @@ class Row:
     duration: float
     path_ratio: float | None
     clearance: float
-    oscillations: float
-    yaw_drift: float
+    oscillations: int
+    yaw_drift: float | None
     position_error: float
     yaw_error: float
 
@@ -145,17 +160,19 @@ def summarize(
         final: Localized pose at the end of the goal.
 
     Returns:
-        `path_ratio` (None for a turn in place), `clearance`, `oscillations` (per metre, per
-        goal when the robot barely moved), `yaw_drift`, `position_error` and `yaw_error`.
+        `path_ratio` (travelled path over the start to final distance, None for a turn in
+        place), `clearance`, `oscillations` (sign changes of the angular command near the
+        goal), `yaw_drift` (`keep_yaw` goals only, else None), `position_error` and
+        `yaw_error`.
     """
     travelled = path_length(measure.points)
-    straight = math.dist(start[:2], goal.pose[:2])
-    changes = sign_changes(measure.angular_commands)
+    covered = math.dist(start[:2], final[:2])
+    drift = max((abs(angle_diff(y, start[2])) for y in measure.yaws), default=0.0)
     return {
-        "path_ratio": travelled / straight if straight > MIN_STRAIGHT_LINE else None,
+        "path_ratio": travelled / covered if covered > MIN_STRAIGHT_LINE else None,
         "clearance": measure.min_range - ROBOT_RADIUS,
-        "oscillations": changes / travelled if travelled > MIN_STRAIGHT_LINE else changes,
-        "yaw_drift": max((abs(angle_diff(y, start[2])) for y in measure.yaws), default=0.0),
+        "oscillations": sign_changes(measure.near_goal_commands),
+        "yaw_drift": drift if goal.keep_yaw else None,
         "position_error": math.dist(final[:2], goal.pose[:2]),
         "yaw_error": abs(angle_diff(final[2], goal.pose[2])),
     }
@@ -165,17 +182,18 @@ def markdown_table(rows: list[Row]) -> str:
     """Format the rows as a Markdown table."""
     lines = [
         (
-            "| Robot | Goal | Rep | Result | Time (s) | Path / line | Min clearance (m) "
-            "| wz sign changes / m | Max yaw drift (rad) | Final error (m, rad) |"
+            "| Robot | Goal | Rep | Result | Time (s) | Path / covered | Min clearance (m) "
+            "| wz sign changes < 0.5 m | Yaw drift (rad) | Final error (m, rad) |"
         ),
         "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for r in rows:
         ratio = "-" if r.path_ratio is None else f"{r.path_ratio:.2f}"
+        drift = "-" if r.yaw_drift is None else f"{r.yaw_drift:.2f}"
         lines.append(
             f"| {r.robot} | {r.goal} | {r.repetition} | {'ok' if r.succeeded else 'FAIL'} "
-            f"| {r.duration:.1f} | {ratio} | {r.clearance:.2f} | {r.oscillations:.1f} "
-            f"| {r.yaw_drift:.2f} | {r.position_error:.2f}, {r.yaw_error:.2f} |"
+            f"| {r.duration:.1f} | {ratio} | {r.clearance:.2f} | {r.oscillations} "
+            f"| {drift} | {r.position_error:.2f}, {r.yaw_error:.2f} |"
         )
     return "\n".join(lines)
 
@@ -201,6 +219,7 @@ class NavBenchmark(Node):
         }
         self.measures: dict[str, Measure | None] = dict.fromkeys(robots)
         self.rows: list[Row] = []
+        self.errors: list[str] = []
         self.lock = threading.Lock()
         for robot in robots:
             self.create_subscription(
@@ -238,8 +257,13 @@ class NavBenchmark(Node):
 
     def _on_cmd(self, robot: str, msg: Twist) -> None:
         measure = self.measures[robot]
-        if measure is not None:
-            measure.angular_commands.append(msg.angular.z)
+        near = (
+            measure is not None
+            and measure.points
+            and math.dist(measure.points[-1], measure.goal_xy) < NEAR_GOAL_DISTANCE
+        )
+        if near:
+            measure.near_goal_commands.append(msg.angular.z)
 
     def _sample(self) -> None:
         for robot, measure in self.measures.items():
@@ -271,23 +295,48 @@ class NavBenchmark(Node):
         return result_future.result().status == GoalStatus.STATUS_SUCCEEDED, self.now() - start
 
     def _wait(self, condition: Callable[[], bool], timeout: float) -> bool:
+        """Wait `timeout` simulated seconds at most, and WALL_FACTOR times that in wall time."""
         start = self.now()
+        wall_deadline = time.monotonic() + WALL_FACTOR * timeout
         while not condition():
-            if self.now() - start > timeout:
+            if self.now() - start > timeout or time.monotonic() > wall_deadline:
                 return False
             time.sleep(0.05)
         return True
 
+    def wait_for_clock(self) -> bool:
+        """Wait for the first `/clock` message, CLOCK_WALL_TIMEOUT seconds at most."""
+        deadline = time.monotonic() + CLOCK_WALL_TIMEOUT
+        while self.now() <= 0.0:
+            if time.monotonic() > deadline:
+                return False
+            time.sleep(0.1)
+        return True
+
     def run_robot(self, robot: str) -> None:
-        """Run the goals of one robot `repeat` times."""
+        """Run the goals of one robot `repeat` times; record any error instead of raising."""
+        try:
+            self._run_robot(robot)
+        except Exception as error:  # noqa: BLE001 - reported as missing rows
+            with self.lock:
+                self.errors.append(f"{robot}: {error!r}")
+            self.get_logger().error(f"{robot}: worker stopped: {error!r}")
+
+    def _run_robot(self, robot: str) -> None:
         plan = self.plans[robot]
-        self.action_clients[robot].wait_for_server()
+        if not self.action_clients[robot].wait_for_server(timeout_sec=SERVER_TIMEOUT):
+            msg = f"/{robot}/navigate_to_pose not available within {SERVER_TIMEOUT} s"
+            raise RuntimeError(msg)
         for repetition in range(1, self.repeat + 1):
             if repetition > 1:
-                self.navigate(robot, plan.start)
+                succeeded, duration = self.navigate(robot, plan.start)
+                log = self.get_logger().info if succeeded else self.get_logger().warning
+                log(
+                    f"{robot}: back to start {'ok' if succeeded else 'FAILED'} in {duration:.1f} s"
+                )
             for goal in plan.goals:
                 start = self.pose(robot) or plan.start
-                self.measures[robot] = Measure()
+                self.measures[robot] = Measure(goal_xy=goal.pose[:2])
                 succeeded, duration = self.navigate(robot, goal.pose)
                 time.sleep(1.0)
                 measure, self.measures[robot] = self.measures[robot], None
@@ -306,22 +355,41 @@ def main() -> None:
     executor.add_node(node)
     spinner = threading.Thread(target=executor.spin, daemon=True)
     spinner.start()
+    status = 0
     try:
-        while node.now() <= 0.0:
-            time.sleep(0.1)
-        workers = [threading.Thread(target=node.run_robot, args=(r,)) for r in node.plans]
-        for worker in workers:
-            worker.start()
-        for worker in workers:
-            worker.join()
-        rows = sorted(node.rows, key=lambda r: (r.robot, r.repetition))
-        print(markdown_table(rows), flush=True)
+        if not node.wait_for_clock():
+            print(
+                f"no /clock within {CLOCK_WALL_TIMEOUT} s: is the simulation running, with "
+                "use_sim_time:=true? Stale Fast DDS shared-memory segments also block it: "
+                "`fastdds shm clean`, or FASTDDS_BUILTIN_TRANSPORTS=UDPv4.",
+                file=sys.stderr,
+            )
+            status = 1
+        else:
+            workers = [threading.Thread(target=node.run_robot, args=(r,)) for r in node.plans]
+            for worker in workers:
+                worker.start()
+            for worker in workers:
+                worker.join()
+            rows = sorted(node.rows, key=lambda r: (r.robot, r.repetition))
+            print(markdown_table(rows), flush=True)
+            for robot, plan in node.plans.items():
+                expected = node.repeat * len(plan.goals)
+                count = sum(1 for r in rows if r.robot == robot)
+                if count != expected:
+                    print(f"{robot}: {count} rows out of {expected}", file=sys.stderr)
+                    status = 1
+            for error in node.errors:
+                print(error, file=sys.stderr)
     except (KeyboardInterrupt, ExternalShutdownException):
-        pass
+        status = 1
     finally:
+        # Shut the context down first: it wakes the spinning executor, which then returns.
+        rclpy.try_shutdown()
+        spinner.join(timeout=5.0)
         executor.shutdown()
         node.destroy_node()
-        rclpy.try_shutdown()
+    sys.exit(status)
 
 
 if __name__ == "__main__":

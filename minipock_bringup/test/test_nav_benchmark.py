@@ -38,23 +38,32 @@ def test_sign_changes_ignores_deadband() -> None:
 def test_summarize_straight_goal() -> None:
     goal = Goal("straight", (3.0, 0.0, 0.0))
     measure = Measure(
-        points=[(0.0, 0.0), (1.5, 0.1), (3.0, 0.0)],
+        goal_xy=(3.0, 0.0),
+        points=[(0.0, 0.0), (1.5, 0.1), (2.9, 0.0)],
         yaws=[0.0, 0.05, -0.1],
-        angular_commands=[0.1, -0.1, 0.1],
+        near_goal_commands=[0.1, -0.1, 0.1],
         min_range=0.5,
     )
-    metrics = summarize(measure, goal, (0.0, 0.0, 0.0), (2.95, 0.0, 0.02))
-    assert metrics["path_ratio"] == pytest.approx(path_length(measure.points) / 3.0)
+    metrics = summarize(measure, goal, (0.0, 0.0, 0.0), (2.9, 0.0, 0.02))
+    # Path over the distance actually covered (2.9 m), not over the distance to the goal.
+    assert metrics["path_ratio"] == pytest.approx(path_length(measure.points) / 2.9)
     assert metrics["clearance"] == pytest.approx(0.5 - 0.17)
-    assert metrics["oscillations"] == pytest.approx(2 / path_length(measure.points))
-    assert metrics["yaw_drift"] == pytest.approx(0.1)
-    assert metrics["position_error"] == pytest.approx(0.05)
+    assert metrics["oscillations"] == 2
+    assert metrics["yaw_drift"] is None
+    assert metrics["position_error"] == pytest.approx(0.1)
     assert metrics["yaw_error"] == pytest.approx(0.02)
+
+
+def test_summarize_keep_yaw_goal_reports_drift() -> None:
+    goal = Goal("lateral", (0.0, 1.0, 0.0), keep_yaw=True)
+    measure = Measure(goal_xy=(0.0, 1.0), points=[(0.0, 0.0), (0.0, 1.0)], yaws=[0.0, -0.12])
+    metrics = summarize(measure, goal, (0.0, 0.0, 0.0), (0.0, 1.0, -0.05))
+    assert metrics["yaw_drift"] == pytest.approx(0.12)
 
 
 def test_summarize_turn_in_place_has_no_path_ratio() -> None:
     goal = Goal("turn", (1.0, 1.0, math.pi))
-    measure = Measure(points=[(1.0, 1.0), (1.0, 1.0)], yaws=[0.0, 3.1], angular_commands=[0.5])
+    measure = Measure(goal_xy=(1.0, 1.0), points=[(1.0, 1.0), (1.0, 1.0)], yaws=[0.0, 3.1])
     metrics = summarize(measure, goal, (1.0, 1.0, 0.0), (1.0, 1.0, -3.1))
     assert metrics["path_ratio"] is None
     assert metrics["oscillations"] == 0
@@ -88,11 +97,11 @@ def test_markdown_table() -> None:
         duration=4.0,
         path_ratio=None,
         clearance=0.3,
-        oscillations=0.0,
-        yaw_drift=3.1,
+        oscillations=0,
+        yaw_drift=None,
         position_error=0.02,
         yaw_error=0.05,
     )
     table = markdown_table([row]).splitlines()
     assert len(table) == 3
-    assert table[2] == "| minipock_0 | turn | 1 | ok | 4.0 | - | 0.30 | 0.0 | 3.10 | 0.02, 0.05 |"
+    assert table[2] == "| minipock_0 | turn | 1 | ok | 4.0 | - | 0.30 | 0 | - | 0.02, 0.05 |"
