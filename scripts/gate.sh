@@ -62,7 +62,9 @@ result=$(colcon test-result --all 2>&1 || true)
 echo "$result" | tail -8
 summary=$(echo "$result" | grep -E '^Summary: [0-9]+ tests' | tail -1)
 tests=$(echo "$summary" | sed -E 's/^Summary: ([0-9]+) tests.*/\1/')
-bad=$(echo "$summary" | sed -E 's/.* ([0-9]+) errors, ([0-9]+) failures.*/\1 \2/' | awk '{print $1 + $2}')
+errors=$(echo "$summary" | grep -oE '[0-9]+ errors?' | cut -d' ' -f1)
+failures=$(echo "$summary" | grep -oE '[0-9]+ failures?' | cut -d' ' -f1)
+bad=$(( ${errors:-0} + ${failures:-0} ))
 if [ -z "$tests" ] || [ "$tests" -eq 0 ]; then echo "GATE tests: FAILED (no test ran)"; exit 1; fi
 if [ "$bad" -gt 0 ]; then echo "GATE tests: FAILED ($bad errors or failures of $tests)"; exit 1; fi
 echo "GATE tests: ok ($tests run)"
