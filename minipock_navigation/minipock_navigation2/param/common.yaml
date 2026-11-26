@@ -12,7 +12,8 @@
 # minipock_mbed-rbdc: 2.0 m/s, 0.7 m/s2 accel, 3.4 m/s2 decel, 3*pi rad/s,
 # pi rad/s2). MPPI, the velocity smoother and the behavior server share the same
 # limits: vx 0.5 m/s (reverse 0.25), wz 1.5 rad/s, accel 0.7 m/s2 and 3.0 rad/s2,
-# decel 1.5 m/s2 and 3.0 rad/s2.
+# decel 1.5 m/s2 and 3.0 rad/s2 (MPPI keeps its linear decel equal to its accel,
+# see FollowPath).
 
 amcl:
   ros__parameters:
@@ -106,10 +107,13 @@ controller_server:
       time_steps: 56
       model_dt: 0.05
       batch_size: 2000
+      # Symmetric on purpose: MPPI clips each sampled control to [v + ax_min * dt,
+      # v + ax_max * dt] around the measured speed v. With |ax_min| > ax_max the averaged
+      # command lands below v at every cycle and the robot never leaves zero speed.
       ax_max: 0.7
-      ax_min: -1.5
+      ax_min: -0.7
       ay_max: 0.7
-      ay_min: -1.5
+      ay_min: -0.7
       az_max: 3.0
       vx_std: 0.2
       vy_std: 0.2

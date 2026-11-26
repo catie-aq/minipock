@@ -147,6 +147,16 @@ def test_limits_within_robot_capabilities(mode: str) -> None:
 
 
 @pytest.mark.parametrize("mode", MODES)
+def test_mppi_acceleration_symmetric(mode: str) -> None:
+    # MPPI clips each sampled control to [v + ax_min * dt, v + ax_max * dt] around the measured
+    # speed v; with |ax_min| > ax_max the averaged command falls below v at every cycle and the
+    # robot stays near zero speed.
+    mppi = _params(_render(mode), "controller_server")["FollowPath"]
+    assert mppi["ax_min"] == -mppi["ax_max"]
+    assert mppi["ay_min"] == -mppi["ay_max"]
+
+
+@pytest.mark.parametrize("mode", MODES)
 def test_controller_and_smoother_agree(mode: str) -> None:
     params = _render(mode)
     mppi = _params(params, "controller_server")["FollowPath"]

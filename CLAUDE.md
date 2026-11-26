@@ -160,6 +160,11 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   (2 m/s, 0,7 m/s², décélération 3,4 m/s², 3π rad/s, π rad/s²) ; les tests de
   `minipock_bringup` le vérifient. MPPI, velocity smoother et behavior server
   partagent les mêmes limites.
+- MPPI : `ax_min = -ax_max` et `ay_min = -ay_max`
+  (`test_mppi_acceleration_symmetric`). MPPI borne chaque commande tirée à
+  `[v + ax_min·dt, v + ax_max·dt]` autour de la vitesse mesurée `v` ; avec une
+  décélération plus forte que l'accélération, la moyenne retombe sous `v` à
+  chaque cycle et le robot reste à l'arrêt (« Failed to make progress »).
 - `docking_server` (géré par `navigation_launch.py`) a un plugin
   `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
 - `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`
