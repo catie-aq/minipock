@@ -38,7 +38,11 @@ def _fleet(context: LaunchContext) -> list[Action]:
     actions += [
         GroupAction(
             [
-                include("minipock_description", "description.launch.py", pick(args, "mode")),
+                include(
+                    "minipock_description",
+                    "description.launch.py",
+                    pick(args, "mode", "sim_index"),
+                ),
                 include("minipock_gz", "robot.launch.py", pick(args, "x", "y", "yaw")),
                 include("minipock_navigation2", "robot.launch.py", pick(args, "params_file")),
             ],

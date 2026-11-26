@@ -239,6 +239,19 @@ def test_robots_see_each_other_lidar() -> None:
                 assert robots[i][1] & robots[j][0] != 0
 
 
+def test_lidar_bits_distinct_and_masks_exclude_only_own_bit() -> None:
+    lidars = [
+        _lidar_flags_and_mask(_robot("differential", sim_index=str(i))) for i in range(MAX_ROBOTS)
+    ]
+    flags = [flag for flag, _ in lidars]
+    assert len(set(flags)) == MAX_ROBOTS
+    for own, (flag, mask) in enumerate(lidars):
+        assert flag & mask == 0
+        for other, (other_flag, _) in enumerate(lidars):
+            if other != own:
+                assert mask & other_flag == other_flag
+
+
 @pytest.mark.parametrize("index", ["-1", str(MAX_ROBOTS)])
 def test_sim_index_out_of_range_rejected(index: str) -> None:
     with pytest.raises(xacro.XacroException):

@@ -9,6 +9,10 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from minipock_bringup.config import FleetConfig, Robot
 from minipock_bringup.nav2_params import render_params_file
 
+# Each simulated robot hides its own LD19 mesh from its LiDAR with one Gazebo visibility bit
+# (see `minipock_description/urdf/sensors.xacro`): 18 bits are free.
+MAX_SIM_ROBOTS = 18
+
 
 def robot_launch_arguments(
     robot: Robot, cfg: FleetConfig, *, use_sim_time: bool
@@ -21,14 +25,21 @@ def robot_launch_arguments(
         use_sim_time: Whether the robot nodes use the simulation clock.
 
     Returns:
-        `namespace`, `mode`, `x`, `y`, `yaw`, `params_file` and `use_sim_time` (`true` or
-        `false`), as strings.
+        `namespace`, `mode`, `x`, `y`, `yaw`, `sim_index` (position of the robot in
+        `cfg.robots`), `params_file` and `use_sim_time` (`true` or `false`), as strings.
 
     Raises:
-        ValueError: If `robot` is not part of `cfg`.
+        ValueError: If `robot` is not part of `cfg`, or if a simulated fleet has more than
+            `MAX_SIM_ROBOTS` robots.
     """
     if robot not in cfg.robots:
         msg = f"Robot {robot.name} is not part of the fleet configuration"
+        raise ValueError(msg)
+    if use_sim_time and len(cfg.robots) > MAX_SIM_ROBOTS:
+        msg = (
+            f"A simulated fleet is limited to {MAX_SIM_ROBOTS} robots "
+            f"(one LiDAR visibility bit each), got {len(cfg.robots)}"
+        )
         raise ValueError(msg)
     params_file = render_params_file(
         robot.mode, robot.name, robot.x, robot.y, robot.yaw, override=robot.nav2_params
@@ -39,6 +50,7 @@ def robot_launch_arguments(
         "x": str(robot.x),
         "y": str(robot.y),
         "yaw": str(robot.yaw),
+        "sim_index": str(cfg.robots.index(robot)),
         "params_file": params_file,
         "use_sim_time": "true" if use_sim_time else "false",
     }

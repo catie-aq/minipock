@@ -37,9 +37,17 @@ cibles `base`, `simulation`, `real`), publiées sur
   LD19 : son visuel porte le bit de visibilité Gazebo `1 << (2 + sim_index)`,
   que le masque du LiDAR du même robot exclut. Chaque LiDAR ignore ainsi son
   propre boîtier mais voit celui des autres robots ; deux robots au même
-  `sim_index` ne voient pas leurs LD19 respectifs. Aucune pièce du châssis ne
-  coupe le plan du LiDAR (`test_scan_plane_clear_of_robot_body`) : pas de
-  filtre d'empreinte, ni en sim ni en réel.
+  `sim_index` ne voient pas leurs LD19 respectifs. Le launch d'entrée
+  `sim.launch.py` fournit un `sim_index` unique par robot (son rang dans
+  `robots` du fichier de flotte) et refuse une flotte de plus de 18 robots ;
+  en réel, `sim_index` reste à son défaut, sans effet. Aucune pièce du châssis
+  ne coupe le plan du LiDAR (`test_scan_plane_clear_of_robot_body`) : l'absence
+  de filtre d'empreinte repose sur la hauteur de l'URDF, à confirmer sur le
+  robot réel.
+- Écart connu de la sim : l'odométrie holonome (`OdometryPublisher` de gz-sim)
+  part de l'origine du monde, alors que le firmware part de zéro (les options de
+  décalage n'existent qu'après gz-sim 8.11.0). Sans effet sur Nav2, qui corrige
+  par `map -> odom`.
 - `ROS_DOMAIN_ID` : 10 sur le réseau du robot. Pour un test local, prendre un
   autre domaine et `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST` pour ne pas
   parler aux robots réels.
