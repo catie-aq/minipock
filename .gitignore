@@ -35,3 +35,6 @@ install
 log
 onshape_to_robot
 .rmf*
+
+# Local agent instructions (not versioned)
+CLAUDE.local.md
