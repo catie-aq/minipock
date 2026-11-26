@@ -157,6 +157,14 @@ def test_mppi_acceleration_symmetric(mode: str) -> None:
 
 
 @pytest.mark.parametrize("mode", MODES)
+def test_velocity_smoother_open_loop(mode: str) -> None:
+    # In closed loop the smoother output is the measured velocity plus a bounded change, never
+    # clamped to max_velocity: a glitch of the odometry twist (gz-sim OdometryPublisher reports
+    # about 62 rad/s when the yaw crosses -2*pi/3) reaches cmd_vel as is.
+    assert _params(_render(mode), "velocity_smoother")["feedback"] == "OPEN_LOOP"
+
+
+@pytest.mark.parametrize("mode", MODES)
 def test_controller_and_smoother_agree(mode: str) -> None:
     params = _render(mode)
     mppi = _params(params, "controller_server")["FollowPath"]

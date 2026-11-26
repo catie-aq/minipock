@@ -185,6 +185,12 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   `[v + ax_min·dt, v + ax_max·dt]` autour de la vitesse mesurée `v` ; avec une
   décélération plus forte que l'accélération, la moyenne retombe sous `v` à
   chaque cycle et le robot reste à l'arrêt (« Failed to make progress »).
+- Velocity smoother en boucle ouverte (`test_velocity_smoother_open_loop`) :
+  en boucle fermée, sa sortie est la vitesse mesurée plus une variation
+  bornée, jamais ramenée sous `max_velocity`. L'`OdometryPublisher` de gz-sim
+  8.11 (holonome) publie environ 62 rad/s pendant 0,1 s chaque fois que le cap
+  passe -2π/3 (changement de signe du quaternion de la physique) : en boucle
+  fermée le robot recevait jusqu'à 50 rad/s.
 - `docking_server` (géré par `navigation_launch.py`) a un plugin
   `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
 - `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`
@@ -246,9 +252,9 @@ colcon test --merge-install --packages-select minipock_bringup \
 colcon test-result --verbose
 ```
 
-- État connu : le but de `minipock_0` (holonome) échoue encore souvent :
-  rotations très rapides près du but et dérive de l'AMCL qui les suit
-  (correctifs en cours).
+- État connu : l'estimation AMCL s'écarte de 0,1 m environ de la position
+  réelle pendant un déplacement, de l'ordre de la tolérance de but (correctif
+  en cours).
 
 ## Skills
 

@@ -345,13 +345,18 @@ route_server:
     CostmapScorer:
       plugin: "nav2_route::CostmapScorer"
 
-# Closed loop: the odometry carries the robot velocity.
+# Open loop: the limits apply from the last command sent. In closed loop the smoother starts
+# from the measured velocity and only bounds its change, without clamping the output to
+# max_velocity: an odometry glitch goes straight to cmd_vel. gz-sim 8.11 OdometryPublisher reports
+# wz = 2*pi/dt averaged over 10 updates (about 62 rad/s for 0.1 s) each time the yaw crosses
+# -2*pi/3, where the physics flips the sign of the orientation quaternion; the holonomic robot was
+# then commanded up to 50 rad/s.
 velocity_smoother:
   ros__parameters:
     smoothing_frequency: 20.0
     stamp_smoothed_velocity_with_smoothing_time: false
     scale_velocities: false
-    feedback: "CLOSED_LOOP"
+    feedback: "OPEN_LOOP"
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
