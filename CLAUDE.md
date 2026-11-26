@@ -25,6 +25,17 @@ Tout se fait dans les images Docker du dépôt (`.devcontainer/Dockerfile`,
 cibles `base`, `simulation`, `real`), publiées sur
 `ghcr.io/catie-aq/minipock:<version>-<cible>`.
 
+- `scripts/docker-run.sh [--gpu] [--gui] "<commande>"` lance une commande dans
+  l'image `simulation` avec le dépôt monté sur `/workspaces/src/minipock` et un
+  espace de travail colcon (`build/`, `install/`, `log/`) sur `/workspaces` :
+  `$MINIPOCK_WS`, par défaut `../ws` à côté du dépôt (un `MINIPOCK_WS` par
+  worktree). `--gpu` active le GPU NVIDIA, `--gui` l'affichage X11 (RViz).
+  Image : `IMAGE`, par défaut `ghcr.io/catie-aq/minipock:<version>-simulation`
+  (version de `minipock/package.xml`), `minipock:dev-simulation` après un build
+  local. Chaque dépôt ou worktree reçoit son `ROS_DOMAIN_ID` et son
+  `GZ_PARTITION`, découverte limitée à localhost. `scripts/gate.sh [<ref>]`
+  rejoue la CI sur un commit (export propre, pre-commit sans sous-module,
+  build, tests unitaires). Les scripts passent `shellcheck` (pre-commit).
 - Compiler avec `--merge-install` : les chemins Gazebo de l'image
   (`GZ_SIM_RESOURCE_PATH`) supposent un `install/share` unique.
 - Sans écran ni GPU (CI, conteneur sans `/dev/dri`) : `LIBGL_ALWAYS_SOFTWARE=1`
@@ -231,6 +242,21 @@ colcon test-result --verbose
   petites consignes de `VelocityControl` ; MPPI, qui part de la vitesse mesurée,
   reste alors à l'arrêt, et l'AMCL dérive pendant les rotations rapides qui
   suivent. Correctifs à faire hors de ce test (description, réglage Nav2).
+
+## Skills
+
+Les gestes répétitifs ont un skill de projet dans `.claude/skills/` :
+
+- `minipock-test` : compiler et tester dans le conteneur (unitaires,
+  `-m integration`, gate complet), lire `colcon test-result`, pièges connus
+  (liens symboliques obsolètes après suppression d'un fichier, `--merge-install`,
+  pre-commit sans le sous-module).
+- `minipock-sim` : lancer la simulation (sans écran, GPU ou rendu logiciel, GUI),
+  sonder topics, TF et états de cycle de vie, envoyer un `NavigateToPose`,
+  arrêter proprement le groupe de processus.
+- `minipock-release` : figer une version (versions des paquets, CHANGELOG, PR en
+  rebase, tag posé par `ros-tag`, dossier de version dans
+  `minipock_documentation`).
 
 ## Qualité et livraison
 
