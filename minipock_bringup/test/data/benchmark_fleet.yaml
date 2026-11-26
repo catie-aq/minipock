@@ -1,0 +1,13 @@
+# Fleet of the navigation benchmark (nav_benchmark with benchmark_goals.yaml): one robot of each
+# kinematics in the empty room.
+namespace: minipock_
+map: "empty_room_map"
+world: "empty_room_world"
+rviz: "fleet"
+fleet:
+  "0":
+    mode: holonomic
+    position: [2.5, -4.0]
+  "1":
+    mode: differential
+    position: [2.5, -6.0]

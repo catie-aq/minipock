@@ -40,6 +40,7 @@ setup(
     entry_points={
         "console_scripts": [
             "raw_data_transformer = minipock_bringup.raw_data_transformer:main",
+            "nav_benchmark = minipock_bringup.nav_benchmark:main",
         ],
     },
 )

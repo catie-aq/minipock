@@ -204,6 +204,26 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   en simulation (odométrie exacte) ; après réglage, 0,09 m au plus. Tolérance de
   but `xy_goal_tolerance` 0,15 m, au-dessus de cette erreur. Valeurs à vérifier
   sur le robot réel (glissement des roues en rotation).
+- Holonome (`holonomic.yaml`, `test_holonomic_critics_without_heading_preference`) :
+  MPPI sans `PreferForwardCritic` ni `PathAngleCritic`, avec `TwirlingCritic` ;
+  il se déplace de côté ou en arrière sans tourner (dérive de cap 0,06 rad sur
+  1 m latéral, 0,69 rad avant).
+- Banc de réglage `nav_benchmark` (`minipock_bringup`) : lance une suite de
+  buts par robot et écrit un tableau Markdown (succès, durée simulée, chemin
+  rapporté à la ligne droite, dégagement minimal tiré du scan, changements de
+  signe de `wz` par mètre, dérive de cap, erreur finale). Buts et flotte dans
+  `minipock_bringup/test/data/benchmark_goals.yaml` et `benchmark_fleet.yaml`
+  (monde `empty_room_world`) ; mesures et raisons des réglages dans
+  `docs/superpowers/specs/2026-11-25-nav2-tuning.md`.
+
+```bash
+ros2 launch minipock_bringup sim.launch.py headless:=true rviz:=false \
+  config:=<src>/minipock_bringup/test/data/benchmark_fleet.yaml
+ros2 run minipock_bringup nav_benchmark --ros-args -p use_sim_time:=true \
+  -p "robots:=[minipock_0, minipock_1]" \
+  -p goals_file:=<src>/minipock_bringup/test/data/benchmark_goals.yaml -p repeat:=3
+```
+
 - `docking_server` (géré par `navigation_launch.py`) a un plugin
   `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
 - `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`

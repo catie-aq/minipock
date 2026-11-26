@@ -109,6 +109,16 @@ def test_holonomic_allows_lateral_velocity() -> None:
     assert _params(differential, "controller_server")["FollowPath"]["vy_max"] == 0
 
 
+def test_holonomic_critics_without_heading_preference() -> None:
+    # A holonomic robot keeps its heading on lateral and backward moves.
+    critics = _params(_render("holonomic"), "controller_server")["FollowPath"]["critics"]
+    assert "PreferForwardCritic" not in critics
+    assert "PathAngleCritic" not in critics
+    assert "TwirlingCritic" in critics
+    differential = _params(_render("differential"), "controller_server")["FollowPath"]
+    assert "PreferForwardCritic" in differential["critics"]
+
+
 def test_initial_pose_rendered() -> None:
     amcl = _params(_render("differential", x=3.25, y=-1.5, yaw=1.2), "amcl")
     assert amcl["set_initial_pose"] is True

@@ -10,6 +10,21 @@ controller_server:
     FollowPath:
       motion_model: "Omni"
       vy_max: 0.5
+      # No heading preference: PreferForwardCritic and PathAngleCritic turned the robot towards
+      # its direction of travel (0.65 rad of drift on a 1 m lateral move, a half turn to reach a
+      # goal 1 m behind). TwirlingCritic keeps the heading still while it translates.
+      critics:
+        - "ConstraintCritic"
+        - "CostCritic"
+        - "GoalCritic"
+        - "GoalAngleCritic"
+        - "PathAlignCritic"
+        - "PathFollowCritic"
+        - "TwirlingCritic"
+      TwirlingCritic:
+        enabled: true
+        cost_power: 1
+        cost_weight: 10.0
 
 velocity_smoother:
   ros__parameters:
