@@ -272,6 +272,17 @@ colcon test --merge-install --pytest-args -m "not integration" && colcon test-re
   opt-in (`minipock_bringup/test/conftest.py`) : un `colcon test` ou un
   `pytest` sans `-m` le saute ; il tourne avec `-m integration` ou avec la
   variable `MINIPOCK_INTEGRATION=1` (à poser par une CI d'intégration).
+- Transport DDS du test d'intégration : UDPv4 seul
+  (`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`, posé par `generate_test_description`
+  pour la simulation et le nœud de test, sauf si la variable existe déjà).
+  La mémoire partagée de Fast DDS dépend de `/dev/shm`, partagé avec l'hôte
+  (`--ipc=host`) ; des segments laissés par des lancements tués ont empêché
+  `/clock` d'atteindre le nœud de test, qui attendait alors jusqu'au garde-fou
+  de 20 fois chaque attente. UDPv4 ne dépend pas de cet état, pour un débit
+  négligeable avec deux robots ; nettoyer avec `fastdds shm clean` resterait
+  à refaire avant chaque lancement. Le test échoue aussi en 30 s (temps réel)
+  si `/clock` n'arrive pas après les topics des robots, avec un message qui
+  cite la mémoire partagée.
 - Lancer le test d'intégration en local, dans le conteneur de simulation
   (workspace compilé). Avec GPU, le conteneur reçoit `--gpus all
   -e NVIDIA_DRIVER_CAPABILITIES=all --device /dev/dri` (rendu matériel, temps

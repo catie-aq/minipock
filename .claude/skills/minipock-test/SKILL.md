@@ -37,6 +37,8 @@ scripts/docker-run.sh --gpu "colcon test --merge-install --packages-select minip
 DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1" scripts/docker-run.sh "<same command>"
 ```
 
+The test sets `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` for the simulation and its own node (stale Fast DDS shared-memory segments in `/dev/shm` once kept `/clock` from the test node), and fails within 30 s of wall time if `/clock` does not arrive after the robot topics. For your own probes in the same graph, `fastdds shm clean` in the container removes stale segments.
+
 `colcon test-result` must report at least one test. `0 tests` means the check did not run (marker missing, wrong package, test file absent): that is a failure of the check, not a pass.
 
 ## Read the results

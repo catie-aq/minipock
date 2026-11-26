@@ -10,6 +10,7 @@ Run it alone, it takes minutes: `colcon test --packages-select minipock_bringup
 """
 
 import math
+import os
 import threading
 import time
 import unittest
@@ -70,6 +71,14 @@ GOAL_TIMEOUT = 300.0
 # rendering runs well below real time, but not twenty times below.
 WALL_FACTOR = 20.0
 POLL_PERIOD = 0.2
+# `/clock` must reach the test node within this wall time once the robot topics arrived;
+# otherwise every simulated-time wait would fall back on the wall-clock guard (up to 100 min).
+CLOCK_WALL_TIMEOUT = 30.0
+NO_CLOCK = (
+    "/clock not received by the test node {:.0f} s after the robot topics, while the simulation "
+    "runs. Seen with stale Fast DDS shared-memory segments in /dev/shm: run `fastdds shm clean` "
+    "(the test already uses the UDPv4 transport unless FASTDDS_BUILTIN_TRANSPORTS is set)."
+)
 
 
 @pytest.mark.launch_test
@@ -78,6 +87,10 @@ def generate_test_description() -> LaunchDescription:
     # The plugin of launch_testing copies the marks of this function onto the test module, so
     # `-m integration` selects it and `-m "not integration"` leaves it out. A module-level
     # `pytestmark` would be ignored.
+    # UDPv4 only, for the simulation and this test node: the shared-memory transport depends on
+    # /dev/shm, which the container shares with the host, and stale segments left there by killed
+    # runs have kept /clock from reaching the test node. Two robots use little bandwidth.
+    os.environ.setdefault("FASTDDS_BUILTIN_TRANSPORTS", "UDPv4")
     sim_launch = Path(get_package_share_directory("minipock_bringup")) / "launch" / "sim.launch.py"
     return LaunchDescription(
         [
@@ -103,6 +116,7 @@ class TestSimNav2(unittest.TestCase):
     tf_buffer: Buffer
     tf_listener: TransformListener
     tf_pairs: set[tuple[str, str]]
+    topics_seen: float | None = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -146,12 +160,19 @@ class TestSimNav2(unittest.TestCase):
             if condition():
                 return True
             now = self._now()
+            if now <= 0.0 and self._clock_missing():
+                return condition()
             if now > 0.0:
                 start = now if start is None else start
                 if now - start > timeout:
                     return condition()
             time.sleep(POLL_PERIOD)
         return condition()
+
+    def _clock_missing(self) -> bool:
+        """Tell whether `/clock` is still missing long after the robot topics arrived."""
+        seen = type(self).topics_seen
+        return seen is not None and time.monotonic() - seen > CLOCK_WALL_TIMEOUT
 
     def _wait_for_message(
         self, msg_type: type, topic: str, qos: QoSProfile, timeout: float
@@ -193,6 +214,10 @@ class TestSimNav2(unittest.TestCase):
                 assert self._wait_for_message(
                     msg_type, name, qos_profile_sensor_data, TOPICS_TIMEOUT
                 ), f"nothing on {name} within {TOPICS_TIMEOUT} s"
+        type(self).topics_seen = time.monotonic()
+        while self._now() <= 0.0 and not self._clock_missing():
+            time.sleep(POLL_PERIOD)
+        assert self._now() > 0.0, NO_CLOCK.format(CLOCK_WALL_TIMEOUT)
 
     def test_2_tf_tree(self) -> None:
         for robot in ROBOTS:
