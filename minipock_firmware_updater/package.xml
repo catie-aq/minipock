@@ -7,6 +7,8 @@
   <maintainer email="s.delpeuch@catie.fr">Sébastien Delpeuch</maintainer>
   <license>Apache-2.0</license>
 
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>minipock_msgs</exec_depend>
   <exec_depend>python3-jsonschema</exec_depend>
   <exec_depend>python3-requests</exec_depend>
 
