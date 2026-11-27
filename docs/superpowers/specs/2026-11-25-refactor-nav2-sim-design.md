@@ -1,6 +1,6 @@
 # MiniPock : refactor de la base jusqu'à Nav2 en simulation multi-robot (design)
 
-Chantier 1 de la reprise, taille L. Source : `revue-base-minipock.md`, sections 1 à 5 et 7. Branche locale `refactor/nav2-sim-base`, worktree `~/CATIE/RD/minipock/minipock-refactor`.
+Chantier 1 de la reprise, taille L. Source : `revue-base-minipock.md`, sections 1 à 5 et 7. Branche `refactor/nav2-sim-base`, dans un worktree dédié.
 
 ## Point de départ (vérifié le 25/11/2026)
 
@@ -113,7 +113,7 @@ Dans `minipock`, `docs/` ne contient que les documents de travail : design et pl
 
 ## 9. Revue critique au regard des pratiques ROS 2 (25/11)
 
-Décisions validées par Seb et la session pilote :
+Décisions validées par l'équipe :
 
 - Roues holonomes sans galets articulés : 27 joints continus inutiles, le mouvement vient de `VelocityControl`. Galets gardés en géométrie visuelle fixe.
 - Config de flotte dans `minipock_bringup/config/` : supprime le cycle de dépendances avec le métapaquet `minipock`, qui redevient un pur métapaquet.

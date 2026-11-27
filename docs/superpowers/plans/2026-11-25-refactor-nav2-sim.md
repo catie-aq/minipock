@@ -12,19 +12,19 @@
 
 ## Global Constraints
 
-- Branche `refactor/nav2-sim-base`, worktree `~/CATIE/RD/minipock/minipock-refactor`, rebasée sur `main` après le merge de la 2.2.1.
+- Branche `refactor/nav2-sim-base`, dans un worktree dédié, rebasée sur `main` après le merge de la 2.2.1.
 - Commits Conventional Commits en anglais, sans ligne `Co-Authored-By`. Code, commentaires et docstrings en anglais.
 - `minipock_fleet_adapter` n'est pas modifié (ni code ni formatage). Firmware hors périmètre.
-- Toutes les commandes ROS tournent dans le conteneur : `~/CATIE/RD/minipock/ws/run.sh "<cmd>"` (monte le worktree dans `/workspaces/src/minipock`, domaine 42, découverte localhost). Image : variable `IMAGE`, `ghcr.io/catie-aq/minipock:2.2.0-simulation` jusqu'à la fin de la tâche 1, puis `minipock:dev-simulation`.
+- Toutes les commandes ROS tournent dans le conteneur : `../ws/run.sh "<cmd>"` (script local, monte le worktree dans `/workspaces/src/minipock`, domaine 42, découverte localhost). Image : variable `IMAGE`, `ghcr.io/catie-aq/minipock:2.2.0-simulation` jusqu'à la fin de la tâche 1, puis `minipock:dev-simulation`.
 - Build : `colcon build --symlink-install --merge-install` ; tests : `colcon test --merge-install --packages-select <pkg> --event-handlers console_direct+ && colcon test-result --verbose`.
 - Sans écran ni GPU : `DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1"`, `gz sim -s --headless-rendering`.
 - Namespace par robot `<namespace><id>` (défaut `minipock_<id>`) ; frames `<ns>/odom`, `<ns>/base_footprint`, `<ns>/base_link`, `<ns>/lidar_link` ; frame `map` commune ; topics relatifs `cmd_vel`, `odom`, `scan`, `joint_states`, `robot_description`.
 - LiDAR simulé : 132 points, 0,02 à 12 m, 10 Hz, bruit gaussien σ = 0,01 m.
 - Limites réelles du robot (firmware `minipock_mbed-rbdc/src/robot_sixtron.cpp` et `robot_sixtron.h`) : vitesse linéaire max 2,0 m/s, accélération 0,7 m/s², décélération 3,4 m/s² ; vitesse angulaire max 3π rad/s, accélération angulaire π rad/s² ; entraxe différentiel 0,328 m ; rayon de roue 0,0355 m ; holonome : roues à 0,172 m du centre. Aucun paramètre Nav2 ni de simulation ne dépasse ces limites.
 - Standard Python CATIE : ruff seul (remplace black, isort, flake8), `line-length = 99`, `target-version = "py312"`, `[tool.ruff.lint] select = ["ALL"]`, `ignore = ["T20", "S101", "D104", "COM812", "CPY001"]` (`COM812` : conflit documenté avec `ruff format` ; `CPY001` : en-tête de licence, incluse dans `ALL` depuis ruff 0.17, pas de politique d'en-tête dans le dépôt), `pydocstyle.convention = "google"`. Ignores par fichier seulement là où ROS l'impose : `INP001` pour `**/launch/*.py`, `**/setup.py`, `**/test/**` ; `PLR2004` et `D` dans `**/test/**`. Tests pytest avec couverture (`--cov`, paquet `python3-pytest-cov`). Outils lancés par `uvx` (`uvx ruff`, `uvx pre-commit`). Les paquets ROS gardent setuptools/colcon et rosdep pour les dépendances (pas de `uv` ni de `uv.lock` par paquet).
-- CLAUDE.md tenu à jour au fil de l'eau : toute tâche qui change une commande, un launch, un argument, un emplacement de fichier ou une convention met à jour `CLAUDE.md` dans le même commit (consigne de Seb du 25/11).
-- Licence : Apache-2.0 partout (identifiant SPDX `Apache-2.0`), validé par Seb le 25/11.
-- Push et merge sur `minipock` autorisés sans Seb, CI verte avant merge. Push sur `catie-aq/ros_workflows` : demander à Seb.
+- CLAUDE.md tenu à jour au fil de l'eau : toute tâche qui change une commande, un launch, un argument, un emplacement de fichier ou une convention met à jour `CLAUDE.md` dans le même commit (consigne de l'équipe du 25/11).
+- Licence : Apache-2.0 partout (identifiant SPDX `Apache-2.0`), validé par l'équipe le 25/11.
+- Push et merge sur `minipock` autorisés sans relecture, CI verte avant merge. Push sur `catie-aq/ros_workflows` : demander l'accord de l'équipe.
 
 ## Review Focus
 
@@ -129,7 +129,7 @@
 - [ ] **Step 4:** tests au vert, puis contrôle manuel sans écran (`DOCKER_EXTRA="-e LIBGL_ALWAYS_SOFTWARE=1"`) : world + description + robot pour `minipock_0` holonome et `minipock_1` différentiel ; `ros2 topic hz /minipock_0/scan` > 0, `frame_id` du scan `minipock_0/lidar_link`, `tf2_echo minipock_1/odom minipock_1/lidar_link` répond. Sans `--merge-install` aussi (build dans un dossier séparé `ws_iso`) : le monde se charge.
 - [ ] **Step 5:** commit `refactor(gz): spawn robots from robot_description and drop lidar_process`.
 
-### Task 4c: Monde de bureaux (amendement validé par Seb le 25/11)
+### Task 4c: Monde de bureaux (amendement validé par l'équipe le 25/11)
 
 **Files:**
 - Create: `minipock_gz/worlds/office.sdf`, `minipock_gz/models/` (modèles du monde, copiés), `minipock_gz/worlds/ATTRIBUTION.md`, `minipock_gz/scripts/world_to_map.py` (script `uv run` avec dépendances inline), `minipock_navigation/minipock_navigation2/map/office.pgm` et `office.yaml`, `minipock_gz/test/test_office_world.py`
@@ -152,7 +152,7 @@
 - Modify: tous les `package.xml` et `setup.py` sauf `minipock_fleet_adapter`, `CMakeLists.txt` des paquets ament_cmake
 
 **Interfaces:**
-- Produces: version unique pour tous les paquets du dépôt (celle de `minipock/package.xml`, 2.2.1), mainteneur `s.delpeuch@catie.fr`, licence `Apache-2.0` partout (décision de Seb du 25/11 ; `minipock_description` et `minipock_gz` déclaraient GPL-3.0-only dans `package.xml`), `setup.py` qui lisent version et licence de façon cohérente avec le `package.xml`.
+- Produces: version unique pour tous les paquets du dépôt (celle de `minipock/package.xml`, 2.2.1), mainteneur `s.delpeuch@catie.fr`, licence `Apache-2.0` partout (décision de l'équipe du 25/11 ; `minipock_description` et `minipock_gz` déclaraient GPL-3.0-only dans `package.xml`), `setup.py` qui lisent version et licence de façon cohérente avec le `package.xml`.
 
 - [ ] **Step 1: test qui échoue** `minipock_bringup/test/test_package_metadata.py` : pour chaque `package.xml` du dépôt hors `minipock_fleet_adapter` (lus depuis le source), même `<version>` que `minipock/package.xml`, `<license>` égal à `Apache-2.0` partout, `license="Apache-2.0"` dans chaque `setup.py`, e-mail mainteneur `s.delpeuch@catie.fr`. Lancer, attendu : échec.
 - [ ] **Step 2:** aligner les métadonnées ; ajouter `ament_lint_auto` avec `ament_xmllint` en `test_depend` des paquets ament_cmake.
@@ -280,7 +280,7 @@
 ### Task 8: CI (ros_workflows puis minipock)
 
 **Files:**
-- Dans un clone de `catie-aq/ros_workflows` (`~/CATIE/RD/minipock/ros_workflows`, branche `feat/ros2-tests-and-rosdep`) : `.github/workflows/ros2.yml`, `docs/ros2.md`
+- Dans un clone de `catie-aq/ros_workflows` (branche `feat/ros2-tests-and-rosdep`) : `.github/workflows/ros2.yml`, `docs/ros2.md`
 - Dans `minipock` : `.github/workflows/ros2-build-test.yaml`
 
 **Interfaces:**
@@ -288,7 +288,7 @@
 
 - [ ] **Step 1:** modifier `ros2.yml` : matrice construite depuis `distributions` (`fromJSON`), image, `action-ros-ci` avec `skip-tests: ${{ !inputs.run-tests }}`, `skip-rosdep-install: ${{ !inputs.rosdep-install }}`, `package-name: ${{ inputs.packages || github.event.repository.name }}`, `colcon-defaults` qui passe `pytest-args` à `colcon test`, `timeout-minutes` sur le job. Mettre à jour `docs/ros2.md` (tableau des entrées, point d'attention sur les tests retiré).
 - [ ] **Step 2:** vérifier la compatibilité : un appel sans entrée produit la même matrice et les mêmes options qu'avant (lecture du YAML résolu avec `actionlint`).
-- [ ] **Step 3:** STOP : demander à Seb l'accord pour pousser la branche et ouvrir la PR sur `ros_workflows`.
+- [ ] **Step 3:** STOP : demander l'accord de l'équipe pour pousser la branche et ouvrir la PR sur `ros_workflows`.
 - [ ] **Step 4:** dans `minipock`, `ros2-build-test.yaml` avec deux jobs appelant `ros_workflows/.github/workflows/ros2.yml@<branche ou main>` : `unit` (`distributions: '["jazzy"]'`, `rosdep-install: true`, `run-tests: true`, `packages: "minipock minipock_bringup minipock_description minipock_gz minipock_navigation2 minipock_cartographer"`, `pytest-args: '-m "not integration"'`) et `integration` (`docker-image: osrf/ros:jazzy-desktop-full`, même paquets, `pytest-args: '-m integration'`, `timeout-minutes: 45`, variable `LIBGL_ALWAYS_SOFTWARE=1` via l'environnement du job si l'action le permet, sinon entrée `env` supplémentaire dans `ros2.yml`).
 - [ ] **Step 5:** commit `ci: run unit and simulation tests through ros_workflows`.
 
@@ -296,13 +296,13 @@
 
 **Files:**
 - Modify: `CLAUDE.md` (relecture finale, il a été tenu à jour par chaque tâche), `CHANGELOG.md` (section `Unreleased`)
-- Dans `~/CATIE/RD/minipock/minipock_documentation`, dossier `latest/` seulement (les dossiers de version publiés ne bougent pas ; la 2.2.1 est figée) : toutes les pages existantes réécrites ou complétées, structure et numérotation gardées, plus une page « Conventions ROS » et la page multi-robot de la 2.1.0 reprise et mise à jour (numérotation décalée en conséquence) ; images dans `img/`.
+- Dans le dépôt `minipock_documentation`, dossier `latest/` seulement (les dossiers de version publiés ne bougent pas ; la 2.2.1 est figée) : toutes les pages existantes réécrites ou complétées, structure et numérotation gardées, plus une page « Conventions ROS » et la page multi-robot de la 2.1.0 reprise et mise à jour (numérotation décalée en conséquence) ; images dans `img/`.
 
-Constat de départ (Seb, 25/11) : la structure est bonne, le contenu manque (4 850 mots en tout, `10-Mécanique.md` vide, `1-Vue-d'ensemble.md` à 131 mots).
+Constat de départ (équipe, 25/11) : la structure est bonne, le contenu manque (4 850 mots en tout, `10-Mécanique.md` vide, `1-Vue-d'ensemble.md` à 131 mots).
 
-Publication (vérifiée dans `~/CATIE/server/sonu_www` le 25/11) : le site SONU (Docusaurus) est alimenté par `sonu_documentation-bot`, qui suit la branche par défaut de `minipock_documentation` via un fichier `.git` posé dans Dropbox (`git ls-remote` toutes les 5 min) et publie toute l'arborescence. Barres latérales autogénérées par dossier : les sous-dossiers avec `_category_.json` sont pris en charge. La page `/qualite` du site signale les titres génériques ou en `snake_case` sans espace, les dossiers à une seule page, les pages vides et les doublons de texte : à éviter.
+Publication (vérifiée dans le dépôt du site le 25/11) : le site SONU (Docusaurus) est alimenté par `sonu_documentation-bot`, qui suit la branche par défaut de `minipock_documentation` via un fichier `.git` posé dans Dropbox (`git ls-remote` toutes les 5 min) et publie toute l'arborescence. Barres latérales autogénérées par dossier : les sous-dossiers avec `_category_.json` sont pris en charge. La page `/qualite` du site signale les titres génériques ou en `snake_case` sans espace, les dossiers à une seule page, les pages vides et les doublons de texte : à éviter.
 
-Structure de `latest/` (validée par Seb le 25/11, deux publics) :
+Structure de `latest/` (validée par l'équipe le 25/11, deux publics) :
 - `utilisateur/` (« je viens de recevoir mon MiniPock ») : présentation et caractéristiques ; premier démarrage (alimentation, Wi-Fi, IP, namespace par le shell ou l'interface web, image sur le PC, vérification) ; piloter le robot (téléopération clavier et FPS) ; cartographier son espace ; naviguer (carte, position initiale, buts dans RViz) ; plusieurs robots ; simuler sans robot ; mettre à jour le firmware ; dépannage.
 - `developpeur/` : architecture (schéma, paquets, nœuds, flux, arbre TF) ; environnement de dev (Docker, devcontainer, colcon, tests, skills) ; conventions ROS ; configuration de flotte (schéma du YAML) ; simulation (mondes, ponts, sans écran) ; navigation (paramètres, surcouches, limites, tableau de réglage) ; système embarqué et contrat firmware (micro-ROS, topics, endpoints HTTP) ; mission Open-RMF ; contribuer et publier une version.
 - Les sections « API Documentation » des pages utilisateur actuelles passent côté développeur ; rien n'est supprimé sans être redistribué.
@@ -322,12 +322,12 @@ Structure de `latest/` (validée par Seb le 25/11, deux publics) :
   - Système embarqué, Endpoints, Mise à jour, Logiciel de mission : relus et corrigés là où le refactor les touche ; Mécanique : contenu minimal (dimensions, entraxe, rayon de roue, limites, lien Dropbox), à partir des valeurs du firmware.
   - Changelog dans `index.md` : entrée de la prochaine version.
 - [ ] **Step 4:** passage au skill `humanizer`, `uvx pre-commit run --files` sur les fichiers touchés (corriger aussi les erreurs markdownlint préexistantes de `latest/`).
-- [ ] **Step 5:** commits `docs: update CLAUDE.md and changelog` (minipock) et `docs: rewrite latest documentation for the refactored stack` (doc, poussé sur `main` du dépôt de doc, modification autorisée par Seb).
+- [ ] **Step 5:** commits `docs: update CLAUDE.md and changelog` (minipock) et `docs: rewrite latest documentation for the refactored stack` (doc, poussé sur `main` du dépôt de doc, modification autorisée par l'équipe).
 
 ### Task 9b: Skills de projet pour les gestes répétitifs
 
 **Files:**
-- Create: `scripts/docker-run.sh` (remplace `~/CATIE/RD/minipock/ws/run.sh`, hors dépôt aujourd'hui : workspace configurable par variable, image par défaut `ghcr.io/catie-aq/minipock:<version>-simulation`, `minipock:dev-simulation` en local), `.claude/skills/minipock-test/SKILL.md`, `.claude/skills/minipock-sim/SKILL.md`, `.claude/skills/minipock-release/SKILL.md`
+- Create: `scripts/docker-run.sh` (remplace le script local `ws/run.sh`, hors dépôt aujourd'hui : workspace configurable par variable, image par défaut `ghcr.io/catie-aq/minipock:<version>-simulation`, `minipock:dev-simulation` en local), `.claude/skills/minipock-test/SKILL.md`, `.claude/skills/minipock-sim/SKILL.md`, `.claude/skills/minipock-release/SKILL.md`
 - Modify: `CLAUDE.md` (section qui liste les skills)
 
 **Interfaces:**
@@ -341,4 +341,4 @@ Structure de `latest/` (validée par Seb le 25/11, deux publics) :
 
 ## Après les tâches
 
-Revue de code de toute la branche (`code-review`), « À relire », contrôle du code avec Seb, rebase sur `main`, push, PR, CI verte, merge.
+Revue de code de toute la branche (`code-review`), « À relire », contrôle du code par l'équipe, rebase sur `main`, push, PR, CI verte, merge.
