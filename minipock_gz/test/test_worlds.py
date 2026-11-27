@@ -26,7 +26,7 @@ def test_empty_room_ground_resolves() -> None:
     assert (PACKAGE / ground[0].removeprefix(PACKAGE_PREFIX) / "model.config").is_file()
 
 
-@pytest.mark.parametrize("name", ["empty_room_world"])
+@pytest.mark.parametrize("name", ["office", "empty_room_world"])
 def test_shipped_worlds_load_nothing_from_the_network(name: str) -> None:
     # `minipock_world` is the legacy world and still pulls its models from Fuel.
     uris = URI.findall((PACKAGE / "worlds" / f"{name}.sdf").read_text())
@@ -35,4 +35,4 @@ def test_shipped_worlds_load_nothing_from_the_network(name: str) -> None:
 
 def test_world_launch_defaults_to_a_world_without_network() -> None:
     launch = (PACKAGE / "launch" / "world.launch.py").read_text()
-    assert 'DeclareLaunchArgument("world", default_value="empty_room_world")' in launch
+    assert 'DeclareLaunchArgument("world", default_value="office")' in launch
