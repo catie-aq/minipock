@@ -1,15 +1,13 @@
 FROM osrf/ros:jazzy-desktop-full AS base
 
 # Workspace dependencies come from the package.xml files (rosdep). Only packages
-# without a rosdep key are installed by hand: crc (pip) and micro_ros_agent (real stage).
+# without a rosdep key are installed by hand: micro_ros_agent (real stage).
 RUN --mount=type=bind,source=.,target=/tmp/src \
     rosdep update \
     && apt-get update \
     && apt-get install -y --no-install-recommends python3-pip python3-colcon-common-extensions ros-jazzy-rqt-tf-tree ros-jazzy-rmf-dev \
     && rosdep install --from-paths /tmp/src --ignore-src -y --skip-keys micro_ros_agent \
     && rm -rf /var/lib/apt/lists/*
-
-RUN pip3 install --break-system-packages --no-cache-dir crc==7.1.0
 
 RUN echo 'source /opt/ros/jazzy/setup.bash' >> /root/.bashrc \
     && echo 'source /workspaces/install/setup.bash' >> /root/.bashrc \

@@ -12,6 +12,8 @@ setup(
     author_email="s.delpeuch@catie.fr",
     license="Apache-2.0",
     install_requires=["setuptools"],
+    # Makes colcon run the tests with pytest instead of unittest.
+    tests_require=["pytest"],
     packages=[package_name],
     entry_points={
         "console_scripts": ["firmware_updater = minipock_firmware_updater.firmware_updater:main"],
