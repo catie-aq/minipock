@@ -1,0 +1,8 @@
+namespace: minipock_
+map: "empty_room_map"
+world: "empty_room_world"
+rviz: "navigation2_rmf"
+fleet:
+  "0":
+    mode: differential
+    position: [0.0, 0.0]

@@ -15,7 +15,10 @@ MODELS = PACKAGE / "models"
 ATTRIBUTION = PACKAGE / "worlds" / "ATTRIBUTION.md"
 MAP_DIR = REPO_ROOT / "minipock_navigation" / "minipock_navigation2" / "map"
 MAP_YAML = MAP_DIR / "office.yaml"
+FLEET = REPO_ROOT / "minipock_bringup" / "config" / "minipocks.yaml"
 
+FREE = 254
+SPAWN_RADIUS = 0.25
 MODEL_URI = re.compile(r"model://([^/<\s]+)")
 
 
@@ -121,6 +124,28 @@ def test_map_matches_world() -> None:
     assert origin_y >= min(y for _, y in poses) - margin
     assert max_x <= max(x for x, _ in poses) + margin
     assert max_y <= max(y for _, y in poses) + margin
+
+
+def test_default_spawns_are_free() -> None:
+    fleet = yaml.safe_load(FLEET.read_text())
+    assert fleet["world"] == "office"
+    assert fleet["map"] == "office"
+    meta, width, height, pixels = _map()
+    resolution = meta["resolution"]
+    origin_x, origin_y, _ = meta["origin"]
+    cells = math.ceil(SPAWN_RADIUS / resolution)
+    for robot in fleet["fleet"].values():
+        x, y = robot["position"][:2]
+        column = math.floor((x - origin_x) / resolution)
+        row = height - 1 - math.floor((y - origin_y) / resolution)
+        for d_row in range(-cells, cells + 1):
+            for d_column in range(-cells, cells + 1):
+                if math.hypot(d_row, d_column) * resolution > SPAWN_RADIUS:
+                    continue
+                r, c = row + d_row, column + d_column
+                assert 0 <= r < height
+                assert 0 <= c < width
+                assert pixels[r * width + c] == FREE, (robot, r, c)
 
 
 # LiDAR band of the map (CLAUDE.md, world_to_map.py --z-min and --z-max).
