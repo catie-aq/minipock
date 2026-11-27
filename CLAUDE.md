@@ -247,7 +247,10 @@ ros2 run minipock_bringup nav_benchmark --ros-args -p use_sim_time:=true \
   `raw_data_transformer` (`minipock_bringup/launch/robot.launch.py`, un par
   namespace) les remet en forme : `odom` (`Odometry`, vitesse calculée dans le
   repère du robot à partir de deux poses successives, nulle si les horodatages
-  sont égaux ou à rebours), `scan` (horodatage du firmware gardé, frame
+  sont égaux ou à rebours, avec un avertissement limité à un toutes les 5 s :
+  horloge du firmware non synchronisée ; covariances diagonales modestes et non
+  nulles, `POSE_VARIANCES` et `TWIST_VARIANCES` de `odometry.py`, à affiner sur
+  le robot), `scan` (horodatage du firmware gardé, frame
   remplacée par le paramètre `scan_frame_id`, défaut `<ns>/lidar_link`, car le
   firmware envoie encore `lds_01_link`) et le seul TF
   `<ns>/odom → <ns>/base_footprint`. `odom` et `scan` sont publiés en QoS

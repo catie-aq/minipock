@@ -11,17 +11,67 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Header
 from tf2_ros import TransformBroadcaster
 
-from minipock_bringup.odometry import Pose2D, body_twist, yaw_from_quaternion
+from minipock_bringup.odometry import (
+    POSE_VARIANCES,
+    TWIST_VARIANCES,
+    Pose2D,
+    body_twist,
+    diagonal_covariance,
+    yaw_from_quaternion,
+)
 
 _WARN_PERIOD = 5.0
+
+
+_POSE_COVARIANCE = diagonal_covariance(POSE_VARIANCES)
+_TWIST_COVARIANCE = diagonal_covariance(TWIST_VARIANCES)
 
 
 def _pose_2d(msg: PoseStamped) -> Pose2D:
     orientation = msg.pose.orientation
     yaw = yaw_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
     return Pose2D(msg.pose.position.x, msg.pose.position.y, yaw)
+
+
+def odometry_message(
+    msg: PoseStamped, twist: tuple[float, float, float], odom_frame: str, base_frame: str
+) -> Odometry:
+    """Return the `Odometry` of a firmware pose and the body-frame twist computed from it.
+
+    Args:
+        msg: Firmware pose, stamped by the firmware.
+        twist: `(vx, vy, wz)` in the robot frame.
+        odom_frame: Frame of the pose.
+        base_frame: Frame moved by the odometry.
+
+    Returns:
+        The message, with the stamp of `msg` and the diagonal covariances of
+        `minipock_bringup.odometry`.
+    """
+    odom = Odometry()
+    odom.header = Header(stamp=msg.header.stamp, frame_id=odom_frame)
+    odom.child_frame_id = base_frame
+    odom.pose.pose = msg.pose
+    odom.pose.covariance = _POSE_COVARIANCE
+    odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.angular.z = twist
+    odom.twist.covariance = _TWIST_COVARIANCE
+    return odom
+
+
+def transform_message(odom: Odometry) -> TransformStamped:
+    """Return the `odom -> base` transform of an `Odometry`, with its own header."""
+    transform = TransformStamped()
+    transform.header = Header(stamp=odom.header.stamp, frame_id=odom.header.frame_id)
+    transform.child_frame_id = odom.child_frame_id
+    position = odom.pose.pose.position
+    transform.transform.translation.x = position.x
+    transform.transform.translation.y = position.y
+    transform.transform.translation.z = position.z
+    transform.transform.rotation = odom.pose.pose.orientation
+    return transform
 
 
 class RawDataTransformer(Node):
@@ -69,25 +119,19 @@ class RawDataTransformer(Node):
         if self._previous is not None:
             previous_pose, previous_stamp = self._previous
             dt = (stamp - previous_stamp).nanoseconds * 1e-9
+            if dt <= 0:
+                # Equal or backward stamps: the firmware clock is not synchronized (micro-ROS
+                # time sync lost or not done). The twist is zero until stamps move forward.
+                self.get_logger().warning(
+                    f"Odometry stamp did not move forward (dt = {dt:.3f} s): twist set to "
+                    "zero; check the firmware time synchronization",
+                    throttle_duration_sec=_WARN_PERIOD,
+                )
             twist = body_twist(previous_pose, pose, dt)
         self._previous = (pose, stamp)
 
-        odom = Odometry()
-        odom.header.stamp = msg.header.stamp
-        odom.header.frame_id = self._odom_frame
-        odom.child_frame_id = self._base_frame
-        odom.pose.pose = msg.pose
-        odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.angular.z = twist
-
-        transform = TransformStamped()
-        transform.header = odom.header
-        transform.child_frame_id = self._base_frame
-        transform.transform.translation.x = msg.pose.position.x
-        transform.transform.translation.y = msg.pose.position.y
-        transform.transform.translation.z = msg.pose.position.z
-        transform.transform.rotation = msg.pose.orientation
-
-        self._tf_broadcaster.sendTransform(transform)
+        odom = odometry_message(msg, twist, self._odom_frame, self._base_frame)
+        self._tf_broadcaster.sendTransform(transform_message(odom))
         self._odom_publisher.publish(odom)
 
     def _on_scan(self, msg: LaserScan) -> None:

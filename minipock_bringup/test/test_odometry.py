@@ -4,7 +4,14 @@ import math
 
 import pytest
 
-from minipock_bringup.odometry import Pose2D, body_twist, yaw_from_quaternion
+from minipock_bringup.odometry import (
+    POSE_VARIANCES,
+    TWIST_VARIANCES,
+    Pose2D,
+    body_twist,
+    diagonal_covariance,
+    yaw_from_quaternion,
+)
 
 
 def test_twist_straight_line() -> None:
@@ -50,3 +57,26 @@ def test_yaw_from_quaternion() -> None:
 
 def test_yaw_from_identity_quaternion() -> None:
     assert yaw_from_quaternion(0.0, 0.0, 0.0, 1.0) == pytest.approx(0.0)
+
+
+def test_diagonal_covariance() -> None:
+    covariance = diagonal_covariance((1.0, 2.0, 3.0, 4.0, 5.0, 6.0))
+    assert len(covariance) == 36
+    assert [covariance[7 * i] for i in range(6)] == [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+    assert sum(covariance) == 21.0
+
+
+@pytest.mark.parametrize("variances", [(1.0,) * 5, (1.0, 1.0, 1.0, 1.0, 1.0, -1.0)])
+def test_diagonal_covariance_rejects(variances: tuple[float, ...]) -> None:
+    with pytest.raises(ValueError, match="variances"):
+        diagonal_covariance(variances)
+
+
+@pytest.mark.parametrize("variances", [POSE_VARIANCES, TWIST_VARIANCES])
+def test_odometry_variances_modest_and_non_zero(variances: tuple[float, ...]) -> None:
+    # A zero covariance reads as a perfect measurement; x, y and yaw stay modest.
+    assert all(v > 0 for v in variances)
+    x, y, _, _, _, yaw = variances
+    assert math.sqrt(x) <= 0.05
+    assert math.sqrt(y) <= 0.05
+    assert math.sqrt(yaw) <= 0.2

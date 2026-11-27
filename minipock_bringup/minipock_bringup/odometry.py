@@ -3,6 +3,16 @@
 import math
 from dataclasses import dataclass
 
+# Diagonal of the pose and twist covariances of the real robot odometry, in the order
+# x, y, z, roll, pitch, yaw (m², rad²; (m/s)², (rad/s)² for the twist). Not measured: modest
+# values (about 3 cm and 0.1 rad standard deviation, per sample for the twist) so that a
+# consumer that weighs odometry (robot_localization, Cartographer) neither ignores it (zero
+# covariance reads as perfect) nor discards it. z, roll and pitch are fixed for a planar base:
+# tiny variance. To refine on the real robot (wheel slip in rotation).
+POSE_VARIANCES = (1e-3, 1e-3, 1e-6, 1e-6, 1e-6, 1e-2)
+TWIST_VARIANCES = (1e-3, 1e-3, 1e-6, 1e-6, 1e-6, 1e-2)
+_DOF = 6
+
 
 @dataclass(frozen=True)
 class Pose2D:
@@ -62,3 +72,21 @@ def body_twist(prev: Pose2D, curr: Pose2D, dt: float) -> tuple[float, float, flo
     vy = (-sin_yaw * dx + cos_yaw * dy) / dt
     wz = _shortest_angle(curr.yaw - prev.yaw) / dt
     return (vx, vy, wz)
+
+
+def diagonal_covariance(variances: tuple[float, ...]) -> list[float]:
+    """Return the row-major 6x6 covariance of a ROS message, `variances` on its diagonal.
+
+    Args:
+        variances: Six variances, in the order x, y, z, roll, pitch, yaw.
+
+    Returns:
+        The 36 values of the matrix.
+
+    Raises:
+        ValueError: If there are not six non-negative variances.
+    """
+    if len(variances) != _DOF or any(v < 0 for v in variances):
+        msg = f"Expected {_DOF} non-negative variances, got {variances}"
+        raise ValueError(msg)
+    return [variances[i] if i == j else 0.0 for i in range(_DOF) for j in range(_DOF)]
