@@ -34,6 +34,7 @@ import yaml
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Twist
 from nav2_msgs.action import NavigateToPose
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.action import ActionClient
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
@@ -204,9 +205,33 @@ class NavBenchmark(Node):
     def __init__(self) -> None:
         """Declare the parameters, read the goals and create the clients and subscriptions."""
         super().__init__("nav_benchmark")
-        self.declare_parameter("robots", ["minipock_0", "minipock_1"])
-        self.declare_parameter("goals_file", "")
-        self.declare_parameter("repeat", 1)
+        self.declare_parameter(
+            "robots",
+            ["minipock_0", "minipock_1"],
+            ParameterDescriptor(
+                description="Namespaces of the robots to run the goals for.",
+                type=ParameterType.PARAMETER_STRING_ARRAY,
+                read_only=True,
+            ),
+        )
+        self.declare_parameter(
+            "goals_file",
+            "",
+            ParameterDescriptor(
+                description="Path of the YAML file listing the goals of each robot.",
+                type=ParameterType.PARAMETER_STRING,
+                read_only=True,
+            ),
+        )
+        self.declare_parameter(
+            "repeat",
+            1,
+            ParameterDescriptor(
+                description="Number of times the whole goal suite is run.",
+                type=ParameterType.PARAMETER_INTEGER,
+                read_only=True,
+            ),
+        )
         robots = list(self.get_parameter("robots").value)
         self.repeat = int(self.get_parameter("repeat").value)
         plans = load_goals(Path(str(self.get_parameter("goals_file").value)))

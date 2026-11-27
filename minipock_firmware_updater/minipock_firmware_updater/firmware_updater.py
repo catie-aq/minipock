@@ -13,6 +13,7 @@ from minipock_msgs.srv import (
     TrigUpdate,
     TrigUpdate_Response,
 )
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.node import Node
 
 from minipock_firmware_updater import firmware
@@ -46,8 +47,23 @@ class FirmwareUpdater(Node):
     def __init__(self) -> None:
         """Declare the parameters, fetch the release tags and create the services."""
         super().__init__("firmware_updater")
-        self.declare_parameter("namespace", "minipock_0")
-        self.declare_parameter("method", "latest")
+        self.declare_parameter(
+            "namespace",
+            "minipock_0",
+            ParameterDescriptor(
+                description="Namespace of the robot; the services are created under it at start.",
+                type=ParameterType.PARAMETER_STRING,
+                read_only=True,
+            ),
+        )
+        self.declare_parameter(
+            "method",
+            "latest",
+            ParameterDescriptor(
+                description="How the firmware version is chosen, read at each update request.",
+                type=ParameterType.PARAMETER_STRING,
+            ),
+        )
         namespace = self.get_parameter("namespace").get_parameter_value().string_value
         self.stored_version = {}
 

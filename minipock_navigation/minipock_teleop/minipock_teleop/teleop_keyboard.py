@@ -6,6 +6,7 @@ import sys
 
 import rclpy
 from geometry_msgs.msg import Twist
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.node import Node
 from rclpy.qos import QoSProfile
 
@@ -75,7 +76,15 @@ class TeleopController(Node):
     def __init__(self) -> None:
         """Resolve the namespace, check the cmd_vel topic and create the publisher."""
         super().__init__("teleop_keyboard")
-        self.declare_parameter("namespace", "")
+        self.declare_parameter(
+            "namespace",
+            "",
+            ParameterDescriptor(
+                description="Robot namespace used to find the cmd_vel topic; empty to pick one.",
+                type=ParameterType.PARAMETER_STRING,
+                read_only=True,
+            ),
+        )
         namespace = self.get_parameter("namespace").value
         self.get_logger().info(f"Namespace: {namespace}")
 
