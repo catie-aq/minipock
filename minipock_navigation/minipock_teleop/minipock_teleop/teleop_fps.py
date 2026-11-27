@@ -3,6 +3,7 @@
 import rclpy
 from geometry_msgs.msg import Twist
 from pynput import keyboard
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 from rclpy.node import Node
 
 
@@ -12,7 +13,15 @@ class TeleopFps(Node):
     def __init__(self) -> None:
         """Find the cmd_vel topic of the namespace and create the publisher and timer."""
         super().__init__("teleop_keyboard")
-        self.declare_parameter("namespace", "")
+        self.declare_parameter(
+            "namespace",
+            "",
+            ParameterDescriptor(
+                description="Robot namespace used to find the cmd_vel topic; empty to pick one.",
+                type=ParameterType.PARAMETER_STRING,
+                read_only=True,
+            ),
+        )
         self.namespace = self.get_parameter("namespace").value
         cmd_vel_topics = self.select_topic()
         cmd_vel_topic = ""
