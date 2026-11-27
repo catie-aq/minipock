@@ -24,6 +24,8 @@ RUN apt-get update && rosdep update
 RUN rosdep install --from-paths . -y
 RUN . /opt/ros/jazzy/setup.sh  && colcon build --merge-install --packages-select micro_ros_setup
 RUN . /workspaces/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh
+# build_agent.sh runs a plain colcon build: --merge-install matches the layout of micro_ros_setup.
+RUN . /workspaces/install/setup.sh && ros2 run micro_ros_setup build_agent.sh --merge-install
 
 FROM base AS simulation
 

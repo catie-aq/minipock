@@ -288,6 +288,11 @@ ros2 run minipock_bringup nav_benchmark --ros-args -p use_sim_time:=true \
   `<ns>/odom → <ns>/base_footprint`. `odom` et `scan` sont publiés en QoS
   capteur (`qos_profile_sensor_data`, best effort). Le même launch lance
   `joint_state_publisher` : le firmware ne publie pas l'état des roues.
+- L'image `real` compile l'agent micro-ROS (`micro_ros_setup`, `build_agent.sh
+  --merge-install`) dans `/workspaces/install` : `micro_ros_agent` n'a pas de
+  clé rosdep, d'où `--skip-keys micro_ros_agent` en CI et dans l'image de base.
+  Un espace de travail monté sur `/workspaces` masque cette installation : le
+  compiler à nouveau dans ce cas.
 - Topics, frames et types échangés avec le firmware forment un contrat :
   un changement ici qui le touche demande la modification correspondante dans
   le dépôt firmware, sinon le robot réel casse sans que la CI le voie.
