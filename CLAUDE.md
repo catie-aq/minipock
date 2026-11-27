@@ -167,7 +167,10 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   `ros_gz_bridge` d'un robot est configuré par un fichier YAML généré au
   lancement (`minipock_gz.bridges.write_config`, champ `qos_profile`), les
   arguments en ligne de commande ne portant pas de QoS (`test_bridges.py`). Tout
-  abonné de `scan` et `odom` doit accepter un publieur best effort.
+  abonné de `scan` et `odom` doit accepter un publieur best effort : vérifié en
+  sim avec `ros2 topic info -v` pour AMCL, les deux costmaps,
+  `collision_monitor`, `controller_server`, `bt_navigator` et
+  `cartographer_node`, tous abonnés en best effort.
 - Sim et réel exposent les mêmes topics et frames : un nœud ne doit pas savoir
   s'il tourne en simulation, hors `use_sim_time`.
 
@@ -279,6 +282,13 @@ ros2 run minipock_bringup nav_benchmark --ros-args -p use_sim_time:=true \
   un changement ici qui le touche demande la modification correspondante dans
   le dépôt firmware, sinon le robot réel casse sans que la CI le voie.
 - Rien ne se teste sur le robot réel sans sonde de programmation à portée.
+- Réglé ou constaté en simulation seulement, à reprendre sur le robot réel :
+  `alpha4` de l'AMCL et `xy_goal_tolerance` (voir « Navigation ») ; un
+  `PoseProgressChecker` à envisager pour les demi-tours du différentiel, qui
+  logue « Failed to make progress » sans échouer
+  (`docs/superpowers/specs/2026-11-25-nav2-tuning.md`) ; le pic de vitesse
+  angulaire de l'`OdometryPublisher` de gz-sim 8.11, à corriger à la source
+  (gz-sim), d'ici là velocity smoother en boucle ouverte.
 
 ## Tests
 
@@ -301,7 +311,8 @@ colcon test --merge-install --pytest-args -m "not integration" && colcon test-re
   les marqueurs de cette fonction, pas un `pytestmark` de module. Le test est
   opt-in (`minipock_bringup/test/conftest.py`) : un `colcon test` ou un
   `pytest` sans `-m` le saute ; il tourne avec `-m integration` ou avec la
-  variable `MINIPOCK_INTEGRATION=1` (à poser par une CI d'intégration).
+  variable `MINIPOCK_INTEGRATION=1`, que la CI pose (voir « Qualité et
+  livraison »).
 - Transport DDS du test d'intégration : UDPv4 seul
   (`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`, posé par `generate_test_description`
   pour la simulation et le nœud de test, sauf si la variable existe déjà).
