@@ -5,20 +5,387 @@ Wi-Fi vers un PC hôte), deux cinématiques (différentielle et holonome), ROS 2
 Jazzy, Gazebo Harmonic, Nav2, Cartographer. Ce dépôt contient toute la partie
 ROS 2 côté PC hôte ; les firmwares vivent dans des dépôts séparés
 (`catie-aq/minipock_zephyr-demo`, `catie-aq/minipock_mbed-rbdc`), les messages
-dans le sous-module `minipock_msgs`, la documentation utilisateur dans
-`catie-aq/minipock_documentation`.
+dans le sous-module `minipock_msgs`.
 
-## Livraison
+## Paquets
 
-- Code, commentaires et docstrings en anglais ; documentation utilisateur en
-  français.
+| Paquet | Rôle |
+|--------|------|
+| `minipock` | Métapaquet pur (aucun fichier installé) |
+| `minipock_description` | URDF/xacro des deux cinématiques |
+| `minipock_gz` | Mondes Gazebo, lancement de la sim, ponts ROS-Gazebo |
+| `minipock_bringup` | Launchs d'entrée `sim.launch.py` et `real.launch.py`, fichiers de flotte (`config/minipocks.yaml` par défaut en sim, `config/minipocks_real.yaml` pour le robot réel), chargement et validation de la config, rendu des paramètres Nav2 et localisation de la flotte ; robot réel : agent micro-ROS, mise en forme odométrie et scan (`raw_data_transformer`) |
+| `minipock_navigation/*` | Nav2 (`minipock_navigation2`), Cartographer, téléopération |
+| `minipock_fleet_adapter` | Adaptateur Open-RMF (chantier séparé, ne pas toucher hors de ce chantier) |
+| `minipock_firmware_updater` | Mise à jour du firmware par ROS ; logique sans ROS ni réseau (versions, découpage en blocs, CRC-8 du firmware) dans `firmware.py`, testée par `test/test_firmware.py` |
+
+## Environnement
+
+Tout se fait dans les images Docker du dépôt (`.devcontainer/Dockerfile`,
+cibles `base`, `simulation`, `real`), publiées sur
+`ghcr.io/catie-aq/minipock:<version>-<cible>`.
+
+- `scripts/docker-run.sh [--gpu] [--gui] "<commande>"` lance une commande dans
+  l'image `simulation` avec le dépôt monté sur `/workspaces/src/minipock` et un
+  espace de travail colcon (`build/`, `install/`, `log/`) sur `/workspaces` :
+  `$MINIPOCK_WS`, par défaut `../ws` à côté du dépôt (un `MINIPOCK_WS` par
+  worktree). `--gpu` active le GPU NVIDIA, `--gui` l'affichage X11 (RViz).
+  Image : `IMAGE`, par défaut `ghcr.io/catie-aq/minipock:<version>-simulation`
+  (version de `minipock/package.xml`), `minipock:dev-simulation` après un build
+  local. Chaque dépôt ou worktree reçoit son `ROS_DOMAIN_ID` et son
+  `GZ_PARTITION`, découverte limitée à localhost. `scripts/gate.sh [<ref>]`
+  rejoue la CI sur un commit (export propre, pre-commit sans sous-module,
+  build, tests unitaires). Les scripts passent `shellcheck` (pre-commit).
+- Compiler avec `--merge-install` : `minipock_gz/launch/world.launch.py` ajoute
+  à `GZ_SIM_RESOURCE_PATH` le dossier `share` qui contient `minipock_description`,
+  et les URI `model://minipock_gz/...` et `package://minipock_gz/...` des mondes
+  supposent que `minipock_gz` y est aussi (un `install/share` unique). L'image ne
+  pose pas `GZ_SIM_RESOURCE_PATH` : les mondes se chargent aussi hors du
+  conteneur. Pas de chemin absolu dans un monde (`test_worlds.py`).
+- Sans écran ni GPU (CI, conteneur sans `/dev/dri`) : `LIBGL_ALWAYS_SOFTWARE=1`
+  et `gz sim -s --headless-rendering`. Le LiDAR simulé (`gpu_lidar`) tourne
+  alors en rendu logiciel, plus lentement que le temps réel.
+- `minipock_description/launch/description.launch.py` prend, en plus de
+  `namespace`, `mode` et `use_sim_time`, l'argument propre à la sim
+  `sim_index` (rang du robot dans la flotte, 0 à 17, unique par simulation).
+  L'origine du `gpu_lidar` est dans le maillage du
+  LD19 : son visuel porte le bit de visibilité Gazebo `1 << (2 + sim_index)`,
+  que le masque du LiDAR du même robot exclut. Chaque LiDAR ignore ainsi son
+  propre boîtier mais voit celui des autres robots ; deux robots au même
+  `sim_index` ne voient pas leurs LD19 respectifs. Le launch d'entrée
+  `sim.launch.py` fournit un `sim_index` unique par robot (son rang dans
+  `robots` du fichier de flotte) et refuse une flotte de plus de 18 robots ;
+  en réel, `sim_index` reste à son défaut, sans effet. Aucune pièce du châssis
+  ne coupe le plan du LiDAR (`test_scan_plane_clear_of_robot_body`) : l'absence
+  de filtre d'empreinte repose sur la hauteur de l'URDF, à confirmer sur le
+  robot réel.
+- Garde au sol (`minipock_description/test/test_urdf.py`) : bas des roues à
+  0,0975 m sous `base_link` (plan de contact), collision du châssis 1 cm
+  au-dessus. Le différentiel a deux patins sans frottement, avant et arrière,
+  1,5 mm au-dessus du plan comme les patins PLA du robot réel : il penche de
+  0,7° au plus et le châssis ne frotte jamais le sol. `minipock_gz` pose le
+  robot 2,5 mm au-dessus du sol (`SPAWN_HEIGHT`, `test_spawn_height.py`) : plus
+  bas, roues et châssis démarrent dans le maillage du sol et y restent
+  enfoncés, et le frottement du châssis absorbe les petites consignes de
+  `VelocityControl` (holonome à l'arrêt).
+- Écart connu de la sim : l'odométrie holonome (`OdometryPublisher` de gz-sim)
+  part de l'origine du monde, alors que le firmware part de zéro (les options de
+  décalage n'existent qu'après gz-sim 8.11.0). Sans effet sur Nav2, qui corrige
+  par `map -> odom`.
+- `ROS_DOMAIN_ID` : 10 sur le réseau du robot. Pour un test local, prendre un
+  autre domaine et `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST` pour ne pas
+  parler aux robots réels.
+
+```bash
+colcon build --symlink-install --merge-install
+```
+
+Simulation de la flotte (monde, robots, localisation, Nav2, RViz) :
+
+```bash
+ros2 launch minipock_bringup sim.launch.py [config:=<fichier>] [headless:=true] [rviz:=false] [slam:=true]
+```
+
+Flotte réelle (agent micro-ROS, mise en forme des données, localisation, Nav2) :
+
+```bash
+ros2 launch minipock_bringup real.launch.py [config:=<fichier>] [rviz:=true] [slam:=true]
+```
+
+- `config:=` : chemin, ou nom d'un fichier de `minipock_bringup/config`
+  (défaut `minipocks.yaml` en sim, `minipocks_real.yaml` en réel). Le fichier
+  est lu une fois par le launch d'entrée, qui inclut pour chaque robot
+  `minipock_description/launch/description.launch.py`, puis
+  `minipock_gz/launch/robot.launch.py` (sim) ou
+  `minipock_bringup/launch/robot.launch.py` (réel), puis
+  `minipock_navigation2/launch/robot.launch.py`.
+- `use_sim_time` n'est pas dans le fichier de flotte : le launch d'entrée le
+  fixe (`true` en sim, `false` en réel) par `SetParameter` pour tous les nœuds,
+  et le passe aussi aux launchs par robot.
+- RViz : `minipock_navigation2/rviz/<rviz>.rviz`, `<rviz>` étant le champ du
+  fichier de flotte (`fleet` dans les deux fichiers livrés).
+- `slam:=true` (sim et réel) : Cartographer construit la carte à la place du
+  `map_server` et des AMCL (voir « Navigation ») ; le champ `map` du fichier de
+  flotte est alors ignoré. Un seul robot dans la flotte, sinon le launch
+  s'arrête sur une erreur qui le dit.
+
+Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
+
+```bash
+ros2 launch minipock_navigation2 robot.launch.py namespace:=minipock_0 params_file:=<fichier rendu> use_sim_time:=true
+```
+
+Cartographer pour un robot (carte sur `/minipock_0/map`, ou sur le topic de
+`map_topic:=`) :
+
+```bash
+ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 use_sim_time:=true
+```
+
+## Mondes de simulation
+
+- Mondes dans `minipock_gz/worlds/` (argument `world` de `world.launch.py`, sans
+  `.sdf`, défaut `office`) : `office` (défaut de `minipocks.yaml`, bureaux
+  meublés tirés de `husarion_office` de Husarion), `empty_room_world`,
+  `minipock_world`. Cartes Nav2 dans
+  `minipock_navigation/minipock_navigation2/map/` : `office` pour `office`,
+  `empty_room_map` pour `empty_room_world`, `catie` (locaux, robot réel) ;
+  `minipock_world` n'a pas de carte. `load_config` vérifie que le monde, la
+  carte et la config RViz du fichier de flotte existent et, sinon, lève une
+  `ConfigError` qui liste les noms installés.
+- Le monde `office` ne charge rien par le réseau : ses modèles sont copiés dans
+  `minipock_gz/models/` (ajouté à `GZ_SIM_RESOURCE_PATH` par `world.launch.py`).
+  Origine et licence de chaque modèle dans `minipock_gz/worlds/ATTRIBUTION.md`,
+  vérifiées par `minipock_gz/test/test_office_world.py` : tout modèle ajouté
+  doit y figurer. Pas d'URI `https://fuel...` dans `office` ni `empty_room_world`
+  (`test_worlds.py`). `minipock_world` est l'ancien monde : il charge ses
+  modèles depuis Fuel (réseau requis) et n'est plus le défaut.
+- Positions de départ de `minipocks.yaml` : dans l'open space, cellules libres
+  dans un rayon de 0,25 m (testé sur la carte).
+- `world_to_map.py` : la cellule i de la carte couvre
+  `[origin + i·res, origin + (i+1)·res)` et une cellule est occupée dès qu'un
+  obstacle la touche (les vitres de 1 cm restent dans la carte). Pas de
+  décalage d'une demi-cellule (`test_world_to_map.py`) : avec, chaque obstacle
+  glissait vers -x et -y et l'AMCL se recalait à plusieurs centimètres de la
+  position réelle.
+- Après toute modification du monde, régénérer la carte (sur l'hôte, depuis la
+  racine du dépôt) ; `--z-max` = hauteur du LiDAR au-dessus du sol (0,1475 m :
+  `lidar_link` à 0,05 m au-dessus de `base_link`, bas des roues à 0,0975 m en
+  dessous, d'après l'URDF) + 0,05 m :
+
+```bash
+uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf \
+  --models minipock_gz/models --z-min 0.02 --z-max 0.1975 --resolution 0.05 \
+  --out minipock_navigation/minipock_navigation2/map/office
+```
+
+## Conventions ROS
+
+- Un robot = un namespace `minipock_<id>` (`<id>` = clé de `fleet` dans la config).
+- Toutes les frames d'un robot sont préfixées par son namespace
+  (`minipock_0/base_footprint`, `minipock_0/odom`, `minipock_0/lidar_link`) et
+  publiées sur le `/tf` global ; la frame `map` est commune à la flotte. Ce choix
+  garde un seul arbre TF pour RViz, Open-RMF et la cartographie multi-robot.
+- Arbre par robot : `map → minipock_<id>/odom → minipock_<id>/base_footprint →
+  minipock_<id>/base_link → …`, avec un seul publieur par transformation.
+- Topics relatifs au namespace : `cmd_vel`, `odom`, `scan`, `joint_states`.
+- QoS : `scan` et `odom` sont publiés en profil capteur (`SENSOR_DATA` :
+  best effort, volatile, profondeur 5) en sim comme en réel. En sim, le pont
+  `ros_gz_bridge` d'un robot est configuré par un fichier YAML généré au
+  lancement (`minipock_gz.bridges.write_config`, champ `qos_profile`), les
+  arguments en ligne de commande ne portant pas de QoS (`test_bridges.py`). Tout
+  abonné de `scan` et `odom` doit accepter un publieur best effort : vérifié en
+  sim avec `ros2 topic info -v` pour AMCL, les deux costmaps,
+  `collision_monitor`, `controller_server`, `bt_navigator` et
+  `cartographer_node`, tous abonnés en best effort.
+- Sim et réel exposent les mêmes topics et frames : un nœud ne doit pas savoir
+  s'il tourne en simulation, hors `use_sim_time`.
+
+## Navigation
+
+- Une seule carte pour la flotte : un `map_server` global publie `/map` (frame
+  `map`) ; chaque robot a son AMCL (`/<ns>/amcl`, `map_topic: /map`). Ces
+  actions viennent de `minipock_bringup.localization.localization_actions`.
+- Mode SLAM (`slam:=true`, `minipock_bringup.localization.slam_actions`) : pour
+  l'unique robot, `cartographer.launch.py` avec `map_topic:=/map` ; ni
+  `map_server` ni AMCL. Cartographer publie `/map` (fiable, transient local,
+  compatible avec la couche statique du costmap global) et
+  `map → <ns>/odom` ; Nav2 navigue sur cette carte, qui grandit. Le repère `map`
+  part de la pose de départ du robot, pas de l'origine du monde : les buts se
+  donnent dans ce repère. Plusieurs robots : refus (`ValueError`), la
+  cartographie collective est un autre chantier. `test_slam_launch.py` vérifie
+  les actions générées par les deux launchs d'entrée ; vérifié en sim (un
+  robot, `empty_room_world`, but atteint à 2 m sur la carte en construction).
+- Un gestionnaire de cycle de vie par namespace, bond actif :
+  `lifecycle_manager_map` (racine) pour `map_server`,
+  `<ns>/lifecycle_manager_localization` pour l'AMCL du robot. Un gestionnaire
+  ne crée de bond qu'avec les serveurs de son namespace (le serveur publie sur
+  `<ns>/bond` sous son nom court).
+- Le reste de Nav2 vient de `nav2_bringup/launch/navigation_launch.py`, inclus
+  par `minipock_navigation2/launch/robot.launch.py` sous le namespace du robot.
+  `SetRemap('/tf', '/tf')` et `SetRemap('/tf_static', '/tf_static')` avant
+  l'include annulent ses remaps vers `tf` : tout reste sur le `/tf` global.
+  Même chose pour AMCL et Cartographer.
+- Paramètres Nav2 en couches, fusionnés au lancement par
+  `minipock_bringup.nav2_params.render_params_file` :
+  `minipock_navigation2/param/common.yaml`, puis la surcouche de la cinématique
+  (`differential.yaml` ou `holonomic.yaml`), puis le champ optionnel
+  `nav2_params` du robot dans le fichier de flotte (chemin, ou nom d'un fichier
+  de `minipock_navigation2/param`). `load_config` résout un chemin relatif
+  depuis le dossier du fichier de flotte, non depuis le dossier de lancement ;
+  un nom sans `/` désigne le fichier voisin du fichier de flotte s'il existe,
+  sinon un fichier de `param`. Les dictionnaires sont fusionnés, une liste
+  de la surcouche remplace celle du dessous. Marqueurs remplacés :
+  `<robot_namespace>`, `<x>`, `<y>`, `<yaw>` (pose initiale AMCL).
+- Clés racine sans namespace (`amcl:`, `controller_server:`…) : le launch les
+  range sous le namespace du robot. Topics relatifs (`scan`, `odom`), sauf ceux
+  des costmaps, absolus (`/<robot_namespace>/scan`), et la carte `/map`.
+- Aucune vitesse ni accélération de Nav2 ne dépasse les limites du firmware
+  (2 m/s, 0,7 m/s², décélération 3,4 m/s², 3π rad/s, π rad/s²) ; les tests de
+  `minipock_bringup` le vérifient. MPPI, velocity smoother et behavior server
+  partagent les mêmes limites.
+- MPPI : `ax_min = -ax_max` et `ay_min = -ay_max`
+  (`test_mppi_acceleration_symmetric`). MPPI borne chaque commande tirée à
+  `[v + ax_min·dt, v + ax_max·dt]` autour de la vitesse mesurée `v` ; avec une
+  décélération plus forte que l'accélération, la moyenne retombe sous `v` à
+  chaque cycle et le robot reste à l'arrêt (« Failed to make progress »).
+- Velocity smoother en boucle ouverte (`test_velocity_smoother_open_loop`) :
+  en boucle fermée, sa sortie est la vitesse mesurée plus une variation
+  bornée, jamais ramenée sous `max_velocity`. L'`OdometryPublisher` de gz-sim
+  8.11 (holonome) publie environ 62 rad/s pendant 0,1 s chaque fois que le cap
+  passe -2π/3 (changement de signe du quaternion de la physique) : en boucle
+  fermée le robot recevait jusqu'à 50 rad/s.
+- AMCL (`test_amcl_localization_settings`) : `alpha4` (bruit de translation
+  par radian de rotation, appliqué en long et en travers par le modèle omni) à
+  0,02 au lieu de 0,2, et les 132 points du scan (`max_beams`). Avec 0,2, quelques
+  tours sur place laissaient l'estimation à 0,15 à 0,25 m de la position réelle
+  en simulation (odométrie exacte) ; après réglage, 0,09 m au plus. Tolérance de
+  but `xy_goal_tolerance` 0,15 m, au-dessus de cette erreur. Valeurs à vérifier
+  sur le robot réel (glissement des roues en rotation).
+- Holonome (`holonomic.yaml`, `test_holonomic_critics_without_heading_preference`) :
+  MPPI sans `PreferForwardCritic` ni `PathAngleCritic`, avec `TwirlingCritic` ;
+  il se déplace de côté ou en arrière sans tourner (dérive de cap 0,08 rad sur
+  1 m latéral, 0,65 rad avant).
+- Banc de réglage `nav_benchmark` (`minipock_bringup`) : lance une suite de
+  buts par robot et écrit un tableau Markdown (succès, durée simulée, chemin
+  parcouru rapporté à la distance couverte, dégagement minimal tiré du scan,
+  changements de signe de `wz` à moins de 0,5 m du but, dérive de cap des
+  buts `keep_yaw`, erreur finale). Il sort en erreur si `/clock` n'arrive pas
+  en 30 s, si un serveur d'action manque ou si une ligne manque. Buts et flotte
+  dans `minipock_bringup/test/data/benchmark_goals.yaml` et `benchmark_fleet.yaml`
+  (monde `empty_room_world`) ; mesures et raisons des réglages dans
+  `docs/superpowers/specs/2026-11-25-nav2-tuning.md`.
+
+```bash
+ros2 launch minipock_bringup sim.launch.py headless:=true rviz:=false \
+  config:=<src>/minipock_bringup/test/data/benchmark_fleet.yaml
+ros2 run minipock_bringup nav_benchmark --ros-args -p use_sim_time:=true \
+  -p "robots:=[minipock_0, minipock_1]" \
+  -p goals_file:=<src>/minipock_bringup/test/data/benchmark_goals.yaml -p repeat:=3
+```
+
+- `docking_server` (géré par `navigation_launch.py`) a un plugin
+  `SimpleNonChargingDock` et aucun dock : il s'active sans servir.
+- `minipock_navigation2/rviz/fleet.rviz` montre `minipock_0` et `minipock_1`
+  (un groupe d'affichages par robot) : à compléter pour une flotte plus grande.
+- Cartographer : `cartographer.launch.py namespace:=<ns>` génère le lua (et la
+  config RViz) avec le namespace à la place de `__NS__` ; il ne publie que
+  `map → <ns>/odom`.
+
+## Robot réel
+
+- Le firmware publie `odom_raw` (`PoseStamped`) et `scan_raw` (`LaserScan`) en
+  micro-ROS (un seul agent UDP, port 8888, lancé par `real.launch.py`).
+  `raw_data_transformer` (`minipock_bringup/launch/robot.launch.py`, un par
+  namespace) les remet en forme : `odom` (`Odometry`, vitesse calculée dans le
+  repère du robot à partir de deux poses successives, nulle si les horodatages
+  sont égaux ou à rebours, avec un avertissement limité à un toutes les 5 s :
+  horloge du firmware non synchronisée ; covariances diagonales modestes et non
+  nulles, `POSE_VARIANCES` et `TWIST_VARIANCES` de `odometry.py`, à affiner sur
+  le robot), `scan` (horodatage du firmware gardé, frame
+  remplacée par le paramètre `scan_frame_id`, défaut `<ns>/lidar_link`, car le
+  firmware envoie encore `lds_01_link`) et le seul TF
+  `<ns>/odom → <ns>/base_footprint`. `odom` et `scan` sont publiés en QoS
+  capteur (`qos_profile_sensor_data`, best effort). Le même launch lance
+  `joint_state_publisher` : le firmware ne publie pas l'état des roues.
+- L'image `real` compile l'agent micro-ROS (`micro_ros_setup`, `build_agent.sh
+  --merge-install`) dans `/workspaces/install` : `micro_ros_agent` n'a pas de
+  clé rosdep, d'où `--skip-keys micro_ros_agent` en CI et dans l'image de base.
+  Un espace de travail monté sur `/workspaces` masque cette installation : le
+  compiler à nouveau dans ce cas.
+- Topics, frames et types échangés avec le firmware forment un contrat :
+  un changement ici qui le touche demande la modification correspondante dans
+  le dépôt firmware, sinon le robot réel casse sans que la CI le voie.
+- Rien ne se teste sur le robot réel sans sonde de programmation à portée.
+- Réglé ou constaté en simulation seulement, à reprendre sur le robot réel :
+  `alpha4` de l'AMCL et `xy_goal_tolerance` (voir « Navigation ») ; un
+  `PoseProgressChecker` à envisager pour les demi-tours du différentiel, qui
+  logue « Failed to make progress » sans échouer
+  (`docs/superpowers/specs/2026-11-25-nav2-tuning.md`) ; le pic de vitesse
+  angulaire de l'`OdometryPublisher` de gz-sim 8.11, à corriger à la source
+  (gz-sim), d'ici là velocity smoother en boucle ouverte.
+
+## Tests
+
+- Tests unitaires de tous les paquets, sans la simulation :
+
+```bash
+colcon test --merge-install --pytest-args -m "not integration" && colcon test-result --verbose
+```
+
+- Test d'intégration `minipock_bringup/test/test_sim_nav2.py` (marqueur pytest
+  `integration`, `launch_testing`) : lance `sim.launch.py` sans interface avec
+  `minipock_bringup/test/data/two_robots.yaml` (monde `office`, `minipock_0`
+  holonome, `minipock_1` différentiel), vérifie `scan` et `odom`, l'arbre TF
+  (`map -> <ns>/odom` publié par chaque AMCL), le `map_server` unique, puis
+  envoie en parallèle un but `NavigateToPose` par robot (constantes `GOALS`,
+  choisies sur `office.pgm`), attendu `SUCCEEDED` sous 300 s simulées. Les
+  attentes comptent en temps simulé (`/clock`), avec un garde-fou en temps
+  réel de 20 fois l'attente. Le marqueur est posé sur
+  `generate_test_description` : le plugin pytest de `launch_testing` recopie
+  les marqueurs de cette fonction, pas un `pytestmark` de module. Le test est
+  opt-in (`minipock_bringup/test/conftest.py`) : un `colcon test` ou un
+  `pytest` sans `-m` le saute ; il tourne avec `-m integration` (ce que fait le
+  job d'intégration de la CI) ou, en local, avec la variable
+  `MINIPOCK_INTEGRATION=1`, que la CI ne pose pas : `container-env` vaut pour
+  le job unitaire comme pour le job d'intégration.
+- Transport DDS du test d'intégration : UDPv4 seul
+  (`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`, posé par `generate_test_description`
+  pour la simulation et le nœud de test, sauf si la variable existe déjà).
+  La mémoire partagée de Fast DDS dépend de `/dev/shm`, partagé avec l'hôte
+  (`--ipc=host`) ; des segments laissés par des lancements tués ont empêché
+  `/clock` d'atteindre le nœud de test, qui attendait alors jusqu'au garde-fou
+  de 20 fois chaque attente. UDPv4 ne dépend pas de cet état, pour un débit
+  négligeable avec deux robots ; nettoyer avec `fastdds shm clean` resterait
+  à refaire avant chaque lancement. Le test échoue aussi en 30 s (temps réel)
+  si `/clock` n'arrive pas après les topics des robots, avec un message qui
+  cite la mémoire partagée.
+- Lancer le test d'intégration en local, dans le conteneur de simulation
+  (workspace compilé). Avec GPU, le conteneur reçoit `--gpus all
+  -e NVIDIA_DRIVER_CAPABILITIES=all --device /dev/dri` (rendu matériel, temps
+  réel, 1 à 3 min) ; sans GPU, `-e LIBGL_ALWAYS_SOFTWARE=1` (rendu logiciel du
+  LiDAR, simulation bien plus lente que le temps réel, attentes inchangées en
+  temps simulé). La commande est la même dans les deux cas ; `-s` dans
+  `--pytest-args` affiche les logs de la simulation et le temps mis par chaque
+  robot pour atteindre son but :
+
+```bash
+colcon test --merge-install --packages-select minipock_bringup \
+  --pytest-args -m integration --event-handlers console_direct+
+colcon test-result --verbose
+```
+
+## Skills
+
+Les gestes répétitifs ont un skill de projet dans `.claude/skills/` :
+
+- `minipock-test` : compiler et tester dans le conteneur (unitaires,
+  `-m integration`, gate complet), lire `colcon test-result`, pièges connus
+  (liens symboliques obsolètes après suppression d'un fichier, `--merge-install`,
+  pre-commit sans le sous-module).
+- `minipock-sim` : lancer la simulation (sans écran, GPU ou rendu logiciel, GUI),
+  sonder topics, TF et états de cycle de vie, envoyer un `NavigateToPose`,
+  arrêter proprement le groupe de processus.
+- `minipock-release` : figer une version (versions des paquets, CHANGELOG, PR en
+  rebase, tag posé par `ros-tag`, dossier de version dans
+  `minipock_documentation`).
+
+## Qualité et livraison
+
+- Code, commentaires et docstrings en anglais ; doc utilisateur en français.
 - Commits Conventional Commits en anglais (`type(scope): subject`), branches
   `type/short-description`.
 - `pre-commit run --all-files` avant de pousser.
-- Ce dépôt : branche, PR vers `main`, merge en rebase (seule méthode permise
+- CI (`.github/workflows/ros2-build-test.yaml`, workflow partagé
+  `catie-aq/ros_workflows` `ros2-ci.yml@v2.0.0`) : pre-commit, compilation et
+  tests unitaires sur Jazzy, puis le test d'intégration `minipock_bringup`
+  (`-m integration`, valeur par défaut du workflow) sur le runner GPU
+  `sonu-github-arc-gpu`. Rolling tourne chaque semaine dans
+  `ros2-rolling.yaml` (alerte précoce, ne bloque aucune PR). Le sous-module privé `minipock_msgs` passe par le secret `PAT`. Passer à une
+  nouvelle version du workflow : changer `@vX.Y.Z` et `toolkit-ref` ensemble.
+- Livraison : branche, PR vers `main`, merge en rebase (seule méthode permise
   par le ruleset, historique linéaire) dès que la CI est verte, sans relecture
-  obligatoire.
-- Dépôts firmware (`minipock_zephyr-demo`, `minipock_mbed-rbdc`) : toute
-  modification passe par une PR relue par un collègue avant merge.
-- Les versions suivent `minipock/package.xml` ; un push sur `main` qui change
-  cette version crée le tag (workflow `ros-tag`).
+  obligatoire. Les dépôts firmware (`minipock_zephyr-demo`,
+  `minipock_mbed-rbdc`) suivent une autre règle : toute modification passe par
+  une PR relue par un collègue avant merge.
+- Les versions suivent `minipock/package.xml` ; un push sur `main` crée le tag.
