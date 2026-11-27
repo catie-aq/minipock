@@ -13,6 +13,7 @@ from launch_ros.actions import Node
 
 from minipock_bringup.localization import localization_actions
 from minipock_bringup.nav2_params import merge_params, render_params_file
+from minipock_bringup.nav_benchmark import ROBOT_RADIUS
 
 MODES = ("differential", "holonomic")
 
@@ -341,3 +342,11 @@ def test_localization_actions(tmp_path: Path) -> None:
         assert params["autostart"] is True
         assert "bond_timeout" not in params
     assert all(_dict_parameters(node, context)["use_sim_time"] is True for node in nodes)
+
+
+@pytest.mark.parametrize("mode", MODES)
+def test_benchmark_robot_radius_matches_costmaps(mode: str) -> None:
+    # The benchmark clearance column is the scan range minus this radius.
+    params = _render(mode)
+    for costmap in ("local_costmap", "global_costmap"):
+        assert _params(params, costmap, costmap)["robot_radius"] == ROBOT_RADIUS
