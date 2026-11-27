@@ -21,6 +21,8 @@ LIDAR_LINK = f"{NAMESPACE}/lidar_link"
 # and 1 are GZ_VISIBILITY_GUI and GZ_VISIBILITY_SELECTABLE, bit 20 is reserved for particles.
 GZ_VISIBILITY_ALL = 0x0FFFFFFF
 GZ_RESERVED_BITS = 0x00000001 | 0x00000002 | 0x00100000
+# Robots one simulation can hold (one visibility bit each); minipock_bringup checks that its
+# MAX_SIM_ROBOTS matches the range sensors.xacro accepts (test_launch_args.py).
 MAX_ROBOTS = 18
 
 # Axis-aligned bounds of the visual meshes, in their own frame, as [[min xyz], [max xyz]] (m).
@@ -192,6 +194,52 @@ def test_holonomic_wheel_collision(holonomic: ET.Element) -> None:
         cylinder = collisions[0].find("geometry/cylinder")
         assert cylinder is not None
         assert float(cylinder.get("radius")) == pytest.approx(WHEEL_RADIUS)
+
+
+# Rollers of the holonomic wheel (motor.xacro): axis 0.030 m from the wheel axis, 5 mm below
+# the wheel link origin, tangent to the wheel, one every 40 degrees.
+ROLLER_RADIUS = 0.030
+ROLLER_HEIGHT = -0.005
+ROLLER_COUNT = 9
+# Friction of the holonomic wheel collision: the rollers let it slide (motor.xacro).
+HOLONOMIC_WHEEL_MU = 0.01
+
+
+def _roller_origins(link: ET.Element) -> list[tuple[list[float], list[float]]]:
+    return [
+        _xyz_rpy(visual.find("origin"))
+        for visual in link.findall("visual")
+        if visual.find("geometry/mesh").get("filename").endswith("roller.stl")
+    ]
+
+
+def test_holonomic_roller_poses(holonomic: ET.Element) -> None:
+    for motor in ("left", "right", "middle"):
+        link = holonomic.find(f"link[@name='{NAMESPACE}/motor_{motor}_wheel_link']")
+        assert link is not None
+        origins = _roller_origins(link)
+        assert len(origins) == ROLLER_COUNT
+        angles = []
+        for (x, y, z), (roll, pitch, yaw) in origins:
+            assert math.hypot(x, y) == pytest.approx(ROLLER_RADIUS, abs=5e-4)
+            assert z == pytest.approx(ROLLER_HEIGHT)
+            assert (roll, pitch) == pytest.approx((0.0, math.pi / 2))
+            # Roller axis tangent to the wheel: the yaw is the position angle minus 90 degrees.
+            angle = math.atan2(y, x)
+            tangent_error = math.remainder(angle - yaw - math.pi / 2, 2 * math.pi)
+            assert tangent_error == pytest.approx(0.0, abs=0.01)
+            angles.append(angle)
+        gaps = sorted(math.degrees(a) % 360 for a in angles)
+        steps = [b - a for a, b in zip(gaps, [*gaps[1:], gaps[0] + 360], strict=True)]
+        assert steps == pytest.approx([360 / ROLLER_COUNT] * ROLLER_COUNT, abs=1.0)
+
+
+def test_holonomic_wheel_friction(holonomic: ET.Element) -> None:
+    for motor in ("left", "right", "middle"):
+        gazebo = holonomic.find(f"gazebo[@reference='{NAMESPACE}/motor_{motor}_wheel_link']")
+        assert gazebo is not None
+        assert float(gazebo.findtext("mu1")) == HOLONOMIC_WHEEL_MU
+        assert float(gazebo.findtext("mu2")) == HOLONOMIC_WHEEL_MU
 
 
 def _lidar_flags_and_mask(robot: ET.Element) -> tuple[int, int]:

@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <robot name="minipock" xmlns:xacro="http://ros.org/wiki/xacro">
-  <!-- Fixed visual of one roller, in the wheel link frame. The poses are the composition of the
-       former roller joint origin and roller link visual origin. -->
+  <!-- Fixed visual of one roller, in the wheel link frame. The poses below come from the former
+       URDF exported from the CAD model, where each roller was a link on a continuous joint: each
+       pose composes that roller joint origin with the roller link visual origin. They put the 9
+       roller axes 0.030 m from the wheel axis, 40 degrees apart, tangent to the wheel and 5 mm
+       below the wheel link origin (test_urdf.py, test_holonomic_roller_poses). -->
   <xacro:macro name="roller_visual" params="xyz rpy">
     <visual>
       <origin xyz="${xyz}" rpy="${rpy}" />

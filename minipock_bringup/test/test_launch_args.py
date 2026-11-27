@@ -3,7 +3,9 @@
 from pathlib import Path
 
 import pytest
+import xacro
 import yaml
+from ament_index_python.packages import get_package_share_directory
 
 from minipock_bringup.config import FleetConfig, Robot
 from minipock_bringup.launch_args import MAX_SIM_ROBOTS, robot_launch_arguments
@@ -78,3 +80,20 @@ def test_real_fleet_size_not_limited() -> None:
     cfg = _fleet(MAX_SIM_ROBOTS + 1)
     arguments = robot_launch_arguments(cfg.robots[-1], cfg, use_sim_time=False)
     assert arguments["namespace"] == f"minipock_{MAX_SIM_ROBOTS}"
+
+
+def _process_description(sim_index: int) -> None:
+    urdf = (
+        Path(get_package_share_directory("minipock_description")) / "urdf" / "minipock.urdf.xacro"
+    )
+    xacro.process_file(
+        str(urdf),
+        mappings={"namespace": "minipock_0/", "mode": "differential", "sim_index": str(sim_index)},
+    )
+
+
+def test_max_sim_robots_matches_description() -> None:
+    # Each robot needs its own LiDAR visibility bit: sensors.xacro accepts sim_index 0 to 17.
+    _process_description(MAX_SIM_ROBOTS - 1)
+    with pytest.raises(xacro.XacroException):
+        _process_description(MAX_SIM_ROBOTS)
