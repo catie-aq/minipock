@@ -27,7 +27,8 @@ def merge_params(base: dict, overlay: dict) -> dict:
         A new dictionary; the inputs are not modified.
 
     Raises:
-        ValueError: If a value of `overlay` is empty (`None`), which ROS cannot load.
+        ValueError: If a value of `overlay`, at any depth, is empty (`None`), which ROS cannot
+            load.
     """
     return _merge(base, overlay, ())
 
@@ -39,8 +40,10 @@ def _merge(base: dict, overlay: dict, path: tuple[str, ...]) -> dict:
         if value is None:
             msg = f"Parameter {'.'.join(where)} has no value: give one or remove the key"
             raise ValueError(msg)
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = _merge(merged[key], value, where)
+        if isinstance(value, dict):
+            # A new sub-dictionary is merged into an empty one: its empty values are rejected.
+            below = merged.get(key)
+            merged[key] = _merge(below if isinstance(below, dict) else {}, value, where)
         else:
             merged[key] = value
     return merged

@@ -66,6 +66,23 @@ def test_merge_rejects_none() -> None:
         merge_params({"a": {"b": 1}}, {"a": {"b": None}})
 
 
+@pytest.mark.parametrize(
+    ("base", "where"),
+    [({}, r"new\.sub\.c"), ({"new": 1}, r"new\.sub\.c"), ({"new": {"x": 1}}, r"new\.sub\.c")],
+)
+def test_merge_rejects_none_in_new_subdictionary(base: dict, where: str) -> None:
+    with pytest.raises(ValueError, match=where):
+        merge_params(base, {"new": {"sub": {"c": None}}})
+
+
+def test_merge_copies_new_subdictionary() -> None:
+    overlay = {"new": {"sub": {"c": 1}}}
+    merged = merge_params({}, overlay)
+    assert merged == overlay
+    merged["new"]["sub"]["c"] = 2
+    assert overlay["new"]["sub"]["c"] == 1
+
+
 @pytest.mark.parametrize("mode", MODES)
 def test_frames_are_prefixed(mode: str) -> None:
     params = _render(mode)
