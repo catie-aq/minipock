@@ -26,6 +26,8 @@ jobs:
       container-env: '{"ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST"}'
       pre-commit: true
       lint-ruff: false
-      integration: false
+      integration: true
+      integration-runner: sonu-github-arc-gpu
+      integration-packages: minipock_bringup
     secrets:
       token: ${{ secrets.PAT }}
