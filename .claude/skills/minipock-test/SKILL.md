@@ -45,7 +45,7 @@ The test sets `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` for the simulation and its own 
 
 - `colcon test-result` lists only failing files; `--verbose` lists every case; `--all` includes passing packages.
 - Details per package: `build/<pkg>/pytest.xml`, console output with `--event-handlers console_direct+`, logs in `log/latest_test/<pkg>/`.
-- A package without tests (for example `minipock_gz` stubs) can show as failed with pytest exit code 5: no test collected, not a defect.
+- A package whose pytest collects no test (or deselects all of them with `-m 'not integration'`) exits with code 5: `colcon test` fails and so does CI, without any failing case in `colcon test-result`. The gate fails on it too: add a test to the package or drop it from the CI package list.
 - `colcon test-result` reads every result already in `build/`: delete `build/<pkg>/pytest.xml` to forget a stale one.
 
 ## Full gate (what CI runs)
@@ -54,7 +54,7 @@ The test sets `FASTDDS_BUILTIN_TRANSPORTS=UDPv4` for the simulation and its own 
 scripts/gate.sh [<git-ref>]
 ```
 
-Exports the commit to `../ws-gate` (with the `minipock_msgs` revision the commit pins), runs `pre-commit` on a clean checkout without the submodule (as CI does), then builds and runs the unit tests in the image (`IMAGE` defaults to `minipock:dev-simulation`; set `IMAGE=ghcr.io/catie-aq/minipock:<version>-simulation` to use the published image). Exit status is non-zero on a pre-commit failure, a build failure, a failed test or zero tests run. It tests the committed state, not the working tree: commit first. The pinned submodule revision must exist locally (`git submodule update --init`).
+Exports the commit to `../ws-gate` (with the `minipock_msgs` revision the commit pins), runs `pre-commit` on a clean checkout without the submodule (as CI does), then builds and runs the unit tests of the packages in the CI list (`packages` of `.github/workflows/ros2-build-test.yaml`) in the image (`IMAGE` defaults to `minipock:dev-simulation`; set `IMAGE=ghcr.io/catie-aq/minipock:<version>-simulation` to use the published image). Exit status is non-zero on a pre-commit failure, a build failure, a failed test, zero tests run or a non-zero `colcon test` exit (code 5 above). It tests the committed state, not the working tree: commit first. The pinned submodule revision must exist locally (`git submodule update --init`).
 
 Lint without Docker: `uvx ruff check . && uvx ruff format --check .` and `uvx pre-commit run --all-files`.
 

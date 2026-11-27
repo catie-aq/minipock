@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Full gate on a commit: clean export, pre-commit, full build and unit tests, the way CI runs them
 # (pre-commit on a checkout without the submodule; the minipock_msgs sources are exported from the
-# revision the commit pins). Exits non-zero if pre-commit fails, the build fails, a test fails or
-# no test ran.
+# revision the commit pins). Exits non-zero if pre-commit fails, the build fails, a test fails, no
+# test ran or colcon test itself exits non-zero (a package with no collected test fails like in CI).
 #
 # Usage: scripts/gate.sh [<git-ref>]      (default HEAD)
 # Environment: IMAGE (default minipock:dev-simulation, the image built from .devcontainer/Dockerfile;
@@ -56,8 +56,9 @@ set -euo pipefail
 colcon build --merge-install --event-handlers console_cohesion- > build.log 2>&1 \
   || { tail -30 build.log; echo "GATE build: FAILED"; exit 1; }
 echo "GATE build: ok"
-colcon test --merge-install --pytest-args -m 'not integration' --event-handlers console_cohesion- \
-  > test.log 2>&1 || true
+test_rc=0
+colcon test --merge-install --packages-select $ci_packages --pytest-args -m 'not integration' --event-handlers console_cohesion- \
+  > test.log 2>&1 || test_rc=$?
 result=$(colcon test-result --all 2>&1 || true)
 echo "$result" | tail -8
 summary=$(echo "$result" | grep -E '^Summary: [0-9]+ tests' | tail -1)
@@ -67,9 +68,25 @@ failures=$(echo "$summary" | grep -oE '[0-9]+ failures?' | cut -d' ' -f1)
 bad=$(( ${errors:-0} + ${failures:-0} ))
 if [ -z "$tests" ] || [ "$tests" -eq 0 ]; then echo "GATE tests: FAILED (no test ran)"; exit 1; fi
 if [ "$bad" -gt 0 ]; then echo "GATE tests: FAILED ($bad errors or failures of $tests)"; exit 1; fi
+# colcon test fails on a package without a collected test (pytest exit code 5), which writes no
+# failing case: the summary alone would miss it, CI would not.
+if [ "$test_rc" -ne 0 ]; then
+  grep -E 'exited with code|Failed' test.log | tail -10
+  echo "GATE tests: FAILED (colcon test exit $test_rc, for instance a package without a collected test)"
+  exit 1
+fi
 echo "GATE tests: ok ($tests run)"
 INNER
 )
+# Test the packages CI tests (its `packages` list), not every package of the tree: a package CI
+# leaves out, without tests, would otherwise fail the gate on pytest exit code 5.
+ci_packages=$(git -C "$repo" show "$commit:.github/workflows/ros2-build-test.yaml" \
+  | awk '/^ *packages: >-/ {f=1; next} f && /^ *[a-z-]+:/ {f=0} f {printf "%s ", $1}')
+if [ -z "$ci_packages" ]; then
+  echo "no package list found in .github/workflows/ros2-build-test.yaml" >&2
+  exit 2
+fi
+inner="ci_packages='$ci_packages'"$'\n'"$inner"
 status=0
 MINIPOCK_SRC="$gate/src/minipock" MINIPOCK_WS="$gate" IMAGE=${IMAGE:-minipock:dev-simulation} \
   "$repo/scripts/docker-run.sh" "$inner" || status=$?
