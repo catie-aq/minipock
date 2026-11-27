@@ -300,7 +300,7 @@
 
 Constat de départ (équipe, 25/11) : la structure est bonne, le contenu manque (4 850 mots en tout, `10-Mécanique.md` vide, `1-Vue-d'ensemble.md` à 131 mots).
 
-Publication (vérifiée dans le dépôt du site le 25/11) : le site SONU (Docusaurus) est alimenté par `sonu_documentation-bot`, qui suit la branche par défaut de `minipock_documentation` via un fichier `.git` posé dans Dropbox (`git ls-remote` toutes les 5 min) et publie toute l'arborescence. Barres latérales autogénérées par dossier : les sous-dossiers avec `_category_.json` sont pris en charge. La page `/qualite` du site signale les titres génériques ou en `snake_case` sans espace, les dossiers à une seule page, les pages vides et les doublons de texte : à éviter.
+Publication : la doc est publiée depuis la branche par défaut du dépôt `minipock_documentation`, dont toute l'arborescence est reprise. Barres latérales autogénérées par dossier : les sous-dossiers avec `_category_.json` sont pris en charge. Le contrôle qualité du site signale les titres génériques ou en `snake_case` sans espace, les dossiers à une seule page, les pages vides et les doublons de texte : à éviter.
 
 Structure de `latest/` (validée par l'équipe le 25/11, deux publics) :
 - `utilisateur/` (« je viens de recevoir mon MiniPock ») : présentation et caractéristiques ; premier démarrage (alimentation, Wi-Fi, IP, namespace par le shell ou l'interface web, image sur le PC, vérification) ; piloter le robot (téléopération clavier et FPS) ; cartographier son espace ; naviguer (carte, position initiale, buts dans RViz) ; plusieurs robots ; simuler sans robot ; mettre à jour le firmware ; dépannage.
@@ -318,8 +318,8 @@ Structure de `latest/` (validée par l'équipe le 25/11, deux publics) :
   - Navigation : architecture Nav2 par robot, carte partagée, paramètres (commun, surcouches, `nav2_params` par robot), limites du robot réel, tableau de réglage de la tâche 7b, envoi de buts.
   - SLAM : Cartographer par robot, sauvegarde de carte.
   - Multi-robot : namespaces, YAML de flotte, carte unique, TF.
-  - Conventions ROS (nouvelle page) : renvoie au standard d'équipe `SONU/Méthodes/ROS/ros.md` pour les règles communes et ne garde que ce qui est propre à MiniPock : YAML de flotte, contrat avec le firmware, arbre TF de la flotte, choix de QoS, launches et leurs arguments.
-  - Système embarqué, Endpoints, Mise à jour, Logiciel de mission : relus et corrigés là où le refactor les touche ; Mécanique : contenu minimal (dimensions, entraxe, rayon de roue, limites, lien Dropbox), à partir des valeurs du firmware.
+  - Conventions ROS (nouvelle page) : renvoie au standard ROS de l'équipe pour les règles communes et ne garde que ce qui est propre à MiniPock : YAML de flotte, contrat avec le firmware, arbre TF de la flotte, choix de QoS, launches et leurs arguments.
+  - Système embarqué, Endpoints, Mise à jour, Logiciel de mission : relus et corrigés là où le refactor les touche ; Mécanique : contenu minimal (dimensions, entraxe, rayon de roue, limites, lien vers les fichiers de conception), à partir des valeurs du firmware.
   - Changelog dans `index.md` : entrée de la prochaine version.
 - [ ] **Step 4:** passage au skill `humanizer`, `uvx pre-commit run --files` sur les fichiers touchés (corriger aussi les erreurs markdownlint préexistantes de `latest/`).
 - [ ] **Step 5:** commits `docs: update CLAUDE.md and changelog` (minipock) et `docs: rewrite latest documentation for the refactored stack` (doc, poussé sur `main` du dépôt de doc, modification autorisée par l'équipe).
