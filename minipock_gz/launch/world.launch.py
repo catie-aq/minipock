@@ -32,7 +32,7 @@ def generate_launch_description() -> LaunchDescription:
     clock = bridges.clock()
     return LaunchDescription(
         [
-            DeclareLaunchArgument("world", default_value="minipock_world"),
+            DeclareLaunchArgument("world", default_value="office"),
             DeclareLaunchArgument("headless", default_value="false"),
             AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(gz_share / "worlds")),
             # Vendored models of the office world, referenced as `model://<name>`.

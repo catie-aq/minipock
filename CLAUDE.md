@@ -125,7 +125,7 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 u
 ## Mondes de simulation
 
 - Mondes dans `minipock_gz/worlds/` (argument `world` de `world.launch.py`, sans
-  `.sdf`) : `office` (défaut de `minipocks.yaml`, bureaux
+  `.sdf`, défaut `office`) : `office` (défaut de `minipocks.yaml`, bureaux
   meublés tirés de `husarion_office` de Husarion), `empty_room_world`,
   `minipock_world`. Cartes Nav2 dans
   `minipock_navigation/minipock_navigation2/map/` : `office` pour `office`,
@@ -137,7 +137,9 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 u
   `minipock_gz/models/` (ajouté à `GZ_SIM_RESOURCE_PATH` par `world.launch.py`).
   Origine et licence de chaque modèle dans `minipock_gz/worlds/ATTRIBUTION.md`,
   vérifiées par `minipock_gz/test/test_office_world.py` : tout modèle ajouté
-  doit y figurer. Pas d'URI `https://fuel...` dans un monde.
+  doit y figurer. Pas d'URI `https://fuel...` dans `office` ni `empty_room_world`
+  (`test_worlds.py`). `minipock_world` est l'ancien monde : il charge ses
+  modèles depuis Fuel (réseau requis) et n'est plus le défaut.
 - Positions de départ de `minipocks.yaml` : dans l'open space, cellules libres
   dans un rayon de 0,25 m (testé sur la carte).
 - `world_to_map.py` : la cellule i de la carte couvre
