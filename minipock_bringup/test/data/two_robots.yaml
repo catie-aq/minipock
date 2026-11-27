@@ -1,0 +1,14 @@
+# Fleet of the integration test test_sim_nav2.py: one robot of each kinematics in the office
+# open space. Kept apart from config/minipocks.yaml so that a change of the default fleet does
+# not move the test goals out of reach.
+namespace: minipock_
+map: "office"
+world: "office"
+rviz: "fleet"
+fleet:
+  "0":
+    mode: holonomic
+    position: [6.2, -5.5]
+  "1":
+    mode: differential
+    position: [8.05, -6.3]

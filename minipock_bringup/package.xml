@@ -7,21 +7,34 @@
   <maintainer email="s.delpeuch@catie.fr">Sébastien Delpeuch</maintainer>
   <license>Apache-2.0</license>
 
-  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-jsonschema</exec_depend>
+  <exec_depend>python3-yaml</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
   <exec_depend>tf2_ros_py</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
   <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>rviz2</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>minipock_description</exec_depend>
+  <exec_depend>minipock_gz</exec_depend>
+  <exec_depend>minipock_navigation2</exec_depend>
+  <exec_depend>minipock_cartographer</exec_depend>
+  <exec_depend>nav2_amcl</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>nav2_common</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
+  <exec_depend>nav2_map_server</exec_depend>
   <!-- micro_ros_agent: no rosdep key, built into /workspaces/install by the real image -->
 
   <test_depend>python3-pytest</test_depend>
   <test_depend>python3-pytest-cov</test_depend>
+  <test_depend>xacro</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

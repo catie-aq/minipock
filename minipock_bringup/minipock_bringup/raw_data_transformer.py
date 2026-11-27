@@ -1,178 +1,161 @@
-# Temporary: this file is rewritten or removed by the refactor.
-# ruff: noqa: ANN001, ANN201, ANN202, ANN204, D100, D101, D102, D107, D205, E501
-import numpy as np
+"""Shape the raw odometry and scan of a real MiniPock into standard ROS messages and TF."""
+
+import contextlib
+
 import rclpy
-from filterpy.kalman import KalmanFilter
 from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
+from rclpy.time import Time
 from sensor_msgs.msg import LaserScan
+from std_msgs.msg import Header
 from tf2_ros import TransformBroadcaster
 
+from minipock_bringup.odometry import (
+    POSE_VARIANCES,
+    TWIST_VARIANCES,
+    Pose2D,
+    body_twist,
+    diagonal_covariance,
+    yaw_from_quaternion,
+)
 
-class LinearKalmanFilter:
-    def __init__(self):
-        # Initialize the Kalman Filter
-        self.kf = KalmanFilter(dim_x=3, dim_z=3)
-        self.kf.x = np.array([0.0, 0.0, 0.0])  # initial state
-        self.kf.P *= 1.0  # initial uncertainty
-        self.kf.R = np.eye(3)  # measurement noise
-        self.kf.Q = np.eye(3)  # process noise
-        self.kf.F = np.eye(3)  # state transition matrix
-        self.kf.H = np.eye(3)  # measurement function
+_WARN_PERIOD = 5.0
 
-    def update(self, measurement):
-        # Update the state with the new measurement
-        self.kf.update(np.array(measurement))
 
-    def get_state(self):
-        return self.kf.x
+_POSE_COVARIANCE = diagonal_covariance(POSE_VARIANCES)
+_TWIST_COVARIANCE = diagonal_covariance(TWIST_VARIANCES)
+
+
+def _pose_2d(msg: PoseStamped) -> Pose2D:
+    orientation = msg.pose.orientation
+    yaw = yaw_from_quaternion(orientation.x, orientation.y, orientation.z, orientation.w)
+    return Pose2D(msg.pose.position.x, msg.pose.position.y, yaw)
+
+
+def odometry_message(
+    msg: PoseStamped, twist: tuple[float, float, float], odom_frame: str, base_frame: str
+) -> Odometry:
+    """Return the `Odometry` of a firmware pose and the body-frame twist computed from it.
+
+    Args:
+        msg: Firmware pose, stamped by the firmware.
+        twist: `(vx, vy, wz)` in the robot frame.
+        odom_frame: Frame of the pose.
+        base_frame: Frame moved by the odometry.
+
+    Returns:
+        The message, with the stamp of `msg` and the diagonal covariances of
+        `minipock_bringup.odometry`.
+    """
+    odom = Odometry()
+    odom.header = Header(stamp=msg.header.stamp, frame_id=odom_frame)
+    odom.child_frame_id = base_frame
+    odom.pose.pose = msg.pose
+    odom.pose.covariance = _POSE_COVARIANCE
+    odom.twist.twist.linear.x, odom.twist.twist.linear.y, odom.twist.twist.angular.z = twist
+    odom.twist.covariance = _TWIST_COVARIANCE
+    return odom
+
+
+def transform_message(odom: Odometry) -> TransformStamped:
+    """Return the `odom -> base` transform of an `Odometry`, with its own header."""
+    transform = TransformStamped()
+    transform.header = Header(stamp=odom.header.stamp, frame_id=odom.header.frame_id)
+    transform.child_frame_id = odom.child_frame_id
+    position = odom.pose.pose.position
+    transform.transform.translation.x = position.x
+    transform.transform.translation.y = position.y
+    transform.transform.translation.z = position.z
+    transform.transform.rotation = odom.pose.pose.orientation
+    return transform
 
 
 class RawDataTransformer(Node):
-    def __init__(self):
+    """Republish the firmware topics of one robot, in the robot namespace.
+
+    Inputs: `odom_raw` (`PoseStamped`, pose of the robot in its odometry frame) and `scan_raw`
+    (`LaserScan`). Outputs: `odom` (`Odometry`, pose and body-frame twist), `scan` (stamp kept,
+    frame set to `scan_frame_id`) and the `<ns>/odom -> <ns>/base_footprint` transform.
+    """
+
+    def __init__(self) -> None:
+        """Declare the parameters and create the subscriptions, publishers and TF broadcaster."""
         super().__init__("raw_data_transformer")
-
-        self.declare_parameter("robot_name", "minipock_0")
-        self.__robot_name = self.get_parameter("robot_name").value
-
-        self.create_subscription(
-            PoseStamped,
-            "odom_raw",
-            self.callback,
-            qos_profile_sensor_data,
+        prefix = self.get_namespace().strip("/")
+        prefix = f"{prefix}/" if prefix else ""
+        self._odom_frame = self._declare_frame(
+            "odom_frame_id", f"{prefix}odom", "Frame of the odometry pose"
         )
-        self.create_subscription(
-            LaserScan,
-            "scan_raw",
-            self.callback_scan,
-            qos_profile_sensor_data,
+        self._base_frame = self._declare_frame(
+            "base_frame_id", f"{prefix}base_footprint", "Robot frame moved by the odometry"
         )
-        self.create_subscription(
-            PoseStamped,
-            "odom_optc_raw",
-            self.callback_optc,
-            qos_profile_sensor_data,
+        # The firmware still stamps its scans `lds_01_link`: the frame is replaced.
+        self._scan_frame = self._declare_frame(
+            "scan_frame_id", f"{prefix}lidar_link", "Frame written in the republished scans"
         )
 
-        self.__odom_publisher = self.create_publisher(Odometry, "odom", qos_profile_sensor_data)
-        self.__odom_optc_publisher = self.create_publisher(
-            Odometry, "odom_optc", qos_profile_sensor_data
+        self._odom_publisher = self.create_publisher(Odometry, "odom", qos_profile_sensor_data)
+        self._scan_publisher = self.create_publisher(LaserScan, "scan", qos_profile_sensor_data)
+        self._tf_broadcaster = TransformBroadcaster(self)
+        self._previous: tuple[Pose2D, Time] | None = None
+
+        self.create_subscription(PoseStamped, "odom_raw", self._on_odom, qos_profile_sensor_data)
+        self.create_subscription(LaserScan, "scan_raw", self._on_scan, qos_profile_sensor_data)
+
+    def _declare_frame(self, name: str, default: str, description: str) -> str:
+        descriptor = ParameterDescriptor(
+            description=description, type=ParameterType.PARAMETER_STRING, read_only=True
         )
-        self.__odom_fusion_publisher = self.create_publisher(
-            Odometry, "odom_fusion", qos_profile_sensor_data
-        )
-        self.__scan_publisher = self.create_publisher(LaserScan, "scan", qos_profile_sensor_data)
-        self.__tf_broadcaster = TransformBroadcaster(self)
+        return self.declare_parameter(name, default, descriptor).value
 
-        self.__odom_transform = TransformStamped()
-        self.__odom_transform.header.frame_id = f"{self.__robot_name}/odom"
-        self.__odom_transform.child_frame_id = f"{self.__robot_name}/base_footprint"
+    def _on_odom(self, msg: PoseStamped) -> None:
+        pose = _pose_2d(msg)
+        stamp = Time.from_msg(msg.header.stamp)
+        twist = (0.0, 0.0, 0.0)
+        if self._previous is not None:
+            previous_pose, previous_stamp = self._previous
+            dt = (stamp - previous_stamp).nanoseconds * 1e-9
+            if dt <= 0:
+                # Equal or backward stamps: the firmware clock is not synchronized (micro-ROS
+                # time sync lost or not done). The twist is zero until stamps move forward.
+                self.get_logger().warning(
+                    f"Odometry stamp did not move forward (dt = {dt:.3f} s): twist set to "
+                    "zero; check the firmware time synchronization",
+                    throttle_duration_sec=_WARN_PERIOD,
+                )
+            twist = body_twist(previous_pose, pose, dt)
+        self._previous = (pose, stamp)
 
-        self.__last_odom_msg = None
-        self.__last_odom_optc_msg = None
+        odom = odometry_message(msg, twist, self._odom_frame, self._base_frame)
+        self._tf_broadcaster.sendTransform(transform_message(odom))
+        self._odom_publisher.publish(odom)
 
-    def callback(self, msg):
-        """Callback to receive a message.
-
-        :param msg: The message received.
-        :return: None.
-        """
-        self.__last_odom_msg = msg
-        self.__publish_odom(msg, self.__odom_publisher)
-
-    def callback_optc(self, msg):
-        """Callback to receive a message.
-
-        :param msg: The message received.
-        :return: None.
-        """
-        self.__last_odom_optc_msg = msg
-        self.__publish_odom(msg, self.__odom_optc_publisher)
-        self.callback_fusion()
-
-    def callback_fusion(self):
-        """Callback to perform sensor fusion using a Kalman filter to combine odometry measurements from two sources and publish the fused pose.
-        :return: None.
-        """
-        if self.__last_odom_msg is None or self.__last_odom_optc_msg is None:
+    def _on_scan(self, msg: LaserScan) -> None:
+        if msg.angle_max <= msg.angle_min:
+            self.get_logger().warning(
+                "Dropping a scan with angle_max <= angle_min", throttle_duration_sec=_WARN_PERIOD
+            )
             return
-
-        # Assuming you have an EKF implementation available
-        ekf = LinearKalmanFilter()
-
-        # Prepare the measurements
-        z1 = [
-            self.__last_odom_msg.pose.position.x,
-            self.__last_odom_msg.pose.position.y,
-            self.__last_odom_msg.pose.position.z,
-        ]
-        z2 = [
-            self.__last_odom_optc_msg.pose.position.x,
-            self.__last_odom_optc_msg.pose.position.y,
-            self.__last_odom_optc_msg.pose.position.z,
-        ]
-
-        # Update the EKF with the measurements
-        ekf.update(z1)
-        ekf.update(z2)
-
-        # Get the estimated state
-        estimated_state = ekf.get_state()
-
-        mean_pose = PoseStamped()
-        mean_pose.header.stamp = self.get_clock().now().to_msg()
-        mean_pose.pose.position.x = estimated_state[0]
-        mean_pose.pose.position.y = estimated_state[1]
-        mean_pose.pose.position.z = estimated_state[2]
-        mean_pose.pose.orientation = (
-            self.__last_odom_msg.pose.orientation
-        )  # Assuming orientation is the same
-
-        self.__publish_odom(mean_pose, self.__odom_fusion_publisher)
-
-    def __publish_odom(self, msg, publisher):
-        self.__odom_transform.header.stamp = msg.header.stamp
-        self.__odom_transform.transform.translation.x = msg.pose.position.x
-        self.__odom_transform.transform.translation.y = msg.pose.position.y
-        self.__odom_transform.transform.translation.z = msg.pose.position.z
-        self.__odom_transform.transform.rotation = msg.pose.orientation
-
-        odom = Odometry()
-        odom.header = self.__odom_transform.header
-        odom.child_frame_id = self.__odom_transform.child_frame_id
-        odom.pose.pose = msg.pose
-
-        self.__tf_broadcaster.sendTransform(self.__odom_transform)
-        publisher.publish(odom)
-
-    def callback_scan(self, msg):
-        """Callback to receive a message.
-
-        :param msg: The message received.
-        :return: None.
-        """
-        msg.header.stamp = self.get_clock().now().to_msg()
-        if msg.angle_max > msg.angle_min:
-            self.__scan_publisher.publish(msg)
+        msg.header.frame_id = self._scan_frame
+        self._scan_publisher.publish(msg)
 
 
-def main(args=None):
-    """:param args: The command line arguments passed to the program.
-    :return: None.
+def main(args: list[str] | None = None) -> None:
+    """Run the node until shutdown.
 
-    The main method is the entry point for the program.
+    Args:
+        args: Command line arguments for rclpy.
     """
     rclpy.init(args=args)
-    odom_subscriber = RawDataTransformer()
-    odom_subscriber.get_logger().info("Raw data transformer has been started.")
-
-    rclpy.spin(odom_subscriber)
-
-    # Destruction du nœud explicitement
-    odom_subscriber.destroy_node()
-    rclpy.shutdown()
+    node = RawDataTransformer()
+    with contextlib.suppress(KeyboardInterrupt, ExternalShutdownException):
+        rclpy.spin(node)
+    node.destroy_node()
+    rclpy.try_shutdown()
 
 
 if __name__ == "__main__":

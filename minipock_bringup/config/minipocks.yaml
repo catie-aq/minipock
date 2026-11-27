@@ -1,0 +1,11 @@
+namespace: minipock_
+map: "office" # for navigation, must be stored in minipock_navigation/minipock_navigation2/map
+world: "office" # for simulation, must be stored in minipock_gz/worlds
+rviz: "fleet" # for visualization, must be stored in minipock_navigation/minipock_navigation2/rviz
+fleet:
+  "0":
+    mode: holonomic
+    position: [6.2, -5.5]
+  "1":
+    mode: differential
+    position: [8.05, -6.3]
