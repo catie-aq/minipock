@@ -48,18 +48,19 @@ def test_position_with_yaw(tmp_path: Path) -> None:
 
 def test_missing_mode_rejected(tmp_path: Path) -> None:
     path = _write(tmp_path, fleet={"7": {"position": [0.0, 0.0]}})
-    with pytest.raises(ConfigError, match="7"):
+    with pytest.raises(ConfigError, match="robot 7"):
         load_config(path)
 
 
 def test_unknown_mode_rejected(tmp_path: Path) -> None:
-    with pytest.raises(ConfigError, match="7"):
+    with pytest.raises(ConfigError, match="robot 7 mode"):
         load_config(_write(tmp_path, **_fleet(mode="flying")))
 
 
-def test_position_wrong_length_rejected(tmp_path: Path) -> None:
-    with pytest.raises(ConfigError, match="7"):
-        load_config(_write(tmp_path, **_fleet(position=[1.0])))
+@pytest.mark.parametrize("position", [[1.0], [1.0, 2.0, 3.0, 4.0], ["a", 1.0], "origin"])
+def test_position_rejected_with_clear_message(tmp_path: Path, position: object) -> None:
+    with pytest.raises(ConfigError, match=r"robot 7 position: expected null .*\[x, y\]"):
+        load_config(_write(tmp_path, **_fleet(position=position)))
 
 
 @pytest.mark.parametrize("namespace", ["minipock/", "Minipock_"])
@@ -129,3 +130,54 @@ def test_unquoted_fleet_key_rejected(tmp_path: Path) -> None:
     )
     with pytest.raises(ConfigError, match=r"quote"):
         load_config(str(path))
+
+
+def test_missing_file_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ConfigError, match="Cannot read"):
+        load_config(str(tmp_path / "absent.yaml"))
+
+
+def test_invalid_yaml_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "fleet.yaml"
+    path.write_text("fleet: [unclosed\n")
+    with pytest.raises(ConfigError, match="not valid YAML"):
+        load_config(str(path))
+
+
+def test_empty_file_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "fleet.yaml"
+    path.write_text("")
+    with pytest.raises(ConfigError, match="mapping"):
+        load_config(str(path))
+
+
+def test_empty_fleet_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ConfigError, match="fleet"):
+        load_config(_write(tmp_path, fleet={}))
+
+
+def test_unknown_top_level_key_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ConfigError, match="robots"):
+        load_config(_write(tmp_path, robots=2))
+
+
+def test_unknown_robot_key_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ConfigError, match=r"robot 7.*speed"):
+        load_config(_write(tmp_path, **_fleet(speed=1.0)))
+
+
+@pytest.mark.parametrize("field", ["world", "map", "rviz", "namespace", "fleet"])
+def test_missing_required_field_rejected(tmp_path: Path, field: str) -> None:
+    content: dict = yaml.safe_load((DATA / "valid.yaml").read_text())
+    del content[field]
+    path = tmp_path / "fleet.yaml"
+    path.write_text(yaml.safe_dump(content))
+    with pytest.raises(ConfigError, match=f"'{field}' is a required property"):
+        load_config(str(path))
+
+
+@pytest.mark.parametrize("robot_id", ["A", "a-b", "_0", "0 1"])
+def test_invalid_robot_id_rejected(tmp_path: Path, robot_id: str) -> None:
+    fleet = {robot_id: {"mode": "differential", "position": None}}
+    with pytest.raises(ConfigError, match="fleet"):
+        load_config(_write(tmp_path, fleet=fleet))

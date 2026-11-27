@@ -164,10 +164,16 @@ def _validate(data: object) -> None:
     if errors:
         error = errors[0]
         where = ".".join(str(part) for part in error.path) or "<root>"
+        message = error.message
         if len(error.path) > 1 and error.path[0] == "fleet":
             field = ".".join(str(part) for part in list(error.path)[2:])
             where = f"robot {error.path[1]} {field}".strip()
-        msg = f"Invalid fleet file at {where}: {error.message}"
+            if list(error.path)[2:3] == ["position"]:
+                message = (
+                    f"expected null (placed automatically), [x, y] or [x, y, yaw] in meters "
+                    f"and radians, got {error.instance!r}"
+                )
+        msg = f"Invalid fleet file at {where}: {message}"
         raise ConfigError(msg)
 
 
@@ -183,10 +189,17 @@ def load_config(path: str) -> FleetConfig:
         The validated configuration.
 
     Raises:
-        ConfigError: If the file is not valid.
+        ConfigError: If the file cannot be read, is not YAML or is not valid.
     """
-    with Path(path).open() as file:
-        data = yaml.safe_load(file)
+    try:
+        with Path(path).open() as file:
+            data = yaml.safe_load(file)
+    except OSError as error:
+        msg = f"Cannot read the fleet file {path}: {error.strerror or error}"
+        raise ConfigError(msg) from error
+    except yaml.YAMLError as error:
+        msg = f"The fleet file {path} is not valid YAML: {error}"
+        raise ConfigError(msg) from error
     _validate(data)
     fleet = data["fleet"]
     explicit = [
