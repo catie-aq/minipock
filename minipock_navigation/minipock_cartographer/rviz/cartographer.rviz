@@ -134,7 +134,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /scan
+        Value: /__NS__/scan
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -175,7 +175,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Best Effort
-        Value: /odom
+        Value: /__NS__/odom
       Value: true
     - Alpha: 0.699999988079071
       Binary representation: false
@@ -191,13 +191,13 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /map
+        Value: /__NS__/map
       Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /map_updates
+        Value: /__NS__/map_updates
       Use Timestamp: false
       Value: true
     - Class: rviz_common/Group
@@ -231,7 +231,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /scan_matched_points2
+            Value: /__NS__/scan_matched_points2
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
@@ -245,7 +245,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /trajectory_node_list
+            Value: /__NS__/trajectory_node_list
           Value: true
         - Class: rviz_default_plugins/MarkerArray
           Enabled: false
@@ -257,7 +257,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /constraint_list
+            Value: /__NS__/constraint_list
           Value: false
         - Class: rviz_default_plugins/MarkerArray
           Enabled: false
@@ -269,7 +269,7 @@ Visualization Manager:
             Durability Policy: Volatile
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /landmark_poses_list
+            Value: /__NS__/landmark_poses_list
           Value: false
       Enabled: true
       Name: Cartographer
@@ -283,7 +283,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot_description
+        Value: /__NS__/robot_description
       Enabled: true
       Links:
         All Links Enabled: true

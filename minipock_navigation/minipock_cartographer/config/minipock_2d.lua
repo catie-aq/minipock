@@ -21,10 +21,13 @@ options = {
     map_builder = MAP_BUILDER,
     trajectory_builder = TRAJECTORY_BUILDER,
     map_frame = "map",
-    tracking_frame = "minipock_0/base_footprint",
-    published_frame = "minipock_0/odom",
-    odom_frame = "minipock_0/odom",
-    provide_odom_frame = true,
+    -- __NS__ is replaced by the robot namespace at launch (cartographer.launch.py).
+    -- The robot (sim bridge or firmware) publishes odom -> base_footprint:
+    -- Cartographer only publishes map -> __NS__/odom.
+    tracking_frame = "__NS__/base_footprint",
+    published_frame = "__NS__/odom",
+    odom_frame = "__NS__/odom",
+    provide_odom_frame = false,
     publish_frame_projected_to_2d = false,
     use_odometry = true,
     use_nav_sat = false,
