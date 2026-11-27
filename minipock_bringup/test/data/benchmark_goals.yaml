@@ -1,0 +1,19 @@
+# Goals of nav_benchmark in empty_room_world (map empty_room_map), fleet benchmark_fleet.yaml.
+# Wall faces on empty_room_map: x = 1.1 and 9.15, y = -2.92 (top) and -7.12 (bottom); poses are
+# [x, y, yaw] in `map`. The wall goals put the robot centre 0.3 m from a wall face.
+# Each robot runs its goals in order, from where the previous one ended.
+minipock_0:  # holonomic
+  start: [2.5, -4.0, 0.0]
+  goals:
+    - {name: straight_3m, pose: [5.5, -4.0, 0.0]}
+    - {name: turn_in_place, pose: [5.5, -4.0, 3.1416]}
+    - {name: behind_1m, pose: [6.5, -4.0, 3.1416]}
+    - {name: lateral_1m, pose: [6.5, -5.0, 3.1416], keep_yaw: true}
+    - {name: wall_0.3m, pose: [6.5, -3.22, 1.5708]}
+minipock_1:  # differential
+  start: [2.5, -6.0, 0.0]
+  goals:
+    - {name: straight_3m, pose: [5.5, -6.0, 0.0]}
+    - {name: turn_in_place, pose: [5.5, -6.0, 3.1416]}
+    - {name: behind_1m, pose: [6.5, -6.0, 3.1416]}
+    - {name: wall_0.3m, pose: [6.5, -6.82, -1.5708]}
