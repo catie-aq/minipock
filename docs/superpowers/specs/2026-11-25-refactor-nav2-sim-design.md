@@ -39,7 +39,7 @@ minipock_bringup/launch/real.launch.py  config:=<yaml> rviz:=false
 
 - Config : toute la configuration d'un usage tient dans un seul YAML, passé en argument `config:=` des launches d'entrée, qui le lisent une seule fois. `config:=` accepte un chemin ou le nom d'un fichier installé de `minipock_bringup/config/` ; on peut passer un autre fichier sans recompiler. Fichiers livrés : `minipock_bringup/config/minipocks.yaml` (défaut, sim) et `minipock_bringup/config/minipocks_real.yaml` (réel, carte `catie`, poses de départ à renseigner). Le paquet `minipock` est un pur métapaquet. Pas de surcharge champ par champ en argument : un autre usage, c'est un autre fichier. Champs : `namespace`, `world` (sim), `map`, `rviz`, `fleet.<id>.mode`, `fleet.<id>.position` (`[x, y]` ou `[x, y, yaw]` dans le repère `map`, `null` en sim pour le placement en spirale), `fleet.<id>.nav2_params` (optionnel). `bringup` et `use_sim_time` ne sont plus dans le fichier : le launch d'entrée les fixe selon le mode. Validation jsonschema complète dans `minipock_bringup.config`, avec message d'erreur lisible.
 - `robot_description` vient de `Command(xacro)` dans `description.launch.py`. Le spawn Gazebo lit ce topic (`ros_gz_sim create -topic`), Gazebo convertit lui-même l'URDF : plus de `gz sdf -p`, plus d'écriture dans `install/share`, plus d'erreur avalée en réel.
-- `world.launch.py` ajoute lui-même les dossiers des paquets à `GZ_SIM_RESOURCE_PATH` : le lancement ne dépend plus du `.bashrc` de l'image ni de `--merge-install`.
+- `world.launch.py` ajoute lui-même les dossiers des paquets à `GZ_SIM_RESOURCE_PATH` : le lancement ne dépend plus du `.bashrc` de l'image. Il garde besoin de `--merge-install` : les URI `model://minipock_gz/...` et `package://minipock_gz/...` supposent un seul `install/share`.
 - Le bug `bool("False")` disparaît par construction : `use_sim_time` circule comme argument de launch booléen, sim à `true`, réel à `false`. Un test le vérifie.
 - Supprimés : `minipock_description/config.py` (déplacé dans `minipock_bringup`) et `model.py`, `minipock_gz/launch/spawn.launch.py`, `minipock_gz/lidar_process.py`, `minipock_navigation2/launch/navigation2.launch.py` (450 lignes), `minipock_bringup/launch/bringup.launch.py`, relais `topic_tools` de Cartographer. Le métapaquet `minipock` reste.
 
@@ -61,8 +61,8 @@ Nav2 Jazzy se lance sous namespace via `nav2_bringup`, mais `navigation_launch.p
 - Différentiel : AMCL `DifferentialMotionModel`, MPPI `DiffDrive`. Holonome : AMCL `OmniMotionModel`, MPPI `Omni`, velocity smoother sur les trois axes. MPPI est le contrôleur par défaut de Nav2 Jazzy et gère les deux cinématiques ; DWB est abandonné.
 - Paramétrage calé sur le robot réel (firmware `minipock_mbed-rbdc` : 2 m/s et 0,7 m/s² en linéaire, 3π rad/s et π rad/s² en angulaire, entraxe 0,328 m, roues de 0,0355 m) : aucun paramètre Nav2 ne dépasse ces limites, et la géométrie différentielle de la simulation est alignée dessus (la sim utilise aujourd'hui 0,335 m et 0,036 m). Valeurs de départ prudentes (0,5 m/s), puis réglage en simulation avec un banc de buts (ligne droite, demi-tour, but derrière, près d'un mur, latéral en holonome) mesurant succès, durée, distance aux obstacles et oscillations ; tableau avant/après consigné.
 - Surcharge par robot : champ optionnel `nav2_params` d'un robot dans le YAML de flotte (chemin ou nom d'un fichier de `minipock_navigation2/param`), sinon le fichier de sa cinématique.
-- Chaîne de vitesse de `nav2_bringup` : contrôleur → `cmd_vel_nav` → velocity smoother → `cmd_vel_smoothed` → collision monitor → `cmd_vel`. Le velocity smoother passe en boucle fermée (`CLOSED_LOOP`) puisque l'odométrie porte désormais la vitesse.
-- Localisation : un seul `map_server` global sur `/map` (frame `map` commune), un AMCL par robot dans son namespace, un `lifecycle_manager` de localisation qui gère l'ensemble ; lancés par `minipock_bringup.localization`, et non par `localization_launch.py` de Nav2, qui imposerait une carte par robot. `navigation_launch.py` de Nav2 reste utilisé pour le reste de la pile.
+- Chaîne de vitesse de `nav2_bringup` : contrôleur → `cmd_vel_nav` → velocity smoother → `cmd_vel_smoothed` → collision monitor → `cmd_vel`. Le velocity smoother est en boucle ouverte (`OPEN_LOOP`) : l'`OdometryPublisher` de gz-sim 8.11 publie des pics de vitesse angulaire (environ 62 rad/s pendant 0,1 s au passage de -2π/3), qu'une boucle fermée recopierait dans la commande.
+- Localisation : un seul `map_server` global sur `/map` (frame `map` commune), un AMCL par robot dans son namespace, un gestionnaire de cycle de vie de localisation par espace de noms (`lifecycle_manager_map` à la racine pour le `map_server`, `<ns>/lifecycle_manager_localization` pour l'AMCL de chaque robot) ; lancés par `minipock_bringup.localization`, et non par `localization_launch.py` de Nav2, qui imposerait une carte par robot. `navigation_launch.py` de Nav2 reste utilisé pour le reste de la pile.
 - `docking_server` fait partie des nœuds gérés par `navigation_launch.py` en Jazzy : configuration minimale pour qu'il s'active, sans dock déclaré.
 - Cartographer : `cartographer.launch.py namespace:=minipock_<id>`, fichier lua généré au lancement avec les frames du robot, topics `scan` et `odom` relatifs. Pas de slam_toolbox.
 - RViz : une config qui montre toute la flotte (arbre TF unique), lancée par `rviz:=true`.
@@ -117,7 +117,7 @@ Décisions validées par l'équipe :
 
 - Roues holonomes sans galets articulés : 27 joints continus inutiles, le mouvement vient de `VelocityControl`. Galets gardés en géométrie visuelle fixe.
 - Config de flotte dans `minipock_bringup/config/` : supprime le cycle de dépendances avec le métapaquet `minipock`, qui redevient un pur métapaquet.
-- Une seule carte : un `map_server` global sur `/map`, un AMCL par robot, un `lifecycle_manager` de localisation pour l'ensemble ; `navigation_launch.py` de Nav2 pour le reste.
+- Une seule carte : un `map_server` global sur `/map`, un AMCL par robot, un gestionnaire de cycle de vie de localisation par espace de noms ; `navigation_launch.py` de Nav2 pour le reste.
 - Paramètres Nav2 : un fichier commun et une surcouche par cinématique, fusionnés au lancement, puis la surcouche optionnelle du robot.
 
 Décisions techniques prises dans le chantier :
@@ -128,7 +128,7 @@ Décisions techniques prises dans le chantier :
 - Préfixe des frames par xacro, pas par `frame_prefix` de `robot_state_publisher` : les plugins Gazebo ont besoin des frames préfixées dans le SDF.
 - Paramètres des nœuds du dépôt déclarés avec descripteur (type, description, lecture seule si besoin).
 - Métadonnées des paquets homogènes : même version pour tous les paquets du dépôt, identifiants de licence SPDX, adresse de maintenance CATIE, `package.xml` validés par `ament_xmllint`.
-- Frames conformes à REP-105 (`map`, `odom`, `base_footprint`, `base_link`) et unités REP-103.
+- Frames `map`, `odom`, `base_footprint`, `base_link` et unités REP-103. Point ouvert sur REP-105 : `base_footprint` est à la hauteur de `base_link`, 0,0975 m au-dessus du sol (état hérité de `main`), alors que REP-105 le place au sol. Sans effet sur Nav2 en 2D, à corriger avant des capteurs 3D.
 
 Reportés au chantier réel : odométrie complète (twist) publiée par le firmware au lieu d'une dérivée côté PC ; orientation du LiDAR monté à l'envers à vérifier.
 
