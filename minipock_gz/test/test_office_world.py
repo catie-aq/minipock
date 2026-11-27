@@ -93,7 +93,14 @@ def test_every_model_has_license() -> None:
     assert models
     for name in models:
         assert name in rows, name
-        assert any(re.search(r"Apache-2\.0|CC-BY-4\.0|CC0-1\.0", cell) for cell in rows[name])
+        license_cell, source = rows[name][0], rows[name][1]
+        # License column checked against the source: husarion_gz_worlds is Apache-2.0, each
+        # Fuel model carries its own license (checked on its Fuel page).
+        assert license_cell in {"Apache-2.0", "CC-BY-4.0", "CC0-1.0"}, name
+        if "husarion_gz_worlds" in source:
+            assert license_cell == "Apache-2.0", name
+        else:
+            assert f"app.gazebosim.org/OpenRobotics/fuel/models/{name})" in source, name
 
 
 def test_world_name() -> None:
@@ -139,3 +146,75 @@ def test_default_spawns_are_free() -> None:
                 assert 0 <= r < height
                 assert 0 <= c < width
                 assert pixels[r * width + c] == FREE, (robot, r, c)
+
+
+# LiDAR band of the map (CLAUDE.md, world_to_map.py --z-min and --z-max).
+BAND = (0.02, 0.1975)
+OCCUPIED = 0
+
+
+def _pose(element: etree._Element) -> tuple[float, ...]:
+    text = element.findtext("pose") or "0 0 0 0 0 0"
+    return tuple(float(value) for value in text.split())
+
+
+def _compose(parent: tuple[float, ...], child: tuple[float, ...]) -> tuple[float, ...] | None:
+    """Compose two planar poses (x, y, z, roll, pitch, yaw); None if one is tilted."""
+    if any(abs(angle) > 1e-6 for angle in (*parent[3:5], *child[3:5])):
+        return None
+    cos, sin = math.cos(parent[5]), math.sin(parent[5])
+    return (
+        parent[0] + cos * child[0] - sin * child[1],
+        parent[1] + sin * child[0] + cos * child[1],
+        parent[2] + child[2],
+        0.0,
+        0.0,
+        parent[5] + child[5],
+    )
+
+
+def _primitives_in_band() -> list[tuple[str, float, float]]:
+    """Return the name and world (x, y) center of every box or cylinder cut by the band."""
+    world = etree.parse(WORLD).getroot().find("world")
+    centers = []
+    for model in world.findall("model"):
+        for link in model.findall("link"):
+            for collision in link.findall("collision"):
+                geometry = collision.find("geometry")
+                box, cylinder = geometry.find("box"), geometry.find("cylinder")
+                if box is not None:
+                    height = float(box.findtext("size").split()[2])
+                elif cylinder is not None:
+                    height = float(cylinder.findtext("length"))
+                else:
+                    continue
+                pose = _compose(_pose(model), _pose(link))
+                pose = pose and _compose(pose, _pose(collision))
+                if pose is None:
+                    continue
+                if pose[2] + height / 2 < BAND[0] or pose[2] - height / 2 > BAND[1]:
+                    continue
+                name = f"{model.get('name')}::{collision.get('name')}"
+                centers.append((name, pose[0], pose[1]))
+    return centers
+
+
+def test_map_cells_match_world_obstacles() -> None:
+    # A sample of the map recomputed from the world: the cell under the center of each box and
+    # cylinder cut by the LiDAR band is occupied. Moving one of them without regenerating the
+    # map (CLAUDE.md, world_to_map.py) fails here.
+    meta, width, height, pixels = _map()
+    resolution = meta["resolution"]
+    origin_x, origin_y, _ = meta["origin"]
+    centers = _primitives_in_band()
+    assert len(centers) >= 20
+    for name, x, y in centers:
+        column = math.floor((x - origin_x) / resolution)
+        row = height - 1 - math.floor((y - origin_y) / resolution)
+        assert pixels[row * width + column] == OCCUPIED, name
+
+
+def test_no_classic_gazebo_material_script() -> None:
+    # Gazebo Sim ignores `<script>` materials and the `file://media` files do not exist.
+    for path in _sdf_files():
+        assert "file://media" not in path.read_text(), path

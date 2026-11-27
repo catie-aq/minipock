@@ -42,7 +42,7 @@ Changes from the original:
 | `MopCart3` | CC-BY-4.0 | [Fuel OpenRobotics/MopCart3](https://app.gazebosim.org/OpenRobotics/fuel/models/MopCart3) v1, Roselle Carmen | textures downscaled to 512 px |
 | `OfficeChairBlack` | CC-BY-4.0 | [Fuel OpenRobotics/OfficeChairBlack](https://app.gazebosim.org/OpenRobotics/fuel/models/OfficeChairBlack) v1, Wan Yi Seow | none |
 | `SquareShelf` | CC-BY-4.0 | [Fuel OpenRobotics/SquareShelf](https://app.gazebosim.org/OpenRobotics/fuel/models/SquareShelf) v2, Wan Yi Seow | none |
-| `Table` | CC0-1.0 | [Fuel OpenRobotics/Table](https://app.gazebosim.org/OpenRobotics/fuel/models/Table) v3, Nate Koenig | only `model.sdf`, `model.config` and the texture kept |
+| `Table` | CC0-1.0 | [Fuel OpenRobotics/Table](https://app.gazebosim.org/OpenRobotics/fuel/models/Table) v3, Nate Koenig | only `model.sdf`, `model.config` and the texture kept; classic Gazebo material scripts (`gazebo.material`) removed, as in `office.sdf` |
 | `Toilet` | CC-BY-4.0 | [Fuel OpenRobotics/Toilet](https://app.gazebosim.org/OpenRobotics/fuel/models/Toilet) v1, Roselle Carmen | none |
 | `TrashBin` | CC-BY-4.0 | [Fuel OpenRobotics/TrashBin](https://app.gazebosim.org/OpenRobotics/fuel/models/TrashBin) v1, Roselle Carmen | texture recompressed |
 | `WhiteCabinet` | CC-BY-4.0 | [Fuel OpenRobotics/WhiteCabinet](https://app.gazebosim.org/OpenRobotics/fuel/models/WhiteCabinet) v1, Wan Yi Seow | none |

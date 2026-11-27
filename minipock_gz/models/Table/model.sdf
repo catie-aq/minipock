@@ -27,11 +27,6 @@
         </geometry>
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Wood</name>
-          </script>
-          <!-- PBR for Ignition, material scripts for gazebo classic-->
           <pbr>
             <metal>
               <albedo_map>model://Table/Table_Diffuse.jpg</albedo_map>
@@ -58,10 +53,6 @@
         </geometry>
         <material>
           <diffuse>0.5 0.5 0.5</diffuse>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
         </material>
       </visual>
       <collision name="front_right_leg">
@@ -83,10 +74,6 @@
         </geometry>
         <material>
           <diffuse>0.5 0.5 0.5</diffuse>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
         </material>
       </visual>
       <collision name="back_right_leg">
@@ -108,10 +95,6 @@
         </geometry>
         <material>
           <diffuse>0.5 0.5 0.5</diffuse>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
         </material>
       </visual>
       <collision name="back_left_leg">
@@ -133,10 +116,6 @@
         </geometry>
         <material>
           <diffuse>0.5 0.5 0.5</diffuse>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
         </material>
       </visual>
     </link>
