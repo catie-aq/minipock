@@ -125,9 +125,14 @@ ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 u
 ## Mondes de simulation
 
 - Mondes dans `minipock_gz/worlds/` (argument `world` de `world.launch.py`, sans
-  `.sdf`) : `office` (défaut de `minipocks.yaml`, bureaux meublés tirés de
-  `husarion_office` de Husarion), `empty_room_world`, `minipock_world`. Carte
-  Nav2 de même nom dans `minipock_navigation/minipock_navigation2/map/`.
+  `.sdf`) : `office` (défaut de `minipocks.yaml`, bureaux
+  meublés tirés de `husarion_office` de Husarion), `empty_room_world`,
+  `minipock_world`. Cartes Nav2 dans
+  `minipock_navigation/minipock_navigation2/map/` : `office` pour `office`,
+  `empty_room_map` pour `empty_room_world`, `catie` (locaux, robot réel) ;
+  `minipock_world` n'a pas de carte. `load_config` vérifie que le monde, la
+  carte et la config RViz du fichier de flotte existent et, sinon, lève une
+  `ConfigError` qui liste les noms installés.
 - Le monde `office` ne charge rien par le réseau : ses modèles sont copiés dans
   `minipock_gz/models/` (ajouté à `GZ_SIM_RESOURCE_PATH` par `world.launch.py`).
   Origine et licence de chaque modèle dans `minipock_gz/worlds/ATTRIBUTION.md`,
@@ -204,7 +209,10 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
   `minipock_navigation2/param/common.yaml`, puis la surcouche de la cinématique
   (`differential.yaml` ou `holonomic.yaml`), puis le champ optionnel
   `nav2_params` du robot dans le fichier de flotte (chemin, ou nom d'un fichier
-  de `minipock_navigation2/param`). Les dictionnaires sont fusionnés, une liste
+  de `minipock_navigation2/param`). `load_config` résout un chemin relatif
+  depuis le dossier du fichier de flotte, non depuis le dossier de lancement ;
+  un nom sans `/` désigne le fichier voisin du fichier de flotte s'il existe,
+  sinon un fichier de `param`. Les dictionnaires sont fusionnés, une liste
   de la surcouche remplace celle du dessous. Marqueurs remplacés :
   `<robot_namespace>`, `<x>`, `<y>`, `<yaw>` (pose initiale AMCL).
 - Clés racine sans namespace (`amcl:`, `controller_server:`…) : le launch les

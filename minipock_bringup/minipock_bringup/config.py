@@ -1,6 +1,7 @@
 """Fleet configuration loading and validation."""
 
 import math
+import os
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -93,6 +94,44 @@ class FleetConfig:
 
 def _config_dir() -> Path:
     return Path(get_package_share_directory("minipock_bringup")) / "config"
+
+
+def _installed_file(package: str, folder: str, name: str, suffix: str, field: str) -> None:
+    """Check that `<name><suffix>` exists in `folder` of `package`.
+
+    Raises:
+        ConfigError: If the file is missing; the message lists the installed names.
+    """
+    directory = Path(get_package_share_directory(package)) / folder
+    if (directory / f"{name}{suffix}").is_file():
+        return
+    installed = ", ".join(sorted(path.stem for path in directory.glob(f"*{suffix}")))
+    msg = (
+        f"Fleet file field '{field}': '{name}' not found in {directory}. "
+        f"Installed names: {installed}"
+    )
+    raise ConfigError(msg)
+
+
+def _check_installed_files(data: dict) -> None:
+    """Check that the world, the map and the RViz configuration of a fleet file exist."""
+    _installed_file("minipock_gz", "worlds", data["world"], ".sdf", "world")
+    _installed_file("minipock_navigation2", "map", data["map"], ".yaml", "map")
+    _installed_file("minipock_navigation2", "rviz", data["rviz"], ".rviz", "rviz")
+
+
+def _resolve_nav2_params(value: str, fleet_dir: Path) -> str:
+    """Anchor a relative Nav2 override on the folder of the fleet file.
+
+    A bare file name stays as it is when no such file sits next to the fleet file: it then names
+    a file of `minipock_navigation2/param`. A relative path with a folder is always taken from
+    the fleet file folder; absolute paths are unchanged.
+    """
+    if not value or Path(value).is_absolute():
+        return value
+    if "/" in value or (fleet_dir / value).is_file():
+        return str(fleet_dir / value)
+    return value
 
 
 def default_config_path() -> str:
@@ -189,7 +228,10 @@ def load_config(path: str) -> FleetConfig:
         The validated configuration.
 
     Raises:
-        ConfigError: If the file cannot be read, is not YAML or is not valid.
+        ConfigError: If the file cannot be read, is not YAML or is not valid, or if its world,
+            map or RViz configuration is not installed.
+
+    A relative `nav2_params` path is resolved from the folder of the fleet file.
     """
     try:
         with Path(path).open() as file:
@@ -201,6 +243,8 @@ def load_config(path: str) -> FleetConfig:
         msg = f"The fleet file {path} is not valid YAML: {error}"
         raise ConfigError(msg) from error
     _validate(data)
+    _check_installed_files(data)
+    fleet_dir = Path(os.path.abspath(path)).parent  # noqa: PTH100 - keeps symlinks unresolved
     fleet = data["fleet"]
     explicit = [
         (float(spec["position"][0]), float(spec["position"][1]))
@@ -225,7 +269,7 @@ def load_config(path: str) -> FleetConfig:
                 x=x,
                 y=y,
                 yaw=yaw,
-                nav2_params=spec.get("nav2_params", ""),
+                nav2_params=_resolve_nav2_params(spec.get("nav2_params", ""), fleet_dir),
             ),
         )
     return FleetConfig(

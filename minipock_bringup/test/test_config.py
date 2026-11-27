@@ -106,6 +106,45 @@ def test_spiral_for_null_positions(tmp_path: Path) -> None:
     assert (config.robots[0].x, config.robots[0].y) == (0.0, 0.0)
 
 
+@pytest.mark.parametrize(
+    ("field", "name"),
+    [("world", "nowhere"), ("map", "empty_room_world"), ("rviz", "navigation2_missing")],
+)
+def test_missing_installed_file_rejected(tmp_path: Path, field: str, name: str) -> None:
+    with pytest.raises(ConfigError, match=f"'{field}': '{name}' not found") as error:
+        load_config(_write(tmp_path, **{field: name}))
+    assert "Installed names:" in str(error.value)
+
+
+def test_shipped_fleet_files_resolve() -> None:
+    for name in ("minipocks.yaml", "minipocks_real.yaml"):
+        load_config(resolve_config_path(name))
+
+
+def test_relative_nav2_params_from_fleet_file_folder(tmp_path: Path) -> None:
+    folder = tmp_path / "fleets"
+    (folder / "params").mkdir(parents=True)
+    content = yaml.safe_load((DATA / "valid.yaml").read_text())
+    content["fleet"] = {
+        "0": {"mode": "differential", "position": [0.0, 0.0], "nav2_params": "params/lab.yaml"},
+        "1": {"mode": "differential", "position": [1.0, 1.0], "nav2_params": "next_to.yaml"},
+        "2": {
+            "mode": "differential",
+            "position": [2.0, 2.0],
+            "nav2_params": "holonomic_slow.yaml",
+        },
+        "3": {"mode": "differential", "position": [3.0, 3.0], "nav2_params": "/abs/other.yaml"},
+    }
+    (folder / "next_to.yaml").write_text("{}")
+    fleet_file = folder / "lab.yaml"
+    fleet_file.write_text(yaml.safe_dump(content))
+    robots = load_config(str(fleet_file)).robots
+    assert robots[0].nav2_params == str(folder / "params" / "lab.yaml")
+    assert robots[1].nav2_params == str(folder / "next_to.yaml")
+    assert robots[2].nav2_params == "holonomic_slow.yaml"  # installed name, not next to the file
+    assert robots[3].nav2_params == "/abs/other.yaml"
+
+
 def test_nav2_params_optional(tmp_path: Path) -> None:
     assert load_config(_write(tmp_path, **_fleet())).robots[0].nav2_params == ""
     config = load_config(_write(tmp_path, **_fleet(nav2_params="holonomic_slow.yaml")))
