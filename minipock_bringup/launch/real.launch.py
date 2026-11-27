@@ -11,10 +11,14 @@ from launch_ros.actions import Node, SetParameter
 
 from minipock_bringup.config import load_config, resolve_config_path
 from minipock_bringup.launch_args import include, pick, robot_launch_arguments
-from minipock_bringup.localization import localization_actions
+from minipock_bringup.localization import fleet_localization
 
 USE_SIM_TIME = False
 MICRO_ROS_PORT = "8888"
+
+
+def _is_true(value: str) -> bool:
+    return value.lower() in ("true", "1")
 
 
 def _fleet(context: LaunchContext) -> list[Action]:
@@ -25,10 +29,11 @@ def _fleet(context: LaunchContext) -> list[Action]:
         robot_launch_arguments(robot, cfg, use_sim_time=USE_SIM_TIME) for robot in cfg.robots
     ]
     actions: list[Action] = list(
-        localization_actions(
+        fleet_localization(
             [(args["namespace"], args["params_file"]) for args in robots],
             str(nav2_share / "map" / f"{cfg.map}.yaml"),
             use_sim_time=USE_SIM_TIME,
+            slam=_is_true(LaunchConfiguration("slam").perform(context)),
         )
     )
     actions += [
@@ -62,7 +67,8 @@ def generate_launch_description() -> LaunchDescription:
 
     Returns:
         The launch description. Arguments: `config` (path, or name of a file installed in
-        `minipock_bringup/config`) and `rviz`.
+        `minipock_bringup/config`), `slam` (Cartographer builds the map, single robot) and
+        `rviz`.
     """
     return LaunchDescription(
         [
@@ -70,6 +76,11 @@ def generate_launch_description() -> LaunchDescription:
                 "config",
                 default_value="minipocks_real.yaml",
                 description="Fleet file: path, or name of a file of minipock_bringup/config",
+            ),
+            DeclareLaunchArgument(
+                "slam",
+                default_value="false",
+                description="Map with Cartographer (one robot) instead of the map server and AMCL",
             ),
             DeclareLaunchArgument("rviz", default_value="false", description="Start RViz"),
             SetParameter(name="use_sim_time", value=USE_SIM_TIME),

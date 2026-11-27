@@ -13,7 +13,7 @@ Commands go through `scripts/docker-run.sh` (see `minipock-test` for the image, 
 scripts/docker-run.sh "ros2 launch minipock_bringup sim.launch.py --show-args"
 ```
 
-`config:=<file>` (fleet YAML: a path, or a name from `minipock_bringup/config`, default `minipocks.yaml`: 2 robots in the `office` world), `headless:=true|false` (Gazebo server only), `rviz:=true|false`. Fleet size, kinematics (`holonomic`/`differential`), start positions and world come from the YAML (`fleet:` keys are the robot ids; robot `n` gets namespace `minipock_<n>`); maximum 18 robots.
+`config:=<file>` (fleet YAML: a path, or a name from `minipock_bringup/config`, default `minipocks.yaml`: 2 robots in the `office` world), `headless:=true|false` (Gazebo server only), `rviz:=true|false`, `slam:=true|false` (Cartographer maps instead of `map_server` and AMCL; the fleet must have exactly one robot, and goals are in the Cartographer `map` frame, which starts at the robot's start pose). Fleet size, kinematics (`holonomic`/`differential`), start positions and world come from the YAML (`fleet:` keys are the robot ids; robot `n` gets namespace `minipock_<n>`); maximum 18 robots.
 
 ## Choose the rendering
 

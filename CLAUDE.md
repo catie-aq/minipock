@@ -83,13 +83,13 @@ colcon build --symlink-install --merge-install
 Simulation de la flotte (monde, robots, localisation, Nav2, RViz) :
 
 ```bash
-ros2 launch minipock_bringup sim.launch.py [config:=<fichier>] [headless:=true] [rviz:=false]
+ros2 launch minipock_bringup sim.launch.py [config:=<fichier>] [headless:=true] [rviz:=false] [slam:=true]
 ```
 
 Flotte réelle (agent micro-ROS, mise en forme des données, localisation, Nav2) :
 
 ```bash
-ros2 launch minipock_bringup real.launch.py [config:=<fichier>] [rviz:=true]
+ros2 launch minipock_bringup real.launch.py [config:=<fichier>] [rviz:=true] [slam:=true]
 ```
 
 - `config:=` : chemin, ou nom d'un fichier de `minipock_bringup/config`
@@ -104,6 +104,10 @@ ros2 launch minipock_bringup real.launch.py [config:=<fichier>] [rviz:=true]
   et le passe aussi aux launchs par robot.
 - RViz : `minipock_navigation2/rviz/<rviz>.rviz`, `<rviz>` étant le champ du
   fichier de flotte (`fleet` dans les deux fichiers livrés).
+- `slam:=true` (sim et réel) : Cartographer construit la carte à la place du
+  `map_server` et des AMCL (voir « Navigation ») ; le champ `map` du fichier de
+  flotte est alors ignoré. Un seul robot dans la flotte, sinon le launch
+  s'arrête sur une erreur qui le dit.
 
 Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
 
@@ -111,7 +115,8 @@ Nav2 d'un robot (localisation lancée à part, voir « Navigation ») :
 ros2 launch minipock_navigation2 robot.launch.py namespace:=minipock_0 params_file:=<fichier rendu> use_sim_time:=true
 ```
 
-Cartographer pour un robot (carte sur `/minipock_0/map`) :
+Cartographer pour un robot (carte sur `/minipock_0/map`, ou sur le topic de
+`map_topic:=`) :
 
 ```bash
 ros2 launch minipock_cartographer cartographer.launch.py namespace:=minipock_0 use_sim_time:=true
@@ -171,6 +176,16 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
 - Une seule carte pour la flotte : un `map_server` global publie `/map` (frame
   `map`) ; chaque robot a son AMCL (`/<ns>/amcl`, `map_topic: /map`). Ces
   actions viennent de `minipock_bringup.localization.localization_actions`.
+- Mode SLAM (`slam:=true`, `minipock_bringup.localization.slam_actions`) : pour
+  l'unique robot, `cartographer.launch.py` avec `map_topic:=/map` ; ni
+  `map_server` ni AMCL. Cartographer publie `/map` (fiable, transient local,
+  compatible avec la couche statique du costmap global) et
+  `map → <ns>/odom` ; Nav2 navigue sur cette carte, qui grandit. Le repère `map`
+  part de la pose de départ du robot, pas de l'origine du monde : les buts se
+  donnent dans ce repère. Plusieurs robots : refus (`ValueError`), la
+  cartographie collective est un autre chantier. `test_slam_launch.py` vérifie
+  les actions générées par les deux launchs d'entrée ; vérifié en sim (un
+  robot, `empty_room_world`, but atteint à 2 m sur la carte en construction).
 - Un gestionnaire de cycle de vie par namespace, bond actif :
   `lifecycle_manager_map` (racine) pour `map_server`,
   `<ns>/lifecycle_manager_localization` pour l'AMCL du robot. Un gestionnaire

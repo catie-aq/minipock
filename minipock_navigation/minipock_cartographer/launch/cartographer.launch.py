@@ -70,6 +70,7 @@ def _cartographer(context: LaunchContext) -> list[GroupAction]:
                     output="screen",
                     parameters=[{"use_sim_time": use_sim_time}],
                     arguments=["-resolution", LaunchConfiguration("resolution")],
+                    remappings=[("map", LaunchConfiguration("map_topic"))],
                 ),
                 Node(
                     package="rviz2",
@@ -90,14 +91,16 @@ def generate_launch_description() -> LaunchDescription:
 
     Returns:
         The launch description. Arguments: `namespace` (without trailing slash),
-        `use_sim_time`, `resolution` (occupancy grid cell size, in meters) and `start_rviz`.
-        The map is published on `/<namespace>/map`, in the `map` frame.
+        `use_sim_time`, `resolution` (occupancy grid cell size, in meters), `map_topic`
+        (default `map`, relative: `/<namespace>/map`; `/map` for Nav2 in SLAM mode) and
+        `start_rviz`. The map is in the `map` frame.
     """
     return LaunchDescription(
         [
             DeclareLaunchArgument("namespace", default_value="minipock_0"),
             DeclareLaunchArgument("use_sim_time", default_value="false"),
             DeclareLaunchArgument("resolution", default_value="0.05"),
+            DeclareLaunchArgument("map_topic", default_value="map"),
             DeclareLaunchArgument("start_rviz", default_value="true"),
             OpaqueFunction(function=_cartographer),
         ]

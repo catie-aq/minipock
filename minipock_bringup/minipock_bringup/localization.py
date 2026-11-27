@@ -1,10 +1,12 @@
-"""Fleet localization: one shared map server, one AMCL per robot."""
+"""Fleet localization: one shared map server and one AMCL per robot, or Cartographer SLAM."""
 
 from launch import Action
 from launch.actions import GroupAction
 from launch_ros.actions import Node, SetRemap
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import RewrittenYaml
+
+from minipock_bringup.launch_args import include
 
 MAP_TOPIC = "/map"
 MAP_FRAME = "map"
@@ -101,3 +103,59 @@ def _lifecycle_manager(
             {"autostart": True, "node_names": node_names, "use_sim_time": use_sim_time},
         ],
     )
+
+
+def slam_actions(namespaces: list[str], *, use_sim_time: bool) -> list[Action]:
+    """Return the Cartographer actions mapping with the only robot of the fleet.
+
+    Cartographer replaces the map server and the AMCLs: it publishes the map it builds on
+    `/map` (where Nav2 reads it) and `map -> <namespace>/odom`. Mapping with several robots
+    (one shared map) is not supported.
+
+    Args:
+        namespaces: Namespace of each robot of the fleet.
+        use_sim_time: Whether the nodes use the simulation clock.
+
+    Returns:
+        The launch actions.
+
+    Raises:
+        ValueError: If the fleet does not have exactly one robot.
+    """
+    if len(namespaces) != 1:
+        msg = (
+            f"slam:=true maps with a single robot, the fleet has {len(namespaces)} "
+            f"({', '.join(namespaces)}): use a fleet file with one robot"
+        )
+        raise ValueError(msg)
+    return [
+        include(
+            "minipock_cartographer",
+            "cartographer.launch.py",
+            {
+                "namespace": namespaces[0],
+                "use_sim_time": "true" if use_sim_time else "false",
+                "map_topic": MAP_TOPIC,
+                "start_rviz": "false",
+            },
+        )
+    ]
+
+
+def fleet_localization(
+    robots: list[tuple[str, str]], map_yaml: str, *, use_sim_time: bool, slam: bool
+) -> list[Action]:
+    """Return the localization actions of the fleet: `slam_actions` or `localization_actions`.
+
+    Args:
+        robots: `(namespace, params_file)` of each robot.
+        map_yaml: Path of the map YAML file, unused with `slam`.
+        use_sim_time: Whether the nodes use the simulation clock.
+        slam: Map with Cartographer instead of localizing on `map_yaml`.
+
+    Returns:
+        The launch actions.
+    """
+    if slam:
+        return slam_actions([namespace for namespace, _ in robots], use_sim_time=use_sim_time)
+    return localization_actions(robots, map_yaml, use_sim_time=use_sim_time)
