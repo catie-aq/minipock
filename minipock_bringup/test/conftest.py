@@ -2,7 +2,7 @@
 
 They start Gazebo and Nav2 and take minutes: a plain `colcon test` or `pytest` skips them. They
 run when the marker expression names them (`-m integration`) or when `MINIPOCK_INTEGRATION=1`
-(set by the integration CI job).
+(local option: CI selects them with `-m integration`).
 """
 
 import os

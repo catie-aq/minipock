@@ -30,7 +30,7 @@ Drop `--packages-select` to test every package. `-m 'not integration'` keeps the
 
 ## Integration test (starts Gazebo and Nav2)
 
-Tests marked `integration` (`@pytest.mark.integration`, `minipock_bringup/test/test_sim_nav2.py`) start the simulation, check that Nav2 comes up and send one goal per robot. The marker is registered in `minipock_bringup/setup.cfg`. They are opt-in (`minipock_bringup/test/conftest.py`): a plain `colcon test` or `pytest` skips them; they run with `-m integration` or with `MINIPOCK_INTEGRATION=1` in the environment (set by the CI). Unit runs may still pass `-m 'not integration'`. Without a GPU force software rendering; the LiDAR then runs far below real time (see `minipock-sim`), so allow minutes:
+Tests marked `integration` (`@pytest.mark.integration`, `minipock_bringup/test/test_sim_nav2.py`) start the simulation, check that Nav2 comes up and send one goal per robot. The marker is registered in `minipock_bringup/setup.cfg`. They are opt-in (`minipock_bringup/test/conftest.py`): a plain `colcon test` or `pytest` skips them; they run with `-m integration` or with `MINIPOCK_INTEGRATION=1` in the environment (local option: the CI does not set it, the integration job selects the tests with `-m integration`). Unit runs may still pass `-m 'not integration'`. Without a GPU force software rendering; the LiDAR then runs far below real time (see `minipock-sim`), so allow minutes:
 
 ```bash
 scripts/docker-run.sh --gpu "colcon test --merge-install --packages-select minipock_bringup --pytest-args -m integration --event-handlers console_direct+ && colcon test-result --verbose"

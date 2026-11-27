@@ -310,9 +310,10 @@ colcon test --merge-install --pytest-args -m "not integration" && colcon test-re
   `generate_test_description` : le plugin pytest de `launch_testing` recopie
   les marqueurs de cette fonction, pas un `pytestmark` de module. Le test est
   opt-in (`minipock_bringup/test/conftest.py`) : un `colcon test` ou un
-  `pytest` sans `-m` le saute ; il tourne avec `-m integration` ou avec la
-  variable `MINIPOCK_INTEGRATION=1`, que la CI pose (voir « Qualité et
-  livraison »).
+  `pytest` sans `-m` le saute ; il tourne avec `-m integration` (ce que fait le
+  job d'intégration de la CI) ou, en local, avec la variable
+  `MINIPOCK_INTEGRATION=1`, que la CI ne pose pas : `container-env` vaut pour
+  le job unitaire comme pour le job d'intégration.
 - Transport DDS du test d'intégration : UDPv4 seul
   (`FASTDDS_BUILTIN_TRANSPORTS=UDPv4`, posé par `generate_test_description`
   pour la simulation et le nœud de test, sauf si la variable existe déjà).
@@ -363,7 +364,7 @@ Les gestes répétitifs ont un skill de projet dans `.claude/skills/` :
 - CI (`.github/workflows/ros2-build-test.yaml`, workflow partagé
   `catie-aq/ros_workflows` `ros2-ci.yml@v2.0.0`) : pre-commit, compilation et
   tests unitaires sur Jazzy, puis le test d'intégration `minipock_bringup`
-  (`-m integration`, variable `MINIPOCK_INTEGRATION=1`) sur le runner GPU
+  (`-m integration`, valeur par défaut du workflow) sur le runner GPU
   `sonu-github-arc-gpu`. Rolling tourne chaque semaine dans
   `ros2-rolling.yaml` (alerte précoce, ne bloque aucune PR). Le sous-module privé `minipock_msgs` passe par le secret `PAT`. Passer à une
   nouvelle version du workflow : changer `@vX.Y.Z` et `toolkit-ref` ensemble.
