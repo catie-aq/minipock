@@ -22,15 +22,13 @@ def _data_dir(directory: str) -> tuple[str, list[str]]:
 
 setup(
     name=package_name,
-    version="1.0.0",
+    version="2.2.1",
     description="Description package for MiniPock robot",
     author="Sébastien Delpeuch",
     author_email="s.delpeuch@catie.fr",
-    license="Apache 2.0",
-    install_requires=[
-        "python>=3.10",
-        "jsonschema",
-    ],
+    license="Apache-2.0",
+    install_requires=["setuptools"],
+    tests_require=["pytest"],
     packages=[package_name],
     entry_points={
         "console_scripts": [
