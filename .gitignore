@@ -38,3 +38,7 @@ onshape_to_robot
 
 # Local agent instructions (not versioned)
 CLAUDE.local.md
+
+# Local Python tooling (uv run of the host scripts); ROS packages use rosdep
+.venv/
+/uv.lock
