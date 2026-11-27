@@ -20,6 +20,19 @@ def _data_dir(directory: str) -> tuple[str, list[str]]:
     return (f"share/{package_name}/{directory}", files)
 
 
+def _data_tree(directory: str) -> list[tuple[str, list[str]]]:
+    """Return data_files entries installing `directory` and all its subdirectories.
+
+    Args:
+        directory: Directory relative to the package root.
+
+    Returns:
+        One entry per directory holding files.
+    """
+    directories = [Path(directory), *sorted(p for p in Path(directory).rglob("*") if p.is_dir())]
+    return [_data_dir(str(path)) for path in directories if any(path.glob("*.*"))]
+
+
 setup(
     name=package_name,
     version="2.2.1",
@@ -38,5 +51,6 @@ setup(
         _data_dir("worlds/models"),
         _data_dir("worlds/models/empty_room_ground"),
         _data_dir("worlds/models/empty_room_ground/meshes"),
+        *_data_tree("models"),
     ],
 )
