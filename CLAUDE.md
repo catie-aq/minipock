@@ -36,8 +36,12 @@ cibles `base`, `simulation`, `real`), publiées sur
   `GZ_PARTITION`, découverte limitée à localhost. `scripts/gate.sh [<ref>]`
   rejoue la CI sur un commit (export propre, pre-commit sans sous-module,
   build, tests unitaires). Les scripts passent `shellcheck` (pre-commit).
-- Compiler avec `--merge-install` : les chemins Gazebo de l'image
-  (`GZ_SIM_RESOURCE_PATH`) supposent un `install/share` unique.
+- Compiler avec `--merge-install` : `minipock_gz/launch/world.launch.py` ajoute
+  à `GZ_SIM_RESOURCE_PATH` le dossier `share` qui contient `minipock_description`,
+  et les URI `model://minipock_gz/...` et `package://minipock_gz/...` des mondes
+  supposent que `minipock_gz` y est aussi (un `install/share` unique). L'image ne
+  pose pas `GZ_SIM_RESOURCE_PATH` : les mondes se chargent aussi hors du
+  conteneur. Pas de chemin absolu dans un monde (`test_worlds.py`).
 - Sans écran ni GPU (CI, conteneur sans `/dev/dri`) : `LIBGL_ALWAYS_SOFTWARE=1`
   et `gz sim -s --headless-rendering`. Le LiDAR simulé (`gpu_lidar`) tourne
   alors en rendu logiciel, plus lentement que le temps réel.

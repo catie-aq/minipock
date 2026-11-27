@@ -18,7 +18,7 @@ scripts/docker-run.sh "colcon build --symlink-install --merge-install"
 scripts/docker-run.sh "colcon build --symlink-install --merge-install --packages-select minipock_bringup"
 ```
 
-`--merge-install` is required: the image sets `GZ_SIM_RESOURCE_PATH` for a single `install/share`.
+`--merge-install` is required: `world.launch.py` adds one `install/share` to `GZ_SIM_RESOURCE_PATH`, and the world URIs (`model://minipock_gz/...`, `package://...`) resolve against it.
 
 ## Unit tests (no simulation)
 

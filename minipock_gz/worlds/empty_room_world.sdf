@@ -361,7 +361,7 @@
     </model>
     <include>
       <name>empty_room_ground</name>
-      <uri>/workspaces/install/share/minipock_gz/worlds/models/empty_room_ground/model.sdf</uri>
+      <uri>model://minipock_gz/worlds/models/empty_room_ground</uri>
       <pose>0 0 0.0 0 0 0</pose>
     </include>
     <rmf_charger_waypoints name="charger_waypoints">
