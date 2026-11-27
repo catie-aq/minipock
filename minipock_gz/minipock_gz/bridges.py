@@ -1,6 +1,10 @@
 """Factories for the Gazebo to ROS bridges of a MiniPock simulation."""
 
-from minipock_gz.bridge import Bridge, BridgeDirection
+import tempfile
+
+import yaml
+
+from minipock_gz.bridge import SENSOR_DATA, Bridge, BridgeDirection
 
 
 def clock() -> Bridge:
@@ -22,7 +26,8 @@ def robot_bridges(namespace: str) -> list[Bridge]:
 
     Returns:
         The odometry, velocity command, LiDAR scan, joint states and TF bridges. The Gazebo
-        topics are those set by the plugins of the robot description.
+        topics are those set by the plugins of the robot description. `odom` and `scan` are
+        published with the sensor data QoS (best effort), as on the real robot.
     """
     return [
         Bridge(
@@ -31,6 +36,7 @@ def robot_bridges(namespace: str) -> list[Bridge]:
             gz_type="gz.msgs.Odometry",
             ros_type="nav_msgs/msg/Odometry",
             direction=BridgeDirection.GZ_TO_ROS,
+            qos_profile=SENSOR_DATA,
         ),
         Bridge(
             gz_topic=f"{namespace}/cmd_vel",
@@ -45,6 +51,7 @@ def robot_bridges(namespace: str) -> list[Bridge]:
             gz_type="gz.msgs.LaserScan",
             ros_type="sensor_msgs/msg/LaserScan",
             direction=BridgeDirection.GZ_TO_ROS,
+            qos_profile=SENSOR_DATA,
         ),
         Bridge(
             gz_topic=f"{namespace}/joint_states",
@@ -61,3 +68,26 @@ def robot_bridges(namespace: str) -> list[Bridge]:
             direction=BridgeDirection.GZ_TO_ROS,
         ),
     ]
+
+
+def write_config(
+    bridges: list[Bridge], prefix: str = "bridge_", directory: str | None = None
+) -> str:
+    """Write the `parameter_bridge` YAML configuration of `bridges` to a temporary file.
+
+    The configuration file, unlike command line arguments, carries the QoS profile of each
+    bridge.
+
+    Args:
+        bridges: Bridges to configure.
+        prefix: Prefix of the file name.
+        directory: Directory of the file, the system temporary directory by default.
+
+    Returns:
+        The path of the file, for the `config_file` parameter of `parameter_bridge`.
+    """
+    with tempfile.NamedTemporaryFile(
+        mode="w", prefix=prefix, suffix=".yaml", dir=directory, delete=False
+    ) as file:
+        yaml.safe_dump([bridge.config() for bridge in bridges], file, sort_keys=False)
+    return file.name

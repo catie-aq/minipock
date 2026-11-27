@@ -153,6 +153,12 @@ uv run minipock_gz/scripts/world_to_map.py --world minipock_gz/worlds/office.sdf
 - Arbre par robot : `map → minipock_<id>/odom → minipock_<id>/base_footprint →
   minipock_<id>/base_link → …`, avec un seul publieur par transformation.
 - Topics relatifs au namespace : `cmd_vel`, `odom`, `scan`, `joint_states`.
+- QoS : `scan` et `odom` sont publiés en profil capteur (`SENSOR_DATA` :
+  best effort, volatile, profondeur 5) en sim comme en réel. En sim, le pont
+  `ros_gz_bridge` d'un robot est configuré par un fichier YAML généré au
+  lancement (`minipock_gz.bridges.write_config`, champ `qos_profile`), les
+  arguments en ligne de commande ne portant pas de QoS (`test_bridges.py`). Tout
+  abonné de `scan` et `odom` doit accepter un publieur best effort.
 - Sim et réel exposent les mêmes topics et frames : un nœud ne doit pas savoir
   s'il tourne en simulation, hors `use_sim_time`.
 

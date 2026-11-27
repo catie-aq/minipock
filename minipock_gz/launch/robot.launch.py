@@ -42,8 +42,9 @@ def _robot(context: LaunchContext) -> list[Node]:
             executable="parameter_bridge",
             name=f"{namespace}_bridge",
             output="screen",
-            arguments=[bridge.argument() for bridge in robot_bridges],
-            remappings=[bridge.remapping() for bridge in robot_bridges],
+            parameters=[
+                {"config_file": bridges.write_config(robot_bridges, prefix=f"{namespace}_bridge_")}
+            ],
         ),
     ]
 
