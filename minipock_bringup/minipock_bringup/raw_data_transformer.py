@@ -1,13 +1,14 @@
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN201, ANN202, ANN204, D100, D101, D102, D107, D205, E501
+import numpy as np
 import rclpy
-from geometry_msgs.msg import TransformStamped
+from filterpy.kalman import KalmanFilter
+from geometry_msgs.msg import PoseStamped, TransformStamped
 from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from tf2_ros import TransformBroadcaster
-from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import LaserScan
-from filterpy.kalman import KalmanFilter
-import numpy as np
+from tf2_ros import TransformBroadcaster
 
 
 class LinearKalmanFilter:
@@ -38,31 +39,31 @@ class RawDataTransformer(Node):
 
         self.create_subscription(
             PoseStamped,
-            f"odom_raw",
+            "odom_raw",
             self.callback,
             qos_profile_sensor_data,
         )
         self.create_subscription(
             LaserScan,
-            f"scan_raw",
+            "scan_raw",
             self.callback_scan,
             qos_profile_sensor_data,
         )
         self.create_subscription(
             PoseStamped,
-            f"odom_optc_raw",
+            "odom_optc_raw",
             self.callback_optc,
             qos_profile_sensor_data,
         )
 
-        self.__odom_publisher = self.create_publisher(Odometry, f"odom", qos_profile_sensor_data)
+        self.__odom_publisher = self.create_publisher(Odometry, "odom", qos_profile_sensor_data)
         self.__odom_optc_publisher = self.create_publisher(
-            Odometry, f"odom_optc", qos_profile_sensor_data
+            Odometry, "odom_optc", qos_profile_sensor_data
         )
         self.__odom_fusion_publisher = self.create_publisher(
-            Odometry, f"odom_fusion", qos_profile_sensor_data
+            Odometry, "odom_fusion", qos_profile_sensor_data
         )
-        self.__scan_publisher = self.create_publisher(LaserScan, f"scan", qos_profile_sensor_data)
+        self.__scan_publisher = self.create_publisher(LaserScan, "scan", qos_profile_sensor_data)
         self.__tf_broadcaster = TransformBroadcaster(self)
 
         self.__odom_transform = TransformStamped()
@@ -73,8 +74,7 @@ class RawDataTransformer(Node):
         self.__last_odom_optc_msg = None
 
     def callback(self, msg):
-        """
-        Callback to receive a message.
+        """Callback to receive a message.
 
         :param msg: The message received.
         :return: None.
@@ -83,8 +83,7 @@ class RawDataTransformer(Node):
         self.__publish_odom(msg, self.__odom_publisher)
 
     def callback_optc(self, msg):
-        """
-        Callback to receive a message.
+        """Callback to receive a message.
 
         :param msg: The message received.
         :return: None.
@@ -94,8 +93,7 @@ class RawDataTransformer(Node):
         self.callback_fusion()
 
     def callback_fusion(self):
-        """
-        Callback to perform sensor fusion using a Kalman filter to combine odometry measurements from two sources and publish the fused pose.
+        """Callback to perform sensor fusion using a Kalman filter to combine odometry measurements from two sources and publish the fused pose.
         :return: None.
         """
         if self.__last_odom_msg is None or self.__last_odom_optc_msg is None:
@@ -150,8 +148,7 @@ class RawDataTransformer(Node):
         publisher.publish(odom)
 
     def callback_scan(self, msg):
-        """
-        Callback to receive a message.
+        """Callback to receive a message.
 
         :param msg: The message received.
         :return: None.
@@ -162,8 +159,7 @@ class RawDataTransformer(Node):
 
 
 def main(args=None):
-    """
-    :param args: The command line arguments passed to the program.
+    """:param args: The command line arguments passed to the program.
     :return: None.
 
     The main method is the entry point for the program.

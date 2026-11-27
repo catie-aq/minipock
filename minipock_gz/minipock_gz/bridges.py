@@ -1,7 +1,10 @@
+"""Factories for the Gazebo to ROS bridges of a MiniPock robot."""
+
 from minipock_gz import bridge
 
 
-def clock():
+def clock() -> bridge.Bridge:
+    """Return the bridge for the simulation clock."""
     return bridge.Bridge(
         gz_topic="/clock",
         ros_topic="/clock",
@@ -11,17 +14,19 @@ def clock():
     )
 
 
-def tf(model_name):
+def tf(model_name: str) -> bridge.Bridge:
+    """Return the bridge for the model TF tree."""
     return bridge.Bridge(
         gz_topic=f"/model{model_name}/tf",
-        ros_topic=f"/tf",
+        ros_topic="/tf",
         gz_type="gz.msgs.Pose_V",
         ros_type="tf2_msgs/msg/TFMessage",
         direction=bridge.BridgeDirection.GZ_TO_ROS,
     )
 
 
-def pose(model_name):
+def pose(model_name: str) -> bridge.Bridge:
+    """Return the bridge for the model pose."""
     return bridge.Bridge(
         gz_topic=f"/model{model_name}/pose",
         ros_topic=f"{model_name}/pose",
@@ -31,7 +36,8 @@ def pose(model_name):
     )
 
 
-def joint_states(world_name, model_name):
+def joint_states(world_name: str, model_name: str) -> bridge.Bridge:
+    """Return the bridge for the model joint states."""
     return bridge.Bridge(
         gz_topic=f"/world{world_name}/model{model_name}/joint_state",
         ros_topic=f"{model_name}/joint_states",
@@ -41,7 +47,8 @@ def joint_states(world_name, model_name):
     )
 
 
-def odometry(model_name):
+def odometry(model_name: str) -> bridge.Bridge:
+    """Return the bridge for the model odometry."""
     return bridge.Bridge(
         gz_topic=f"{model_name}/odom",
         ros_topic=f"{model_name}/odom",
@@ -51,7 +58,8 @@ def odometry(model_name):
     )
 
 
-def cmd_vel(model_name):
+def cmd_vel(model_name: str) -> bridge.Bridge:
+    """Return the bridge for the model velocity command."""
     return bridge.Bridge(
         gz_topic=f"{model_name}/cmd_vel",
         ros_topic=f"{model_name}/cmd_vel",
@@ -61,7 +69,8 @@ def cmd_vel(model_name):
     )
 
 
-def scan_lidar(model_name):
+def scan_lidar(model_name: str) -> bridge.Bridge:
+    """Return the bridge for the raw LiDAR scan."""
     return bridge.Bridge(
         gz_topic=f"{model_name}/scan_raw",
         ros_topic=f"{model_name}/scan_raw",

@@ -1,15 +1,11 @@
-"""
-Class for a bridge between Gazebo and ROS.
-"""
+"""Class for a bridge between Gazebo and ROS."""
 
 from dataclasses import dataclass
 from enum import Enum
 
 
 class BridgeDirection(Enum):
-    """
-    Enum for the direction of a bridge.
-    """
+    """Enum for the direction of a bridge."""
 
     BIDIRECTIONAL = 0
     GZ_TO_ROS = 1
@@ -25,8 +21,7 @@ DIRECTION_SYMS = {
 
 @dataclass
 class Bridge:
-    """
-    Class for a bridge between Gazebo and ROS.
+    """Class for a bridge between Gazebo and ROS.
 
     :param gz_topic: Gazebo topic name
     :param ros_topic: ROS topic name
@@ -41,18 +36,15 @@ class Bridge:
     ros_type: str
     direction: BridgeDirection
 
-    def argument(self):
-        """
-        Return the argument string for the bridge.
+    def argument(self) -> str:
+        """Return the argument string for the bridge.
 
         :return: argument string
         """
-        out = f"{self.gz_topic}@{self.ros_type}{DIRECTION_SYMS[self.direction]}{self.gz_type}"
-        return out
+        return f"{self.gz_topic}@{self.ros_type}{DIRECTION_SYMS[self.direction]}{self.gz_type}"
 
-    def remapping(self):
-        """
-        Return the remapping tuple for the bridge.
+    def remapping(self) -> tuple[str, str]:
+        """Return the remapping tuple for the bridge.
 
         :return: remapping tuple
         """

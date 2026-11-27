@@ -1,5 +1,6 @@
-"""
-This file contains the definitions of three main functions that are used to generate the launch
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN002, ANN003, ANN201, ARG001, D205, D415, EXE002, PTH118, PTH123, RET504
+"""This file contains the definitions of three main functions that are used to generate the launch
 descriptions for different robots, based on provided configurations.
 
 Functions:
@@ -12,17 +13,15 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.actions import GroupAction
-from launch.actions import OpaqueFunction
+from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
 from minipock_description import config
 
 
 def parse_config(context, *args, **kwargs):
-    """
-    Parse the configuration for launching processes
+    """Parse the configuration for launching processes
 
     :param context: the context for launching processes
     :param args: variable number of additional arguments
@@ -38,8 +37,7 @@ def parse_config(context, *args, **kwargs):
 
 
 def spawn(use_sim_time, robot_name):
-    """
-    This method is used to spawn a robot in a simulation environment.
+    """This method is used to spawn a robot in a simulation environment.
     It reads the URDF file of the robot model and generates launch processes to start the
     robot_state_publisher node.
 
@@ -48,7 +46,7 @@ def spawn(use_sim_time, robot_name):
     :return: A list of launch processes.
     """
     # robot_state_publisher
-    model_dir = os.path.join(get_package_share_directory(f"minipock_description"), "models/tmp")
+    model_dir = os.path.join(get_package_share_directory("minipock_description"), "models/tmp")
     urdf_file = os.path.join(model_dir, f"{robot_name}_model.urdf")
     with open(urdf_file) as input_file:
         robot_desc = input_file.read()
@@ -68,8 +66,7 @@ def spawn(use_sim_time, robot_name):
 
 
 def generate_launch_description():
-    """
-    Generates a launch description for spawning a robot in a specific position and orientation.
+    """Generates a launch description for spawning a robot in a specific position and orientation.
 
     :return: A LaunchDescription object.
     """

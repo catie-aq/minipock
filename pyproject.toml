@@ -1,0 +1,30 @@
+# Ruff configuration only: ROS packages keep setuptools/colcon and rosdep.
+[tool.ruff]
+line-length = 99
+target-version = "py312"
+extend-exclude = ["minipock_fleet_adapter"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+# COM812 conflicts with `ruff format`; CPY001 would require a license header in every file.
+ignore = ["T20", "S101", "D104", "COM812", "CPY001"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/launch/*.py" = ["INP001"]
+"**/setup.py" = ["INP001"]
+# SLF001: launch_ros actions expose no public accessor before execution.
+"**/test/**" = ["INP001", "PLR2004", "D", "SLF001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+# Submodule, absent from checkouts without submodules (CI): classify it the same everywhere.
+known-third-party = ["minipock_msgs"]
+known-first-party = [
+  "minipock_bringup",
+  "minipock_description",
+  "minipock_gz",
+  "minipock_teleop",
+  "minipock_firmware_updater",
+]

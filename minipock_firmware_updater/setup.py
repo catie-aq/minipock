@@ -1,4 +1,4 @@
-import os
+"""Packaging for minipock_firmware_updater."""
 
 from setuptools import setup
 
@@ -21,8 +21,8 @@ setup(
     data_files=[
         (
             "share/ament_index/resource_index/packages",
-            ["resource/" + package_name],
+            [f"resource/{package_name}"],
         ),
-        (os.path.join("share", package_name), ["package.xml"]),
+        (f"share/{package_name}", ["package.xml"]),
     ],
 )
