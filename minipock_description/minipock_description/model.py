@@ -1,6 +1,6 @@
-"""
-This module is used to generate the sdf file from the urdf file
-"""
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN201, D415, EM102, PTH110, PTH118, PTH123, RET503, RET504, S603, TRY003
+"""This module is used to generate the sdf file from the urdf file"""
 
 import codecs
 import os
@@ -14,8 +14,7 @@ PACKAGE_NAME = "minipock_description"
 
 
 def xacro_cmd(robot_name, urdf, mode):
-    """
-    Generate the command to run xacro and gz sdf print
+    """Generate the command to run xacro and gz sdf print
 
     :param urdf: path to urdf file
     :param mode: mode for xacro command (holonomic or differential)
@@ -40,8 +39,7 @@ def xacro_cmd(robot_name, urdf, mode):
 
 
 def name_from_plugin(plugin_sdf):
-    """
-    Return the plugin name
+    """Return the plugin name
 
     :param plugin_sdf: sdf string of the plugin
     :return: name of the plugin
@@ -52,8 +50,7 @@ def name_from_plugin(plugin_sdf):
 
 
 def generate(robot_name, mode):
-    """
-    Generate the sdf file from the urdf file
+    """Generate the sdf file from the urdf file
 
     :param robot_name: The name of the robot
     :param mode: The mode for generating the sdf file
@@ -85,8 +82,7 @@ def generate(robot_name, mode):
 
 
 def spawn_args(robot_name="minipock", robot_position_str="0.0 0.0 0.0", mode="differential"):
-    """
-    Return the spawning arguments for the create command
+    """Return the spawning arguments for the create command
 
     :param robot_name: name of the robot
     :param robot_position_str: position of the robot in the world*

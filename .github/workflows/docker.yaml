@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - .devcontainer/Dockerfile
+      - '**/package.xml'
     tags:
       - '*.*.*'
   workflow_dispatch:
@@ -20,7 +21,8 @@ jobs:
     needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
-      Dockerfile: .devcontainer
+      Dockerfile: .
+      file: .devcontainer/Dockerfile
       target: "base"
     secrets:
       PAT: ${{ secrets.PAT }}
@@ -28,7 +30,8 @@ jobs:
     needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
-      Dockerfile: .devcontainer
+      Dockerfile: .
+      file: .devcontainer/Dockerfile
       target: "simulation"
     secrets:
       PAT: ${{ secrets.PAT }}
@@ -36,7 +39,8 @@ jobs:
     needs: docker-test
     uses: catie-aq/generic_workflows/.github/workflows/docker-ghcr.yml@main
     with:
-      Dockerfile: .devcontainer
+      Dockerfile: .
+      file: .devcontainer/Dockerfile
       target: "real"
     secrets:
       PAT: ${{ secrets.PAT }}

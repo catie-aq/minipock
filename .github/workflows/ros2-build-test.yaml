@@ -5,9 +5,27 @@ on:
   pull_request:
 
 jobs:
-  pre-commit:
-    uses: catie-aq/generic_workflows/.github/workflows/pre-commit.yaml@main
-  ros2-build-test:
-    uses: catie-aq/ros_workflows/.github/workflows/ros2.yml@main
+  ros2:
+    uses: catie-aq/ros_workflows/.github/workflows/ros2-ci.yml@v2.0.0
+    with:
+      toolkit-ref: v2.0.0
+      submodules: recursive
+      merge-install: true
+      packages: >-
+        minipock
+        minipock_bringup
+        minipock_cartographer
+        minipock_description
+        minipock_firmware_updater
+        minipock_gz
+        minipock_navigation
+        minipock_navigation2
+        minipock_teleop
+      skip-keys: micro_ros_agent
+      pytest-args: '["-m", "not integration"]'
+      container-env: '{"ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST"}'
+      pre-commit: true
+      lint-ruff: false
+      integration: false
     secrets:
-      PAT: ${{ secrets.PAT }}
+      token: ${{ secrets.PAT }}

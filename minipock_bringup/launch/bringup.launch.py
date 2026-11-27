@@ -1,3 +1,5 @@
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN002, ANN003, ANN201, ARG001, D100, D205, EXE002, PTH118, RET504
 import os
 
 from ament_index_python import get_package_share_directory
@@ -10,12 +12,12 @@ from launch.actions import (
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from minipock_description import model, config
+
+from minipock_description import config, model
 
 
 def parse_config(context, *args, **kwargs):
-    """
-    The `parse_config` method is used to parse a configuration in the specified context.
+    """The `parse_config` method is used to parse a configuration in the specified context.
 
     It retrieves the robot name using the LaunchConfiguration class and then performs the necessary
     operations
@@ -45,8 +47,7 @@ def parse_config(context, *args, **kwargs):
 
 
 def micro_ros_agent():
-    """
-    :return: LaunchDescription instance containing a Node with package 'micro_ros_agent'
+    """:return: LaunchDescription instance containing a Node with package 'micro_ros_agent'
     and executable 'micro_ros_agent'
     """
     return LaunchDescription(
@@ -61,8 +62,7 @@ def micro_ros_agent():
 
 
 def spawn(robot_name, robot_mode):
-    """
-    Spawn the robot in the current Gazebo world.
+    """Spawn the robot in the current Gazebo world.
 
     :return: list of launch processes
     """
@@ -82,8 +82,7 @@ def spawn(robot_name, robot_mode):
 
 
 def state(robot_name):
-    """
-    :return: LaunchDescription instance containing a Node with package 'joint_state_publisher'
+    """:return: LaunchDescription instance containing a Node with package 'joint_state_publisher'
     and executable 'joint_state_publisher'
     """
     return LaunchDescription(
@@ -98,8 +97,7 @@ def state(robot_name):
 
 
 def odometry(robot_name):
-    """
-    :return: LaunchDescription instance containing a Node with package 'joint_state_publisher'
+    """:return: LaunchDescription instance containing a Node with package 'joint_state_publisher'
     and executable 'joint_state_publisher'
     """
     return LaunchDescription(
@@ -117,8 +115,7 @@ def odometry(robot_name):
 
 
 def generate_launch_description():
-    """
-    Generates a launch description for spawning a robot in a specific position and orientation.
+    """Generates a launch description for spawning a robot in a specific position and orientation.
 
     :return: A LaunchDescription object.
     """

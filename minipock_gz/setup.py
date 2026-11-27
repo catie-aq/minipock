@@ -1,20 +1,34 @@
-import os
-from glob import glob
+"""Packaging for minipock_gz."""
+
+from pathlib import Path
 
 from setuptools import setup
 
 package_name = "minipock_gz"
 
+
+def _data_dir(directory: str) -> tuple[str, list[str]]:
+    """Return a data_files entry installing the files of `directory`.
+
+    Args:
+        directory: Directory relative to the package root.
+
+    Returns:
+        The install destination and the list of source files.
+    """
+    files = sorted(str(path) for path in Path(directory).glob("*.*"))
+    return (f"share/{package_name}/{directory}", files)
+
+
 setup(
     name=package_name,
-    version="1.0.0",
+    version="2.2.1",
     description="MiniPock Worlds for Gazebo Sim",
     author="Sébastien Delpeuch",
     author_email="s.delpeuch@catie.fr",
-    license="Apache 2.0",
-    install_requires=[
-        "python>=3.10",
-    ],
+    license="Apache-2.0",
+    install_requires=["setuptools"],
+    tests_require=["pytest"],
     packages=[package_name],
     entry_points={
         "console_scripts": [
@@ -22,21 +36,12 @@ setup(
         ],
     },
     data_files=[
-        ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
-        (os.path.join("share", package_name), ["package.xml"]),
-        (os.path.join("share", package_name, "worlds"), glob(os.path.join("worlds", "*.*"))),
-        (os.path.join("share", package_name, "launch"), glob(os.path.join("launch", "*.*"))),
-        (
-            os.path.join("share", package_name, "worlds", "models"),
-            glob(os.path.join("worlds", "models", "*.*")),
-        ),
-        (
-            os.path.join("share", package_name, "worlds", "models", "empty_room_ground"),
-            glob(os.path.join("worlds", "models", "empty_room_ground", "*.*")),
-        ),
-        (
-            os.path.join("share", package_name, "worlds", "models", "empty_room_ground", "meshes"),
-            glob(os.path.join("worlds", "models", "empty_room_ground", "meshes", "*.*")),
-        ),
+        ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
+        (f"share/{package_name}", ["package.xml"]),
+        _data_dir("worlds"),
+        _data_dir("launch"),
+        _data_dir("worlds/models"),
+        _data_dir("worlds/models/empty_room_ground"),
+        _data_dir("worlds/models/empty_room_ground/meshes"),
     ],
 )

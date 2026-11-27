@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-#
 # Copyright 2022 ROBOTIS CO., LTD.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +14,20 @@
 #
 # Author: Darby Lim
 
+"""Launch file for Cartographer SLAM."""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
 from minipock_description import config
 
 
-def generate_launch_description():
+def generate_launch_description() -> LaunchDescription:
+    """Launch Cartographer SLAM, its occupancy grid, RViz and the relays."""
     start_rviz = LaunchConfiguration("start_rviz")
     config_dict = config.config()
     use_sim_time = config_dict["use_sim_time"]

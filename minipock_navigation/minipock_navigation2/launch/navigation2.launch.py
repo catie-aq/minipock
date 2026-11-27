@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
+# Temporary: this file is rewritten or removed by the refactor.
+# ruff: noqa: ANN001, ANN002, ANN003, ANN201, ARG001, D100, EM101, EXE001, PERF401, RET504, TRY003
 
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    IncludeLaunchDescription,
     GroupAction,
+    IncludeLaunchDescription,
     OpaqueFunction,
 )
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
-from launch_ros.actions import Node, LoadComposableNodes
-from launch_ros.actions import PushRosNamespace
+from launch_ros.actions import LoadComposableNodes, Node, PushRosNamespace
 from launch_ros.descriptions import ComposableNode
 from launch_ros.substitutions import FindPackageShare
 from nav2_common.launch import ReplaceString
+
 from minipock_description import config as minipock_config
 
 
 def parse_config(context, *args, **kwargs):
-    """
-    Generate the launch description for the application.
+    """Generate the launch description for the application.
 
     :param context: The context of the launch.
     :return: A LaunchDescription object.
@@ -104,8 +105,7 @@ def parse_config(context, *args, **kwargs):
 
 
 def make_robots(namespace, fleet):
-    """
-    Create a list of robots with their names and positions.
+    """Create a list of robots with their names and positions.
 
     :param namespace: namespace of the robots
     :param fleet: list of robots
@@ -123,8 +123,7 @@ def make_robots(namespace, fleet):
 
 
 def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_file):
-    """
-    Generate the launch description for localization.
+    """Generate the launch description for localization.
 
     :param robots: list of robots containing their names
     :param use_sim_time: use simulation time
@@ -241,8 +240,7 @@ def launch_localization(robots, use_sim_time, autostart, use_respawn, map_yaml_f
 
 
 def standalone_navigation_nodes(config):
-    """
-    Generate the launch description for standalone navigation.
+    """Generate the launch description for standalone navigation.
 
     :param config: dictionary containing the configuration parameters
     :return: list of launch actions
@@ -303,8 +301,7 @@ def standalone_navigation_nodes(config):
 
 
 def composed_navigation_nodes(config):
-    """
-    Generate the launch description for composed navigation in a container.
+    """Generate the launch description for composed navigation in a container.
 
     :param config: dictionary containing the configuration parameters
     :return: list of launch actions
@@ -385,8 +382,7 @@ def composed_navigation_nodes(config):
 
 
 def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composition):
-    """
-    Generate the launch description for navigation.
+    """Generate the launch description for navigation.
 
     :param robots: list of robots containing their names
     :param use_sim_time: use simulation time
@@ -521,7 +517,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
             "package": "nav2_lifecycle_manager",
             "executable": "lifecycle_manager",
             "plugin": "nav2_lifecycle_manager::LifecycleManager",
-            "name": f"lifecycle_manager_navigation",
+            "name": "lifecycle_manager_navigation",
         }
 
         navigation_lifecycle_nodes = []
@@ -551,8 +547,7 @@ def launch_navigation(robots, use_sim_time, autostart, use_respawn, use_composit
 
 
 def generate_launch_description():
-    """
-    Generate the launch description for spawning an object in a simulation.
+    """Generate the launch description for spawning an object in a simulation.
 
     :return: LaunchDescription object.
     """
