@@ -30,11 +30,6 @@ setup(
     install_requires=["setuptools"],
     tests_require=["pytest"],
     packages=[package_name],
-    entry_points={
-        "console_scripts": [
-            "lidar_process = minipock_gz.lidar_process:main",
-        ],
-    },
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
         (f"share/{package_name}", ["package.xml"]),

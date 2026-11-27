@@ -10,10 +10,14 @@
           <mesh filename="package://minipock_description/models/base_alu.dae" />
         </geometry>
       </visual>
+      <!-- Chassis collision, from 0.0875 m below base_link (1 cm above the wheel contact plane,
+           0.0975 m below base_link; the aluminium plate bottom is at -0.089) to 0.0045 m above.
+           Lower, the cylinder touches the floor and its friction absorbs the small velocity
+           commands of VelocityControl (holonomic). -->
       <collision>
-        <origin xyz="0 0 -${0.089/2}" rpy="0 -0 ${-pi/2}" />
+        <origin xyz="0 0 -0.0415" rpy="0 -0 ${-pi/2}" />
         <geometry>
-          <cylinder radius="0.15" length="0.098" />
+          <cylinder radius="0.15" length="0.092" />
         </geometry>
       </collision>
       <inertial>
@@ -76,5 +80,36 @@
       <parent link="${namespace}base_link"/>
       <child link="${namespace}minipock_structure_misc_link"/>
     </joint>
+  </xacro:macro>
+
+  <!-- Skid of the differential base: the real robot rests on its two wheels and tips onto one of
+       two skids of the PLA structure, front and rear (base_pla.stl, lowest points at
+       x = +-0.125 m, 0.096 m below base_link, 1.5 mm above the wheel contact plane). Modelled as
+       frictionless spheres at the same height: the simulated base tips by 0.7 degree at most
+       and the chassis never drags on the floor. Touching the contact plane instead, the skids
+       take load off the wheels, which then slip. -->
+  <xacro:macro name="caster" params="namespace:=minipock/ name:=caster_front x:=0.0">
+    <xacro:property name="caster_radius" value="0.01"/>
+    <link name="${namespace}${name}_link">
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <sphere radius="${caster_radius}" />
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="0.01" />
+        <inertia ixx="4e-7" ixy="0.0" ixz="0.0" iyy="4e-7" iyz="0.0" izz="4e-7" />
+      </inertial>
+    </link>
+    <joint name="${namespace}${name}_joint" type="fixed">
+      <origin xyz="${x} 0 ${-0.096 + caster_radius}" rpy="0 0 0"/>
+      <parent link="${namespace}base_link"/>
+      <child link="${namespace}${name}_link"/>
+    </joint>
+    <gazebo reference="${namespace}${name}_link">
+      <mu1>0.0</mu1>
+      <mu2>0.0</mu2>
+    </gazebo>
   </xacro:macro>
 </robot>
